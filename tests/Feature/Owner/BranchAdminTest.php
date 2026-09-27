@@ -12,6 +12,20 @@ use Tests\FoundationTestCase;
 
 class BranchAdminTest extends FoundationTestCase
 {
+    public function test_operator_reset_remains_available_in_read_only_but_business_writes_do_not(): void
+    {
+        [$business, $owner] = $this->tenant();
+        $branch = $this->branch($owner);
+        $admin = app(AccountService::class)->saveAdmin($owner, ['nama' => 'Admin', 'email' => 'security@example.test', 'password' => $this->password(), 'branch_id' => $branch->id, 'is_active' => true]);
+        $business->forceFill(['active_until' => now()->subDays(8)])->save();
+        $password = $this->password();
+        $this->actingAs($owner)->post('/owner/admins/'.$admin->id.'/reset', ['password' => $password])->assertSessionHasNoErrors()->assertRedirect();
+        $this->assertTrue(Hash::check($password, $admin->fresh()->password));
+        $this->assertTrue($admin->fresh()->must_change_password);
+        $this->assertSame(1, DB::table('audit_logs')->count());
+        $this->post('/owner/branches', ['nama' => 'Tidak boleh'])->assertStatus(423);
+    }
+
     public function test_active_transactions_block_deactivation_and_completed_history_is_kept(): void
     {
         [$business, $owner] = $this->tenant();

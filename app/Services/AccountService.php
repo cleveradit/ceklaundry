@@ -122,7 +122,7 @@ class AccountService
             $target->forceFill(['password' => $password, 'must_change_password' => true])->save();
             $this->revoke($target);
             Audit::record($fresh, $business->id, 'akun.reset_password', ['user_id' => $target->id]);
-        }, $actor->role === 'developer' ? 'administration' : 'business');
+        }, $actor->role === 'developer' ? 'administration' : 'security');
     }
 
     public function saveAdmin(User $actor, array $data, ?int $id = null): User

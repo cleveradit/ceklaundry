@@ -27,6 +27,9 @@ class BusinessTransaction
                     if ($fresh->role === 'admin') {
                         abort_unless(DB::table('branches')->where('id', $fresh->branch_id)->where('business_id', $businessId)->where('is_active', true)->exists(), 403, 'Cabang tidak aktif.');
                     }
+                } elseif ($mode === 'security') {
+                    abort_if($fresh->must_change_password, 403, 'Ganti password awal terlebih dahulu.');
+                    abort_unless(app(LifecycleService::class)->panelAllowed($business), 403, 'Akses bisnis tidak aktif.');
                 }
             }
 
