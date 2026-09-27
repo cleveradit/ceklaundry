@@ -77,7 +77,7 @@ Aturan penting:
 
 - **Isolasi tenant:** owner dan admin hanya dapat melihat/mengelola data milik bisnisnya sendiri. Tidak ada jalur apa pun (termasuk manipulasi URL/API) untuk mengakses data bisnis lain.
 - **Isolasi cabang:** admin hanya dapat melihat dan mengelola data cabang tempat ia ditugaskan. Satu admin ditugaskan ke **tepat satu cabang**, tetapi satu cabang **boleh memiliki banyak admin** (shift pagi/sore).
-- **Developer tidak mengakses data operasional** (transaksi, pelanggan) milik bisnis — hanya data administratif tenant (nama bisnis, akun owner, masa aktif, konfigurasi teknis, statistik ringkas).
+- **Developer tidak mengakses data operasional individual** (termasuk transaksi, pelanggan, pembayaran, pencarian, dan detailnya). Panel developer hanya menampilkan data administratif tenant dan angka agregat yang disebut FR-D04; angka agregat tidak memuat baris/identitas individual.
 
 ---
 
@@ -147,7 +147,7 @@ Label **M1–M6** = urutan pengerjaan (lihat Bagian 13). Semua kebutuhan wajib d
 | FR-C01 | Halaman depan menampilkan kolom input kode resi dan tombol "Cek Status" sebagai elemen utama, serta tombol "Coba Demo". | M2 |
 | FR-C02 | Halaman status dapat diakses langsung via URL unik `/t/{kode_resi}` (URL inilah yang dikodekan dalam QR di resi). | M2 |
 | FR-C03 | Halaman status menampilkan: timeline status (tahap yang sudah dilalui + waktu), rincian layanan, potongan promo/stempel (jika ada), total akhir, rincian pembayaran (jumlah terbayar/DP & sisa tagihan), status bayar, estimasi selesai, catatan kondisi, dan info cabang (nama, alamat, no. telp yang bisa diklik untuk telepon/WA). | M2 |
-| FR-C04 | Pelanggan dapat memasukkan alamat email di halaman status untuk menerima notifikasi saat cucian siap diambil. Email tersimpan ke data transaksi dan data pelanggan. | M3 |
+| FR-C04 | Pelanggan dapat memasukkan alamat email di halaman status sebelum `SIAP_DIAMBIL` untuk menerima notifikasi. Email valid disimpan serentak ke `transactions.notification_email` dan `customers.email`; notifikasi transaksi memakai snapshot `notification_email`. Form dan POST hanya tersedia saat tenant dapat menulis; `BACA_SAJA`/`NONAKTIF` tetap menampilkan halaman status tetapi menolak perubahan email di server. | M3 |
 | FR-C05 | Jika kode resi tidak ditemukan, tampilkan pesan ramah "Kode resi tidak ditemukan, periksa kembali resi Anda" tanpa membocorkan informasi apa pun. | M2 |
 | FR-C06 | Nama dan no. HP pelanggan di halaman publik disamarkan sebagian demi privasi (mis. "Rad*** — 0812***678"). | M2 |
 | FR-C07 | Jika program stempel bisnis aktif, halaman status menampilkan jumlah stempel pelanggan (mis. "Stempel Anda: 7/10"). | M4 |
@@ -163,17 +163,17 @@ Catatan: seluruh kemampuan admin di bawah ini juga dimiliki owner untuk semua ca
 | FR-A03 | Setiap item layanan berisi: jenis layanan, kuantitas (berat kg dengan 1 angka desimal untuk layanan satuan-kg, atau jumlah unit untuk layanan satuan-item), perkiraan jumlah baju (opsional), subtotal otomatis. | M2 |
 | FR-A04 | Mencatat catatan kondisi cucian per transaksi (teks bebas, mis. noda/kerusakan yang sudah ada sejak diterima). | M2 |
 | FR-A05 | Memperbarui status transaksi mengikuti siklus di Bagian 6. Setiap perubahan status tercatat di riwayat (siapa, kapan). | M2 |
-| FR-A06 | Mencatat pembayaran sebagai **daftar catatan pembayaran** per transaksi (jumlah, metode tunai/transfer, waktu, admin pencatat). Jika saklar DP bisnis aktif, jumlah boleh sebagian (uang muka); total seluruh pembayaran tidak boleh melebihi total akhir. Status bayar transaksi diturunkan otomatis: `BELUM_BAYAR` (Rp0), `DP` (sebagian), `LUNAS` (penuh). Catatan pembayaran **tidak dapat diubah/dihapus** setelah disimpan. | M2 |
+| FR-A06 | Mencatat pembayaran sebagai **daftar catatan pembayaran** per transaksi (jumlah, metode tunai/transfer, waktu, admin pencatat). Jika saklar DP bisnis aktif, jumlah boleh sebagian (uang muka); total seluruh pembayaran tidak boleh melebihi total akhir. Status bayar diturunkan sesuai Bagian 7.4, termasuk total akhir Rp0 yang otomatis `LUNAS` tanpa baris pembayaran Rp0. Catatan pembayaran **tidak dapat diubah/dihapus** setelah disimpan. | M2 |
 | FR-A07 | Transaksi tidak dapat diubah ke status "Sudah Diambil" jika status bayar belum `LUNAS` (bisnis tidak menerima hutang). | M2 |
 | FR-A08 | Mencetak resi dalam format struk thermal 58 mm (lihat Bagian 8). | M2 |
 | FR-A09 | Tombol "Kirim resi via WhatsApp" yang membuka link `wa.me/{no_hp}` berisi teks ringkasan resi + link cek status (tanpa biaya API, dikirim manual dari perangkat admin). | M2 |
 | FR-A10 | Dashboard admin menampilkan: daftar transaksi hari ini, daftar transaksi aktif per status, dan daftar khusus **"Siap Diambil — belum diambil"** yang diurutkan dari yang paling lama menunggu (tampilkan umur dalam hari). | M2 |
-| FR-A11 | Dashboard admin juga menampilkan daftar **"Terlambat"**: transaksi yang sudah melewati estimasi selesai tetapi belum berstatus "Siap Diambil" — agar admin proaktif memperbarui estimasi atau mengabari pelanggan. | M2 |
+| FR-A11 | Dashboard admin juga menampilkan daftar **"Terlambat"**: transaksi yang sudah melewati estimasi selesai tetapi belum berstatus "Siap Diambil" — agar admin proaktif mengabari pelanggan atau memperbarui status bila cucian memang sudah siap. | M2 |
 | FR-A12 | Pencarian transaksi berdasarkan kode resi, nama pelanggan, atau no. HP. | M2 |
 | FR-A13 | Kelola data pelanggan: mencari (nama/no. HP), menambah, dan **mengedit** data pelanggan (nama, no. HP, email). No. HP unik per bisnis; nama boleh sama antarpelanggan berbeda. Mengubah no. HP tidak memutus riwayat transaksi karena transaksi terkait ke ID internal pelanggan. | M2 |
-| FR-A14 | Menggabungkan pelanggan duplikat: memilih pelanggan sumber & tujuan; seluruh transaksi dan stempel pindah ke pelanggan tujuan, data sumber dihapus. Aksi tercatat dan wajib dikonfirmasi. | M2 |
-| FR-A15 | Membatalkan transaksi (status "Dibatalkan") disertai alasan wajib. Konsekuensi: transaksi keluar dari pendapatan, seluruh pembayarannya dikeluarkan dari laporan pendapatan (pengembalian dana terjadi di luar aplikasi), dan stempel yang diperolehnya (bila ada) dicabut. | M2 |
-| FR-A16 | Mengedit transaksi (item, berat, promo, catatan) **hanya selama status `DITERIMA`**. Sejak `DIPROSES`, transaksi terkunci permanen bagi semua peran — tidak ada fitur buka-kunci, tidak ada pembatalan catatan pembayaran. Satu-satunya jalur pemulihan kesalahan: batalkan transaksi + buat transaksi baru (Bagian 7.6). Jangan membangun fitur edit/koreksi di luar aturan ini. | M2 |
+| FR-A14 | Menggabungkan pelanggan duplikat: memilih pelanggan sumber & tujuan pada bisnis yang sama; transaksi dan seluruh riwayat stempel sumber pindah ke tujuan. Nama, no. HP, dan email akhir tetap milik tujuan; saldo stempel tujuan dihitung ulang dari ledger gabungan. Pemindahan hanya mengubah FK pemilik history, tidak jenis/jumlah/waktu event. Sumber dihapus setelah pemindahan atomik. Aksi tercatat dan wajib dikonfirmasi. | M2 |
+| FR-A15 | Membatalkan transaksi (status "Dibatalkan") disertai alasan wajib. Transaksi keluar dari pendapatan dan pembayarannya dikeluarkan dari laporan (pengembalian dana di luar aplikasi). Stempel yang diperoleh dicabut; stempel yang ditukar dikembalikan lewat entry baru di ledger, tanpa menghapus entry lama. | M2 |
+| FR-A16 | Selama `DITERIMA`, perubahan item, berat/jumlah, promo, dan penukaran stempel hanya boleh jika **belum ada pembayaran dan belum ada penukaran stempel**. Setelah salah satunya ada, seluruh field yang memengaruhi harga terkunci; `catatan_kondisi` dan `estimasi_selesai` tetap dapat diedit selama `DITERIMA`. Sejak `DIPROSES`, seluruh field operasional transaksi terkunci permanen bagi semua peran; satu-satunya pengecualian adalah pengisian email notifikasi FR-C04 sebelum `SIAP_DIAMBIL`. Pemulihan kesalahan: batalkan + buat transaksi baru (Bagian 7.6); tidak ada buka-kunci atau pembatalan catatan pembayaran. | M2 |
 | FR-A17 | Tombol "Ingatkan pelanggan" pada transaksi Siap Diambil untuk mengirim ulang notifikasi secara manual (email dan/atau link `wa.me`). | M3 |
 | FR-A18 | Menerapkan **maksimal satu promo** dan/atau **maksimal satu penukaran stempel** pada transaksi, dengan perhitungan otomatis sesuai Bagian 7.2. | M4 |
 
@@ -193,8 +193,8 @@ Catatan: seluruh kemampuan admin di bawah ini juga dimiliki owner untuk semua ca
 | FR-O10 | Riwayat transaksi semua cabang miliknya dengan filter: cabang, rentang tanggal, status transaksi, status bayar (`BELUM_BAYAR`/`DP`/`LUNAS`). | M5 |
 | FR-O11 | Laporan pendapatan: total pendapatan dengan filter waktu (hari ini, 7 hari terakhir, bulan ini, rentang tanggal bebas) dan per cabang. Definisi pendapatan lihat Bagian 7.5. | M5 |
 | FR-O12 | Daftar tagihan berjalan: transaksi aktif berstatus `BELUM_BAYAR` atau `DP` beserta sisa tagihannya dan totalnya. | M5 |
-| FR-O13 | Dashboard owner: ringkasan harian lintas cabang — jumlah transaksi & total kg masuk hari ini, pendapatan hari ini, jumlah "Siap Diambil" yang menumpuk lebih dari X hari, total sisa tagihan berjalan. Disajikan sebagai kartu angka besar (Bagian 12.2). | M5 |
-| FR-O14 | Pengaturan perilaku notifikasi: aktif/nonaktif pengingat otomatis; jeda hari pertama, interval ulang, batas maksimum pengiriman; **saklar WA per jenis peristiwa** (mis. WA hanya untuk "Siap Diambil", pengingat cukup email); **batas maksimum pesan WA per bulan**; serta tampilan penghitung pesan WA terkirim bulan berjalan. Owner tidak pernah melihat token/konfigurasi teknis. | M3 |
+| FR-O13 | Dashboard owner: ringkasan harian lintas cabang — jumlah transaksi & total kg masuk hari ini, pendapatan hari ini, jumlah `SIAP_DIAMBIL` dengan `waktu_siap_diambil` berusia **≥ `business_settings.reminder_first_days` hari**, total sisa tagihan berjalan. Batas ini sama dengan usia pengingat pertama (default 2 hari), dihitung pada waktu dashboard dibuka; disajikan sebagai kartu angka besar (Bagian 12.2). | M5 |
+| FR-O14 | Pengaturan perilaku notifikasi: aktif/nonaktif pengingat otomatis; jeda hari pertama, interval ulang, batas maksimum pengiriman (masing-masing bilangan ≥1 saat pengingat aktif); **saklar WA per jenis peristiwa**; **batas maksimum pesan WA per bulan**; serta penghitung pesan WA terkirim bulan berjalan. Owner tidak pernah melihat token/konfigurasi teknis. | M3 |
 | FR-O15 | Grafik pendapatan per hari/bulan pada rentang yang dipilih. | M5 |
 | FR-O16 | Ekspor riwayat transaksi ke file CSV. | M5 |
 
@@ -206,7 +206,7 @@ Catatan: seluruh kemampuan admin di bawah ini juga dimiliki owner untuk semua ca
 | FR-D02 | Mendaftarkan bisnis laundry baru: nama bisnis + akun owner (nama, email, password awal) + tanggal masa aktif. Owner wajib mengganti password saat login pertama. | M1 |
 | FR-D03 | Mengubah masa aktif, menonaktifkan/mengaktifkan kembali bisnis, dan mereset password owner. | M1 |
 | FR-D04 | Panel developer menampilkan daftar semua bisnis: nama, status (aktif / masa tenggang / baca-saja / nonaktif / demo), masa aktif, jumlah cabang, dan jumlah transaksi 30 hari terakhir. Developer tidak dapat membuka data operasional (transaksi, pelanggan) milik bisnis. | M1 |
-| FR-D05 | Penegakan siklus masa aktif: (1) **7 hari sebelum habis** — banner peringatan untuk owner; (2) **masa tenggang 7 hari setelah habis** — seluruh fungsi tetap berjalan, banner peringatan mencolok untuk owner & admin; (3) **setelah tenggang — mode baca-saja**: owner/admin tetap bisa login dan melihat semua data (transaksi, laporan, pengaturan) tetapi seluruh aksi tulis dinonaktifkan (tidak bisa buat/ubah transaksi, catat pembayaran, ubah status, ubah pengaturan); notifikasi otomatis berhenti terkirim; link `wa.me` manual tetap boleh dipakai; banner berganti "Masa aktif habis — hubungi developer". Halaman publik cek status **tetap berfungsi selamanya**. | M1 |
+| FR-D05 | Penegakan siklus masa aktif: (1) **7 hari sebelum habis** — banner peringatan owner; (2) **tenggang 7 hari** — fungsi penuh dengan banner owner/admin; (3) **baca-saja** — owner/admin tetap bisa login dan membaca, seluruh tulis bisnis ditolak server; notifikasi otomatis berhenti; `wa.me` manual tetap dapat dibuka. Logout, ganti password awal, dan lupa/reset password tetap diizinkan sebagai operasi keamanan akun. `GET /t/{kode_resi}` tetap tersedia saat `BACA_SAJA`/`NONAKTIF`, tetapi POST email FR-C04 ditolak. | M1 |
 | FR-D06 | Halaman konfigurasi teknis per bisnis di panel developer: (a) WhatsApp — penyedia (adapter: Fonnte / Wablas / WhatsApp Business API resmi), token/kredensial, nomor pengirim resmi milik bisnis, saklar aktif global (default **nonaktif**); (b) Email — nama & alamat pengirim resmi bisnis; default memakai SMTP global aplikasi (dikelola developer), dengan kolom opsional SMTP milik bisnis sendiri. Seluruh konfigurasi teknis hanya terlihat & terubah oleh developer. | M3 |
 
 ### 5.E Mode Demo
@@ -224,23 +224,23 @@ Catatan: seluruh kemampuan admin di bawah ini juga dimiliki owner untuk semua ca
 
 | ID | Kebutuhan | Milestone |
 |---|---|---|
-| FR-L01 | Owner mengatur program stempel per bisnis: aktif/nonaktif, jumlah stempel yang dibutuhkan (N), jenis layanan yang digratiskan (satu layanan master satuan-kg), dan berat maksimal gratis (kg). Contoh: N=10, gratis "Cuci+Setrika" maksimal 3 kg. | M4 |
+| FR-L01 | Owner mengatur program stempel per bisnis: aktif/nonaktif, jumlah stempel yang dibutuhkan (N), jenis layanan yang digratiskan (satu layanan master satuan-kg), dan berat maksimal gratis (kg). Default row bisnis baru: nonaktif, N=10, layanan hadiah dan berat maks null. Saat diaktifkan wajib N≥1, layanan master satuan kg milik bisnis, dan berat maks >0; saat nonaktif konfigurasi hadiah boleh belum lengkap. | M4 |
 | FR-L02 | Perolehan stempel: setiap transaksi yang mencapai status bayar **`LUNAS`** dan tidak dibatalkan menambah 1 stempel ke pelanggan, berlaku lintas cabang dalam satu bisnis. Pembatalan transaksi yang sudah memberi stempel mencabut stempel tersebut. | M4 |
 | FR-L03 | Penukaran stempel: jika stempel pelanggan ≥ N, saat membuat transaksi sistem menawarkan penukaran (maksimal satu penukaran per transaksi). Penukaran memotong harga item layanan yang ditentukan owner sebesar `harga × min(berat, berat_maks_gratis)`; kelebihan berat di atas batas tetap dibayar pelanggan; sisa kuota di bawah batas tidak disimpan. Penukaran mengurangi stempel pelanggan sebanyak N, dan transaksi penukaran **tidak** menambah stempel baru. | M4 |
-| FR-L04 | Riwayat stempel per pelanggan (perolehan, penukaran, pencabutan; transaksi terkait; waktu) dapat dilihat admin dan owner. | M4 |
-| FR-P01 | Owner membuat/mengubah/menonaktifkan promo: nama, tipe potongan (persen dari total atau nominal Rp), nilai, minimal total transaksi (opsional), periode berlaku (tanggal mulai–selesai), berlaku di semua atau sebagian cabang. | M4 |
+| FR-L04 | Riwayat stempel append-only per pelanggan (`perolehan`, `penukaran`, `pengembalian_penukaran`, `pencabutan_perolehan`; transaksi terkait; waktu) dapat dilihat admin/owner. `jumlah` menyimpan delta stempel aktual bertanda saat event (+1, −N saat penukaran, +N saat pengembalian, −1 saat pencabutan); saldo sumber kebenaran = `SUM(jumlah)`, tidak dihitung ulang memakai N terkini. `customers.stamp_count` hanya cache saldo ledger. | M4 |
+| FR-P01 | Owner membuat/mengubah/menonaktifkan promo: nama, tipe potongan (persen dari `promo_eligible_base` atau nominal Rp), nilai, `minimal_total` opsional yang dibandingkan dengan `promo_eligible_base`, periode berlaku, dan cakupan cabang. Basis tersebut = subtotal − potongan stempel (Bagian 7.2). | M4 |
 | FR-P02 | Saat membuat transaksi, admin dapat memilih **maksimal satu** promo dari daftar promo yang sedang aktif & berlaku di cabangnya. Sistem memvalidasi periode dan minimal transaksi. Tidak ada potongan bebas di luar promo. | M4 |
-| FR-P03 | Nama dan nilai promo yang dipakai disalin (snapshot) ke transaksi, sehingga perubahan/penghapusan promo tidak mengubah transaksi lama. | M4 |
+| FR-P03 | Nama, tipe, nilai, dan hasil potongan promo yang dipakai disalin (snapshot) ke transaksi, sehingga perubahan/penonaktifan promo tidak mengubah transaksi lama. | M4 |
 
 ### 5.G Notifikasi
 
 | ID | Kebutuhan | Milestone |
 |---|---|---|
-| FR-N01 | Saat status berubah menjadi "Siap Diambil", sistem otomatis mengirim **email** ke pelanggan (jika email tersedia) berisi info laundry, kode resi, total akhir, sisa tagihan (bila belum lunas), dan link cek status. Dikirim satu kali per transaksi. | M3 |
+| FR-N01 | Saat status berubah menjadi "Siap Diambil", sistem otomatis mengirim **email** ke `transactions.notification_email` (jika tersedia) berisi info laundry, kode resi, total akhir, sisa tagihan (bila belum lunas), dan link cek status. Dikirim satu kali per transaksi per kanal. | M3 |
 | FR-N02 | Pengingat otomatis: jika transaksi masih "Siap Diambil" setelah N hari (default 2), kirim pengingat; ulangi setiap M hari (default 2) hingga maksimum K kali (default 3). Nilai N, M, K diatur owner (FR-O14). | M3 |
 | FR-N03 | Notifikasi **WhatsApp otomatis** melalui lapisan adapter multi-penyedia (Fonnte / Wablas / WhatsApp Business API) memakai kredensial & nomor pengirim milik masing-masing bisnis (dikonfigurasi developer, FR-D06). Default nonaktif. Aplikasi harus berfungsi 100% tanpa WA API (email + `wa.me` manual adalah fondasi). | M3 |
 | FR-N04 | Pengendalian biaya WA: (a) saklar per jenis peristiwa (FR-O14) menentukan peristiwa mana yang memakai WA; (b) **batas bulanan** — jika jumlah pesan WA bulan berjalan mencapai batas yang diatur owner, pengiriman WA berikutnya otomatis jatuh ke email saja dan hal ini dicatat di log; (c) penghitung pesan WA bulan berjalan ditampilkan ke owner. | M3 |
-| FR-N05 | Semua pengiriman notifikasi dicatat dalam log (kanal, tujuan, tipe, waktu, berhasil/gagal/dilewati-karena-batas) dan dapat dilihat di detail transaksi. | M3 |
+| FR-N05 | Semua upaya notifikasi dicatat dalam `notification_logs` (kanal, tujuan, tipe, nomor pengingat bila otomatis, waktu, status). Pembukaan `wa.me` manual berstatus `dibuka_manual` dan tidak dianggap berhasil terkirim; log otomatis per kanal menjadi sumber idempotensi. Log terlihat di detail transaksi. | M3 |
 | FR-N06 | Kegagalan kirim notifikasi tidak boleh menggagalkan perubahan status: pengiriman dilakukan asinkron lewat antrean (queue) berbasis database + penjadwal (cron) harian untuk pengingat. Tidak dibutuhkan Redis atau perangkat lunak tambahan. | M3 |
 
 ### 5.H Resi & Kode Transaksi
@@ -286,36 +286,38 @@ Aturan: status tidak boleh melompat mundur; setiap perubahan dicatat di riwayat 
 
 ### 7.1 Perhitungan subtotal item
 
-1. Item satuan **kg**: `harga_per_kg × berat_kg`. Jika layanan punya berat minimum dan berat aktual di bawahnya, subtotal dihitung memakai berat minimum. Berat dicatat sampai 1 angka desimal (contoh: 3,5 kg).
+1. Item satuan **kg**: `harga_per_kg × berat_kg`. Jika layanan punya berat minimum dan berat aktual di bawahnya, subtotal dihitung memakai berat minimum. Berat dicatat sampai 1 angka desimal (contoh: 3,5 kg); hasil pecahan rupiah dibulatkan ke rupiah terdekat (0,5 ke atas) per item sebelum dijumlah.
 2. Item satuan **item**: `harga_per_item × jumlah`.
 3. Satu transaksi/resi boleh berisi lebih dari satu jenis layanan.
 4. Semua harga dalam Rupiah, bilangan bulat, tanpa pajak (harga sudah final).
-5. Harga yang dipakai adalah harga layanan cabang **pada saat transaksi dibuat** — nama & harga disalin (snapshot) ke item transaksi, sehingga perubahan harga (termasuk pembaruan dari master) tidak mengubah transaksi lama.
+5. Nama, satuan, dan harga layanan cabang disalin ke item transaksi saat dibuat. `transaction_items.subtotal` menyimpan hasil final termasuk berat minimum yang berlaku saat itu; perubahan master/layanan kemudian tidak mengubah tampilan maupun hitungan transaksi lama.
 
 ### 7.2 Urutan perhitungan potongan & total akhir
 
 ```
 subtotal          = jumlah semua subtotal item
 potongan_stempel  = harga layanan gratis × min(berat item, berat_maks_gratis)   [jika ditukar]
-potongan_promo    = persen × (subtotal − potongan_stempel), atau nominal tetap  [jika promo dipilih]
+promo_eligible_base = subtotal − potongan_stempel
+potongan_promo    = persen × promo_eligible_base, atau min(nilai_nominal, promo_eligible_base) [jika promo sah]
 total_akhir       = subtotal − potongan_stempel − potongan_promo   (minimal 0)
 ```
 
-Potongan persen dibulatkan ke rupiah terdekat. Nilai yang ditagih adalah `total_akhir`.
+Urutan validasi: hitung subtotal dan potongan stempel (maksimal nilai item hadiah), tentukan `promo_eligible_base`, lalu uji status/periode/cabang promo dan `promo_eligible_base >= minimal_total` bila minimum diisi. Baru hitung potongan promo. Potongan stempel dan persen dibulatkan ke rupiah terdekat (0,5 ke atas) dan dibatasi masing-masing pada nilai item hadiah dan `promo_eligible_base`. Nilai yang ditagih adalah `total_akhir ≥ 0`; `promo_eligible_base` merupakan nilai turunan, bukan kolom wajib.
 
 ### 7.3 Estimasi selesai
 
-`estimasi_selesai = waktu_masuk + durasi_terlama` di antara semua layanan dalam transaksi (durasi diatur owner per layanan). Admin dapat mengubah estimasi secara manual bila perlu (mis. antrean penuh) — otomatis sebagai default, dapat dikoreksi manual. Transaksi yang melewati estimasi tanpa mencapai "Siap Diambil" masuk daftar "Terlambat" (FR-A11).
+`estimasi_selesai = waktu_masuk + durasi_terlama` di antara semua layanan dalam transaksi (durasi diatur owner per layanan). Admin dapat mengubah estimasi secara manual **selama `DITERIMA`** bila perlu (mis. antrean penuh); sejak `DIPROSES` estimasi terkunci. Transaksi yang melewati estimasi tanpa mencapai "Siap Diambil" masuk daftar "Terlambat" (FR-A11).
 
 ### 7.4 Aturan pembayaran & uang muka (DP)
 
 1. Pembayaran dicatat sebagai daftar catatan pembayaran per transaksi (jumlah, metode tunai/transfer, waktu, pencatat). Satu transaksi bisa punya beberapa catatan (mis. DP saat masuk + pelunasan saat ambil).
-2. Status bayar diturunkan otomatis dari total terbayar: `BELUM_BAYAR` (Rp0) → `DP` (0 < terbayar < total akhir) → `LUNAS` (terbayar = total akhir). Total terbayar tidak boleh melebihi total akhir.
+2. Status bayar diturunkan otomatis: bila `total_akhir = 0`, `LUNAS` tanpa baris pembayaran Rp0; bila total akhir > 0 dan terbayar = 0, `BELUM_BAYAR`; bila 0 < terbayar < total akhir, `DP`; bila terbayar = total akhir, `LUNAS`. Total terbayar tidak boleh melebihi total akhir dan baris pembayaran harus > 0.
 3. DP hanya bisa dicatat jika saklar "Terima uang muka" bisnis aktif (FR-O07). Mematikan saklar hanya memengaruhi transaksi baru; transaksi ber-DP yang berjalan tetap bisa dilunasi.
 4. **Bisnis tidak menerima hutang:** pelunasan wajib tercatat paling lambat saat pengambilan; transaksi `SUDAH_DIAMBIL` selalu `LUNAS`.
 5. Catatan pembayaran bersifat permanen — tidak dapat diubah atau dihapus. Kesalahan pencatatan dipulihkan lewat aturan Bagian 7.6.
 6. Resi, halaman status, dan notifikasi menampilkan jumlah terbayar dan sisa tagihan bila belum lunas.
-7. Stempel loyalti diberikan pada saat transaksi mencapai `LUNAS` (FR-L02).
+7. Stempel loyalti diberikan pada saat transaksi mencapai `LUNAS` (FR-L02), termasuk transaksi Rp0 tanpa pembayaran, kecuali transaksi yang memakai penukaran stempel.
+8. Pencatatan pembayaran wajib atomik: kunci baris transaksi (`SELECT ... FOR UPDATE`), hitung ulang total pembayaran dan sisa, validasi nominal, sisipkan pembayaran, turunkan status bayar, proses stempel, lalu commit. Dua pembayaran paralel tidak boleh bersama-sama melampaui sisa.
 
 ### 7.5 Definisi pendapatan (untuk laporan)
 
@@ -325,7 +327,9 @@ Potongan persen dibulatkan ke rupiah terdekat. Nilai yang ditagih adalah `total_
 
 ### 7.6 Aturan pemulihan kesalahan (final)
 
-Transaksi terkunci sejak `DIPROSES` dan catatan pembayaran bersifat permanen — **bagi semua peran, termasuk owner**. Jika terjadi kesalahan input (salah timbang, salah catat bayar, salah pilih layanan) yang ketahuan setelah terkunci, jalur resminya satu-satunya: **batalkan transaksi (wajib alasan) → buat transaksi baru yang benar**. Pembatalan mengeluarkan transaksi lama dari pendapatan dan mencabut stempelnya; jejak audit tetap utuh. Jangan membangun fitur buka-kunci, edit paksa, atau pembatalan catatan pembayaran.
+Selama `DITERIMA`, edit field harga hanya boleh sebelum ada pembayaran **dan** sebelum ada penukaran stempel; pemeriksaan ini dilakukan ulang secara atomik saat menyimpan. Catatan kondisi dan estimasi selesai dapat diubah selama `DITERIMA`. Seluruh field operasional terkunci sejak `DIPROSES` dan pembayaran permanen bagi semua peran; pembaruan `notification_email` melalui FR-C04 adalah perubahan preferensi notifikasi yang sempit, bukan izin mengedit transaksi operasional, dan hanya sampai sebelum `SIAP_DIAMBIL` saat tenant dapat menulis. Kesalahan setelah kunci harga/status dipulihkan hanya lewat **batalkan (wajib alasan) → buat transaksi baru**. Pembatalan mengeluarkan pembayaran dari laporan, menambah `pengembalian_penukaran` sebesar stempel yang dahulu ditukar, dan/atau `pencabutan_perolehan` untuk stempel yang pernah diperoleh; entry lama tetap ada. Jika pencabutan perolehan lama membuat saldo di bawah nol karena stempel sudah dipakai pada transaksi lain, saldo bertanda tetap dicatat dan penukaran baru ditolak sampai saldo cukup. Jangan membangun buka-kunci atau pembatalan pembayaran.
+
+Penukaran stempel memakai transaksi DB dan lock baris customer (`SELECT ... FOR UPDATE`), memeriksa saldo ledger/cache sesudah lock, lalu menulis delta negatif aktual yang berlaku saat itu. Dua penukaran paralel tidak boleh sama-sama membelanjakan saldo yang sama.
 
 ### 7.7 Aturan resi terpisah
 
@@ -356,6 +360,9 @@ Ketentuan teknis:
 - Pembagian tanggung jawab konfigurasi: **developer memegang yang teknis** (penyedia WA, token, nomor pengirim, email pengirim, SMTP — FR-D06); **owner memegang yang perilaku** (pengingat, saklar per peristiwa, batas WA bulanan — FR-O14).
 - Nomor HP disimpan dalam format internasional (mis. `62812xxxxxxx`) agar kompatibel dengan `wa.me` dan API WhatsApp.
 - Di mode demo, seluruh pengiriman ditekan — hanya dicatat di log (FR-M04). Di mode baca-saja, notifikasi otomatis berhenti (FR-D05).
+- Email tujuan setiap transaksi berasal dari `transactions.notification_email`: disalin dari `customers.email` saat transaksi dibuat; form FR-C04 memperbarui email transaksi itu dan email customer secara atomik. Perubahan customer pada masa depan tidak mengubah snapshot transaksi lama.
+- Setiap notifikasi otomatis memiliki identitas logis per transaksi, tipe, kanal, dan nomor pengingat (untuk `SIAP_DIAMBIL` gunakan nomor 0). `notification_logs` menjadi penjaga idempotensi per kanal; retry memakai identitas yang sama. Pembukaan `wa.me` manual hanya dicatat `dibuka_manual`, bukan `berhasil`; status sukses WA otomatis hanya dari respons penyedia.
+- Di mode baca-saja, link `wa.me` manual masih dapat dibuka dari data yang sudah tampil, tetapi tidak membuat log baru; pengiriman ulang email manual adalah tulis bisnis dan ditolak. Pada mode tulis, pembukaan `wa.me` dicatat mulai M3 ketika `notification_logs` tersedia.
 
 ---
 
@@ -367,17 +374,18 @@ Ini gambaran entitas utama — detail kolom final ditentukan saat implementasi, 
 - **users** — nama, email, password (hash), peran (`developer` / `owner` / `admin`), bisnis (kecuali developer), cabang penugasan (khusus admin), status aktif, penanda wajib ganti password.
 - **branches** — bisnis, nama tempat, alamat, no. telepon, status aktif.
 - **master_services** — bisnis; nama, satuan (`kg`/`item`), harga, durasi (jam), berat minimum (opsional), status aktif.
-- **services** — cabang; atribut sama dengan master; diisi manual atau lewat mekanisme salin/sebarkan dari master (FR-O05).
+- **services** — bisnis dan cabang; atribut sama dengan master; diisi manual atau lewat mekanisme salin/sebarkan dari master (FR-O05).
 - **customers** — bisnis, nama, no. HP (unik per bisnis), email (opsional), jumlah stempel. Berlaku lintas cabang dalam satu bisnis.
-- **transactions** — kode resi (unik global), cabang, pelanggan, pembuat, status, waktu masuk, estimasi selesai, waktu siap diambil, waktu diambil, subtotal, potongan stempel, promo terpakai (referensi + snapshot nama & nilai), potongan promo, total akhir, status bayar turunan (`BELUM_BAYAR`/`DP`/`LUNAS`), catatan kondisi, alasan pembatalan.
-- **payments** — transaksi, jumlah, metode (`tunai`/`transfer`), waktu, pencatat. Tidak dapat diubah/dihapus.
-- **transaction_items** — transaksi, layanan, nama & harga satuan tersimpan (snapshot), berat kg / jumlah unit, perkiraan jumlah baju (opsional), penanda item gratis-stempel, subtotal.
+- **transactions** — bisnis, kode resi (unik global), cabang, pelanggan, pembuat, `notification_email` snapshot, status, waktu masuk, estimasi selesai, waktu siap/diambil, subtotal, potongan stempel, promo terpakai (referensi + snapshot nama/tipe/nilai), potongan promo, total akhir, status bayar turunan, catatan kondisi, alasan pembatalan.
+- **payments** — bisnis, transaksi, jumlah, metode (`tunai`/`transfer`), waktu, pencatat. Tidak dapat diubah/dihapus.
+- **transaction_items** — transaksi, layanan, nama/satuan/harga snapshot, berat kg / jumlah unit, perkiraan jumlah baju (opsional), penanda item gratis-stempel, subtotal final. Tenant diturunkan dari transaksi.
 - **promos** — bisnis, nama, tipe (`persen`/`nominal`), nilai, minimal total (opsional), tanggal mulai, tanggal selesai, cabang berlaku (semua/sebagian), status aktif.
 - **loyalty_settings** — bisnis, aktif/nonaktif, N stempel, layanan gratis (referensi ke layanan master), berat maksimal gratis.
-- **loyalty_histories** — pelanggan, jenis (`perolehan`/`penukaran`/`pencabutan`), jumlah stempel, transaksi terkait, waktu.
-- **status_histories** — transaksi, status, waktu, pengguna pengubah.
-- **notification_logs** — transaksi, kanal (`email`/`whatsapp`), tipe (`siap_diambil`/`pengingat`), tujuan, status kirim (`berhasil`/`gagal`/`dilewati_batas`/`ditekan_demo`), waktu. Penghitung WA bulanan dihitung dari log ini.
-- **settings** — pengaturan perilaku per bisnis: saklar DP, konfigurasi pengingat (N/M/K), saklar WA per peristiwa, batas WA bulanan.
+- **loyalty_histories** — bisnis, pelanggan, jenis empat peristiwa FR-L04, delta stempel aktual bertanda, transaksi terkait, waktu.
+- **status_histories** — bisnis, transaksi, status, waktu, pengguna pengubah.
+- **notification_logs** — bisnis, transaksi, kanal (`email`/`whatsapp`/`whatsapp_manual`), tipe (`siap_diambil`/`pengingat`/`resi`), nomor pengingat/identitas logis, tujuan, status kirim termasuk `dibuka_manual`, waktu. Penghitung WA bulanan hanya dari WA otomatis yang `berhasil`.
+- **business_settings** — pengaturan perilaku per bisnis: saklar DP, konfigurasi pengingat (N/M/K), saklar WA per peristiwa, batas WA bulanan.
+- **audit_logs** — bisnis (nullable hanya untuk aksi developer tanpa tenant tertentu), pelaku, aksi, detail, waktu; aksi berisiko tetap berjejak.
 
 ---
 
@@ -427,7 +435,7 @@ Semua milestone wajib diselesaikan; label ini hanya menentukan urutan pembanguna
 |---|---|---|
 | **M1 — Fondasi & Tenant** | Struktur multi-tenant, autentikasi semua peran, panel developer, siklus masa aktif (peringatan → tenggang → baca-saja), cabang, admin, layanan master + layanan cabang + mekanisme salin/sebarkan | FR-A01, FR-O01–O05, FR-D01–D05 |
 | **M2 — Operasional Inti** | Pelanggan, transaksi, perhitungan harga, siklus status, pembayaran + DP, aturan kunci & pemulihan, resi + QR + cetak, halaman publik, dashboard admin (termasuk daftar menumpuk & terlambat) | FR-C01–C03, C05–C06, FR-A02–A16, FR-O06–O07, FR-R01–R04 |
-| **M3 — Notifikasi** | Email siap-diambil, pengingat terjadwal, `wa.me` manual, adapter WA + saklar per peristiwa + batas bulanan, log, konfigurasi teknis developer, pengaturan perilaku owner | FR-C04, FR-A17, FR-O14, FR-D06, FR-N01–N06 |
+| **M3 — Notifikasi** | Email siap-diambil, pengingat terjadwal, pencatatan pembukaan `wa.me` manual (tautan resi sudah tersedia M2), adapter WA + saklar per peristiwa + batas bulanan, log, konfigurasi teknis developer, pengaturan perilaku owner | FR-C04, FR-A17, FR-O14, FR-D06, FR-N01–N06 |
 | **M4 — Loyalti & Promo** | Program stempel, promo, penerapan pada transaksi & resi | FR-C07, FR-A18, FR-O08–O09, FR-L01–L04, FR-P01–P03 |
 | **M5 — Laporan Owner** | Riwayat, pendapatan berbasis pembayaran, tagihan berjalan, dashboard & ringkasan harian, grafik, ekspor CSV | FR-O10–O13, FR-O15–O16 |
 | **M6 — Mode Demo & PWA** | Pembuatan demo otomatis, data contoh, banner & ganti peran, penekanan notifikasi, pembersihan terjadwal, rate limit; PWA ringan | FR-M01–M06, FR-W01–W02 |
@@ -456,13 +464,13 @@ Fitur berikut **sengaja tidak dibangun**. Jangan mengimplementasikan, menyiapkan
 ## 15. Keputusan yang Sudah Ditetapkan
 
 1. Aplikasi **multi-tenant**: banyak bisnis laundry dalam satu aplikasi; hanya developer yang bisa mendaftarkan bisnis baru; masa aktif diatur manual oleh developer; pembayaran langganan terjadi di luar aplikasi.
-2. Siklus masa aktif: peringatan 7 hari sebelum habis → tenggang 7 hari (fungsi penuh) → **mode baca-saja** (login & lihat boleh, aksi tulis diblokir, notifikasi otomatis berhenti, `wa.me` manual tetap boleh). Halaman publik cek status berfungsi selamanya.
+2. Siklus masa aktif: peringatan 7 hari sebelum habis → tenggang 7 hari (fungsi penuh) → **mode baca-saja** (login & lihat boleh, tulis bisnis diblokir, operasi keamanan akun tetap boleh, notifikasi otomatis berhenti, `wa.me` manual tetap boleh). Halaman publik status tetap dapat dibaca saat bisnis baca-saja/nonaktif, tetapi form tulis email ditolak.
 3. Pelanggan **tidak memiliki akun** — identitasnya nama + no. HP yang dicatat admin; no. HP unik per bisnis; nama boleh kembar; transaksi terikat ke ID internal pelanggan sehingga penggantian no. HP tidak memutus riwayat.
 4. Satu admin ditugaskan ke tepat satu cabang; satu cabang boleh punya banyak admin; owner juga memegang seluruh fungsi operasional di semua cabangnya.
 5. Layanan dikelola lewat **Layanan Master** tingkat bisnis + layanan per cabang; sinkronisasi memakai aturan timpa-berdasarkan-nama dengan pratinjau; layanan khusus cabang tidak disentuh; harga antarcabang boleh berbeda.
 6. Pembayaran dicatat **manual** (tunai/transfer) sebagai daftar catatan pembayaran permanen; **DP didukung dan bisa dimatikan owner**; bisnis tidak menerima hutang — cucian hanya diserahkan setelah lunas.
 7. Pendapatan dihitung **berbasis pembayaran yang diterima** (tanggal bayar), bukan per transaksi; pembayaran transaksi batal dikeluarkan dari laporan.
-8. Transaksi terkunci sejak `DIPROSES` — **permanen untuk semua peran**; pemulihan kesalahan hanya lewat batalkan + buat ulang.
+8. Edit harga transaksi `DITERIMA` hanya sebelum pembayaran/penukaran; edit catatan/estimasi masih boleh saat `DITERIMA`. Field operasional terkunci sejak `DIPROSES` untuk semua peran, dengan pengecualian email notifikasi FR-C04 sebelum siap diambil; pemulihan kesalahan lewat batalkan + buat ulang.
 9. Estimasi selesai dihitung otomatis dari durasi layanan terlama, dapat dikoreksi manual oleh admin; layanan express hanyalah jenis layanan berdurasi pendek berharga lebih tinggi.
 10. Loyalti memakai model **stempel**: 1 stempel per transaksi `LUNAS`; hadiah 1x layanan gratis berbatas berat maksimal; kelebihan berat dibayar; sisa kuota hangus; transaksi penukaran tidak menambah stempel; maksimal satu penukaran per transaksi.
 11. Diskon hanya lewat **promo yang dibuat owner** — admin tidak bisa memberi potongan bebas; maksimal satu promo per transaksi; promo dan harga di-snapshot ke transaksi.
@@ -480,15 +488,19 @@ Fitur berikut **sengaja tidak dibangun**. Jangan mengimplementasikan, menyiapkan
 1. **Cek status:** memasukkan kode resi valid menampilkan halaman status lengkap dalam < 3 detik; kode tidak valid menampilkan pesan "tidak ditemukan" tanpa informasi lain; scan QR pada resi langsung membuka halaman status transaksi tersebut.
 2. **Perhitungan harga:** transaksi berisi "Cuci+Setrika 3,5 kg @Rp7.000" dan "Bed Cover 2 item @Rp25.000" menghasilkan subtotal Rp24.500 dan Rp50.000 dengan total Rp74.500; berat 2 kg pada layanan berminimal 3 kg dihitung sebagai 3 kg.
 3. **DP:** pada transaksi bertotal Rp74.500, DP Rp30.000 saat masuk membuat status bayar `DP` dan sisa Rp44.500 tampil di resi, halaman status, dan notifikasi; pelunasan Rp44.500 saat pengambilan mengubah status ke `LUNAS` dan membuka izin "Sudah Diambil"; jika DP diterima bulan Juli dan pelunasan bulan Agustus, laporan Juli mencatat Rp30.000 dan Agustus Rp44.500; mencatat pembayaran melebihi sisa tagihan ditolak; saat saklar DP dimatikan, transaksi baru tidak bisa dicatat DP tetapi transaksi ber-DP lama tetap bisa dilunasi.
-4. **Kunci permanen:** transaksi berstatus `DIPROSES` tidak dapat diedit oleh admin maupun owner, dan tidak ada catatan pembayaran yang bisa diubah/dihapus; jalur batalkan + buat ulang berfungsi dan mengeluarkan transaksi batal dari pendapatan.
+4. **Kunci permanen:** pada `DITERIMA` tanpa pembayaran/penukaran, item dan promo boleh diedit. Begitu ada salah satunya, edit harga ditolak, termasuk contoh total awal Rp100.000, pembayaran Rp80.000, lalu upaya menurunkan total ke Rp60.000; catatan/estimasi masih dapat diedit. Sejak `DIPROSES`, semua edit ditolak; pembayaran tidak bisa diubah/dihapus; batalkan + buat ulang mengeluarkan transaksi batal dari pendapatan.
 5. **Layanan master:** cabang dengan harga lokal berbeda pada layanan bernama sama akan mengikuti harga master setelah "Salin/Perbarui dari Master", dengan pratinjau tampil sebelum eksekusi; layanan khusus cabang tetap utuh; transaksi lama tidak berubah.
-6. **Stempel:** dengan pengaturan N=10 dan gratis "Cuci+Setrika maks 3 kg" @Rp7.000 — pelanggan bersaldo 10 stempel yang membawa 5 kg mendapat potongan Rp21.000 dan membayar sisanya; stempelnya berkurang 10; transaksi penukaran tidak menambah stempel baru; pelanggan yang membawa 2 kg mendapat potongan Rp14.000 dan sisa kuota hangus.
-7. **Promo:** promo persen yang diterapkan bersama penukaran stempel dihitung dari total **setelah** potongan stempel; promo kedaluwarsa atau di bawah minimal transaksi tidak dapat dipilih.
-8. **Notifikasi & batas WA:** perubahan ke "Siap Diambil" mengirim tepat satu email (dan satu WA bila saklar peristiwa aktif); dengan batas WA bulanan 100, peristiwa ke-101 terkirim email saja dan log mencatat `dilewati_batas`; pengingat berjalan sesuai N/M/K dan berhenti setelah diambil.
-9. **Masa aktif & baca-saja:** 7 hari sebelum habis banner muncul; selama tenggang semua fungsi berjalan; setelah tenggang, login tetap bisa, semua tombol aksi tulis nonaktif/ditolak server, notifikasi otomatis berhenti, dan halaman `/t/{kode_resi}` tetap terbuka.
-10. **Isolasi:** owner/admin bisnis A tidak dapat melihat/mengubah data bisnis B, dan admin cabang X tidak dapat melihat/mengubah transaksi cabang Y, termasuk lewat manipulasi URL atau parameter.
+6. **Stempel:** dengan N=10 dan hadiah "Cuci+Setrika maks 3 kg" @Rp7.000, pelanggan bersaldo 10 membawa 5 kg mendapat potongan Rp21.000, membayar sisa, dan ledger mencatat −10; transaksi penukaran tidak menambah stempel. Saat transaksi ditukar dibatalkan, ledger menambah +10 tanpa menghapus entry −10. Saldo = `SUM(jumlah)`, termasuk setelah N diubah; dua penukaran paralel tidak menghabiskan saldo dua kali.
+7. **Promo:** `minimal_total` diuji terhadap subtotal setelah potongan stempel; promo persen dan nominal dihitung dari basis yang sama, nominal dibatasi basis, total tidak negatif. Promo kedaluwarsa/di luar cabang/di bawah minimum ditolak; snapshot nama/tipe/nilai dan hasil potongan tetap utuh setelah master berubah.
+8. **Notifikasi & batas WA:** tiap peristiwa otomatis dibedakan per kanal dan nomor pengingat; retry tidak mengirim ulang kanal yang sudah berhasil. Dengan batas WA bulanan 100, peristiwa ke-101 email saja dan WA tercatat `dilewati_batas`. `wa.me` manual tercatat `dibuka_manual`, bukan sukses terkirim.
+9. **Masa aktif & baca-saja:** setelah tenggang, login dan ganti/reset password tetap dapat dilakukan; tulis bisnis ditolak server, notifikasi otomatis berhenti; `GET /t/{kode_resi}` tetap terbuka pada tenant baca-saja/nonaktif, sedangkan POST email ditolak.
+10. **Isolasi:** owner/admin bisnis A tidak dapat melihat/mengubah data bisnis B, dan admin cabang 1 tidak dapat melihat/mengubah transaksi cabang 2, termasuk lewat manipulasi URL atau parameter.
 11. **Demo:** klik "Coba Demo" menghasilkan lingkungan demo lengkap dan langsung masuk sebagai owner; tombol ganti peran berfungsi; tidak ada email/WA nyata terkirim; demo terhapus otomatis setelah 7 hari; pembuatan demo dari IP yang sama dibatasi.
 12. **Resi & PWA:** hasil cetak thermal 58 mm terbaca rapi dengan QR terpindai dan mencantumkan DP/sisa bila ada; aplikasi bisa di-install ke home screen; setelah deploy, pengguna otomatis mendapat aset terbaru.
+13. **Total Rp0 & pembayaran paralel:** total akhir Rp0 langsung `LUNAS` tanpa payment Rp0; dua pembayaran bersamaan terhadap sisa Rp50.000 tidak boleh menghasilkan total terbayar Rp100.000.
+14. **Email transaksi:** email customer pada saat pembuatan disalin ke transaksi; pengisian dari halaman status memperbarui snapshot transaksi itu dan customer; perubahan customer sesudahnya tidak mengubah snapshot transaksi lama atau tujuan notifikasinya.
+15. **Integritas tenant & dashboard:** bisnis pada transaksi, cabang, customer, layanan, pembayaran, status, notifikasi, dan ledger harus cocok; owner/admin tidak dapat keluar dari bisnis/cabang. Kartu menumpuk menghitung `SIAP_DIAMBIL` berumur ≥ `reminder_first_days` hari (default 2).
+16. **Gabung pelanggan & default loyalti:** gabung sumber→tujuan mempertahankan nama/no. HP/email tujuan dan menghitung ulang saldo dari history gabungan. Bisnis baru memiliki satu pengaturan loyalti nonaktif dengan N=10 dan hadiah kosong; aktivasi tanpa layanan kg serta berat maks positif ditolak.
 
 ## 17. Glosarium
 
@@ -497,7 +509,7 @@ Fitur berikut **sengaja tidak dibangun**. Jangan mengimplementasikan, menyiapkan
 | Tenant / bisnis | Satu bisnis laundry beserta seluruh datanya, terisolasi dari bisnis lain |
 | Masa aktif | Batas tanggal berlakunya akses sebuah bisnis, diatur manual oleh developer |
 | Masa tenggang | 7 hari setelah masa aktif habis; fungsi masih penuh dengan banner peringatan |
-| Mode baca-saja | Kondisi setelah tenggang habis: login & melihat boleh, seluruh aksi tulis diblokir |
+| Mode baca-saja | Kondisi setelah tenggang habis: login & melihat boleh, tulis bisnis diblokir; operasi keamanan akun tetap tersedia |
 | Kode resi | Kode unik 6 karakter per transaksi untuk cek status, tercetak di resi |
 | Resi | Struk bukti penerimaan cucian |
 | DP / uang muka | Pembayaran sebagian di awal; status bayar `DP` hingga dilunasi |

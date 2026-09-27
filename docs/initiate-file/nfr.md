@@ -25,27 +25,32 @@
 | SEC-05 | **[Uji]** Otorisasi berbasis Policy untuk setiap resource; akses lintas peran ditolak (mis. admin membuka route owner → 403). |
 | SEC-06 | **[Uji]** Data pelanggan pada halaman publik selalu tersamar (FR-C06); respons `/t/{kode}` tidak memuat email, no. HP utuh, atau ID internal. |
 | SEC-07 | Aksi berisiko (gabung pelanggan, sinkronisasi master, perubahan masa aktif, reset password, pembatalan transaksi) tercatat di `audit_logs` beserta pelakunya. |
-| SEC-08 | Mode baca-saja ditegakkan di server (metode tulis → 423) — bukan hanya penonaktifan tombol di UI. **[Uji]** |
+| SEC-08 | **[Uji]** Mode baca-saja menolak seluruh tulis bisnis tenant di server dengan 423, termasuk POST email publik FR-C04; GET status publik tetap tersedia. Logout, ganti password awal, dan alur lupa/reset password tetap diizinkan sebagai operasi keamanan akun. Bisnis `NONAKTIF` juga menolak POST email publik walau GET status tersedia. |
 
 ## 3. Isolasi Multi-Tenant (ISO) — paling kritis
 
 | ID | Kebutuhan |
 |---|---|
-| ISO-01 | **[Uji]** Setiap model operasional memakai global scope `business_id`; test otomatis membuktikan user bisnis A memperoleh 404/daftar-kosong untuk seluruh resource bisnis B (transaksi, pelanggan, laporan, pengaturan, ekspor). |
-| ISO-02 | **[Uji]** Admin cabang X memperoleh 404/daftar-kosong untuk data cabang Y pada bisnis yang sama. |
-| ISO-03 | **[Uji]** Developer tidak dapat membaca data operasional bisnis mana pun (transaksi, pelanggan, pembayaran) melalui route/kueri apa pun. |
+| ISO-01 | **[Uji]** Model dengan kolom `business_id` langsung memakai `BelongsToBusiness`; child tanpa kolom tersebut hanya diakses melalui parent terscope. User bisnis A memperoleh 404/daftar-kosong untuk resource bisnis B (transaksi, pelanggan, laporan, pengaturan, ekspor). |
+| ISO-02 | **[Uji]** Admin cabang 1 memperoleh 404/daftar-kosong untuk data cabang 2 pada bisnis yang sama, termasuk child transaksi dan tindakan tulis; owner hanya pada `business_id` miliknya. |
+| ISO-03 | **[Uji]** Developer tidak dapat membuka/mencari transaksi, pelanggan, pembayaran, atau detail operasional bisnis mana pun. Pengecualian hanya endpoint statistik agregat tenant yang eksplisit pada FR-D04: jumlah cabang dan jumlah transaksi 30 hari; respons hanya angka tanpa ID/baris individual. |
 | ISO-04 | Akses lintas tenant merespons **404**, bukan 403, agar keberadaan data tidak bocor. |
 | ISO-05 | Ekspor CSV, pencarian, dan pembuat laporan tunduk pada scope yang sama (tidak ada jalur pintas kueri mentah tanpa filter tenant). |
+| ISO-06 | **[Uji]** `services.business_id = branches.business_id`; `transactions.business_id = branches.business_id = customers.business_id`; `payments`, `status_histories`, `notification_logs`, `loyalty_histories` cocok dengan tenant parent. FK komposit dan service menolak ID lintas tenant; `users.branch_id`, pivot promo, dan hadiah loyalti juga divalidasi tenant/cabang. Tenant tidak diambil dari URL/input pengguna. |
 
 ## 4. Keandalan & Integritas (AND)
 
 | ID | Kebutuhan |
 |---|---|
 | AND-01 | Operasi tulis multi-langkah (buat transaksi+item+pembayaran, pembatalan, penggabungan pelanggan, sinkronisasi master, penukaran stempel) dibungkus transaksi database — sukses seluruhnya atau gagal seluruhnya. |
-| AND-02 | **[Uji]** Invarian data: kumulatif `payments` ≤ `total_akhir`; `status_bayar` selalu konsisten dengan pembayaran; `stamp_count` selalu = penjumlahan `loyalty_histories`. |
+| AND-02 | **[Uji]** Invarian: kumulatif `payments` ≤ `total_akhir`; untuk total Rp0 status `LUNAS` tanpa payment Rp0, selebihnya `BELUM_BAYAR`/`DP`/`LUNAS` sesuai jumlah bayar; `customers.stamp_count = SUM(loyalty_histories.jumlah)` termasuk kompensasi pembatalan dan merge. |
 | AND-03 | Job notifikasi dicoba ulang maksimal 3 kali dengan backoff; kegagalan akhir tercatat (`notification_logs` = `gagal`, baris `failed_jobs` tersimpan) tanpa memengaruhi alur utama. |
-| AND-04 | Perintah terjadwal (pengingat, pembersihan demo) bersifat idempoten — dijalankan dua kali tidak mengirim/menghapus ganda. |
+| AND-04 | **[Uji]** Pengingat memakai key unik (`transaction_id`, tipe, kanal, nomor pengingat); scheduler/job/retry berulang tidak menggandakan kanal yang sukses. Pembersihan demo idempoten. Hasil penyedia yang tidak pasti tidak diulang buta tanpa dukungan idempotensi penyedia. |
 | AND-05 | **[Ops]** Backup otomatis harian database + penyimpanan minimal 7 hari; prosedur pemulihan terdokumentasi. |
+| AND-06 | **[Uji]** Dua pembayaran paralel pada sisa sama memakai lock transaksi: hanya pembayaran yang muat pada sisa berhasil, tak ada overpay, status bayar tetap benar; edit harga `DITERIMA` bersamaan dengan pembayaran juga tidak merusak total. |
+| AND-07 | **[Uji]** Dua penukaran paralel memakai lock customer: saldo dicek setelah lock; hanya penukaran yang cukup saldo berhasil dan penukaran tidak membuat saldo negatif. Pembatalan mengembalikan jumlah stempel aktual tanpa memakai N terkini. |
+| AND-08 | **[Uji]** Snapshot item (nama/satuan/harga/subtotal final), promo (nama/tipe/nilai/potongan), dan email transaksi tetap stabil setelah master/customer berubah. Promo minimum dihitung atas `subtotal - potongan_stempel`; nominal dibatasi basis dan total ≥ 0. |
+| AND-09 | **[Uji]** Edit harga hanya untuk `DITERIMA` tanpa payment/penukaran; catatan kondisi/estimasi boleh berubah pada `DITERIMA`; sejak `DIPROSES` semua edit operasional ditolak. Pengecualian FR-C04 hanya mengubah email notifikasi sebelum `SIAP_DIAMBIL` pada tenant yang dapat menulis. Pembatalan dan merge tidak menghapus entry ledger dan menjaga delta historis. |
 
 ## 5. Usabilitas & Aksesibilitas (UX)
 
@@ -88,14 +93,14 @@
 | ID | Kebutuhan |
 |---|---|
 | OBS-01 | Log aplikasi terstruktur (per hari) untuk error & peristiwa penting; `failed_jobs` dapat dipantau developer. |
-| OBS-02 | Seluruh pengiriman notifikasi terekam di `notification_logs` dan terlihat di detail transaksi (FR-N05); penghitung WA bulanan owner bersumber dari log ini. |
+| OBS-02 | Seluruh upaya notifikasi terekam di `notification_logs` dan terlihat di detail transaksi (FR-N05); penghitung WA bulanan owner hanya dari kanal `whatsapp` API berstatus `berhasil`. Pembukaan `wa.me` memakai `whatsapp_manual`/`dibuka_manual` dan tidak dihitung terkirim. |
 | OBS-03 | Kesalahan server memberi halaman error ramah kepada pengguna; detail teknis hanya masuk log. |
 
 ## 10. Data, Retensi & Kapasitas (DAT)
 
 | ID | Kebutuhan |
 |---|---|
-| DAT-01 | `payments`, `status_histories`, `loyalty_histories`, dan `audit_logs` bersifat tambah-saja dan tidak pernah dihapus selama bisnis ada (kecuali pembersihan tenant demo). |
+| DAT-01 | `payments`, `status_histories`, `loyalty_histories`, dan `audit_logs` bersifat tambah-saja dan tidak pernah dihapus selama bisnis ada (kecuali pembersihan tenant demo); master yang dipakai transaksi dinonaktifkan dan snapshot histori dipertahankan. |
 | DAT-02 | Data tenant demo terhapus tuntas ≤ 7 hari setelah dibuat (FR-M05) — mencakup seluruh tabel terkait. |
 | DAT-03 | `notification_logs` disimpan minimal 12 bulan. |
 | DAT-04 | Asumsi kapasitas desain (bukan batas keras): hingga ±200 bisnis aktif, ±50.000 transaksi/bulan agregat, berjalan nyaman pada satu VPS (2–4 vCPU, 4–8 GB RAM). Desain kueri & indeks mengacu pada angka ini. |

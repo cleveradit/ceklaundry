@@ -17,6 +17,7 @@ Sebagai pengguna ber-akun (developer/owner/admin), saya ingin masuk dengan email
 2. **Given** akun berpenanda `must_change_password`, **When** login berhasil, **Then** pengguna dipaksa ke halaman ganti password dan tidak bisa membuka halaman lain sebelum menggantinya.
 3. **Given** akun dinonaktifkan (`is_active = false`) atau bisnisnya dinonaktifkan developer, **When** login, **Then** akses ditolak dengan pesan yang jelas.
 4. **Given** pengguna lupa password, **When** meminta reset via email, **Then** tautan reset terkirim dan dapat dipakai sekali.
+5. **Given** bisnis `BACA_SAJA` dan owner harus mengganti password awal, **When** mengirim perubahan password, **Then** perubahan keamanan akun berhasil sementara operasi bisnis tetap ditolak 423; logout dan lupa/reset password juga tetap tersedia.
 
 ### US-102 — Developer mendaftarkan bisnis baru
 FR: FR-D02 · M1
@@ -25,6 +26,7 @@ Sebagai developer, saya ingin mendaftarkan bisnis laundry baru beserta akun owne
 
 1. **Given** form bisnis baru terisi (nama bisnis, nama/email/password awal owner, masa aktif), **When** disimpan, **Then** tercipta satu `business`, satu user `owner` berpenanda wajib ganti password, satu baris `business_settings` dan `loyalty_settings` default.
 2. **Given** email owner sudah dipakai user lain, **When** disimpan, **Then** ditolak dengan pesan validasi.
+3. **Given** bisnis baru tercipta, **When** pengaturan loyalti dibaca, **Then** satu row berisi `is_active=false`, `stempel_dibutuhkan=10`, `master_service_id=null`, dan `berat_maks_gratis=null`.
 
 ### US-103 — Developer mengelola masa aktif & daftar bisnis
 FR: FR-D03, FR-D04 · M1
@@ -33,6 +35,7 @@ Sebagai developer, saya ingin melihat semua bisnis beserta statusnya dan menguba
 
 1. **Given** panel developer dibuka, **When** melihat daftar bisnis, **Then** tampil nama, status (aktif/tenggang/baca-saja/nonaktif/demo), masa aktif, jumlah cabang, dan jumlah transaksi 30 hari terakhir — tanpa akses ke data transaksi/pelanggan mana pun.
 2. **Given** sebuah bisnis, **When** developer mengubah `active_until`, menonaktifkan/mengaktifkan, atau mereset password owner, **Then** perubahan berlaku seketika dan tercatat di `audit_logs`.
+3. **Given** developer membuka angka transaksi 30 hari/cabang, **When** meminta detail, pencarian, pelanggan, atau pembayaran bisnis, **Then** akses ditolak; API statistik hanya mengembalikan angka agregat tanpa ID/baris operasional.
 
 ### US-104 — Siklus masa aktif: peringatan → tenggang → baca-saja
 FR: FR-D05 · M1
@@ -41,9 +44,10 @@ Sebagai owner, saya ingin diberi peringatan bertahap saat masa aktif menipis, ag
 
 1. **Given** masa aktif habis ≤ 7 hari lagi, **When** owner membuka panel, **Then** banner peringatan tampil.
 2. **Given** masa aktif habis < 7 hari yang lalu (tenggang), **When** owner/admin bekerja, **Then** seluruh fungsi berjalan normal dengan banner mencolok.
-3. **Given** tenggang telah lewat (baca-saja), **When** owner/admin login, **Then** login berhasil, semua data terbaca, namun setiap request tulis (POST/PUT/PATCH/DELETE selain logout) ditolak server dengan status 423 dan tombol aksi di UI nonaktif.
+3. **Given** tenggang telah lewat (baca-saja), **When** owner/admin login, **Then** login berhasil dan data terbaca, tetapi setiap tulis bisnis ditolak server 423 dan tombol bisnis nonaktif; logout, ganti password awal, serta lupa/reset password tetap bekerja.
 4. **Given** bisnis dalam mode baca-saja, **When** penjadwal notifikasi berjalan, **Then** tidak ada notifikasi otomatis terkirim untuk bisnis itu.
 5. **Given** bisnis dalam mode baca-saja atau nonaktif, **When** pelanggan membuka `/t/{kode_resi}` transaksinya, **Then** halaman status tetap tampil normal.
+6. **Given** bisnis `BACA_SAJA` atau `NONAKTIF`, **When** pelanggan membuka status, **Then** form email tidak tersedia; POST perubahan email langsung ditolak server tanpa mengubah transaksi/customer.
 
 ### US-105 — Owner mengelola cabang
 FR: FR-O02 · M1
@@ -79,7 +83,7 @@ Sebagai owner, saya ingin menyalin/memperbarui layanan cabang dari master dengan
 1. **Given** cabang tanpa layanan, **When** "Salin/Perbarui dari Master" dijalankan, **Then** seluruh layanan master aktif tersalin ke cabang.
 2. **Given** cabang memiliki layanan bernama sama dengan master namun harga berbeda, **When** sinkronisasi dijalankan, **Then** layanan cabang itu ditimpa mengikuti master (harga, durasi, berat minimum, satuan).
 3. **Given** cabang memiliki layanan khusus yang tidak ada di master, **When** sinkronisasi dijalankan, **Then** layanan khusus itu tidak disentuh.
-4. **Given** sinkronisasi akan dijalankan, **When** owner menekan tombolnya, **Then** pratinjau tampil lebih dulu ("X diperbarui, Y ditambahkan") dan eksekusi butuh konfirmasi.
+4. **Given** sinkronisasi akan memperbarui 5 layanan dan menambah 2 layanan, **When** owner menekan tombolnya, **Then** pratinjau "5 diperbarui, 2 ditambahkan" tampil lebih dulu dan eksekusi butuh konfirmasi.
 5. **Given** halaman master, **When** owner memakai "Sebarkan ke Cabang" dengan mencentang beberapa cabang, **Then** aturan 1–4 berlaku untuk setiap cabang tercentang.
 6. **Given** transaksi lama dengan harga snapshot, **When** sinkronisasi mengubah harga cabang, **Then** transaksi lama tidak berubah.
 
@@ -89,8 +93,9 @@ FR: Bagian 3.2 `prd.md`; NFR-ISO · M1
 Sebagai pemilik data, saya ingin data bisnis dan cabang terisolasi mutlak, agar tidak ada kebocoran antarbisnis.
 
 1. **Given** user bisnis A, **When** mengakses URL/ID resource milik bisnis B (transaksi, pelanggan, laporan, pengaturan), **Then** respons 404 — bukan 403 — tanpa membocorkan keberadaan data.
-2. **Given** admin cabang X, **When** mengakses transaksi/dashboard cabang Y bisnis yang sama, **Then** respons 404/daftar kosong.
+2. **Given** admin cabang 1, **When** mengakses transaksi/dashboard cabang 2 bisnis yang sama, **Then** respons 404/daftar kosong.
 3. **Given** developer, **When** mencoba membuka data transaksi/pelanggan bisnis mana pun, **Then** akses ditolak oleh policy.
+4. **Given** record transaksi/layanan/pembayaran/status/notifikasi/loyalti baru, **When** service menyimpannya, **Then** `business_id` harus cocok dengan parent, cabang, dan customer; ID lintas bisnis ditolak meski dikirim langsung ke API.
 
 ---
 
@@ -120,11 +125,12 @@ FR: FR-A02, FR-A03, FR-A04; aturan 7.1 & 7.7 · M2
 Sebagai admin, saya ingin mencatat cucian masuk beserta layanannya dalam waktu kurang dari satu menit, agar antrean pelanggan cepat terlayani.
 
 1. **Given** pelanggan lama, **When** admin mengetik no. HP/nama, **Then** data pelanggan ditemukan tanpa input ulang; **Given** pelanggan baru, **Then** cukup nama + no. HP (email opsional).
-2. **Given** item "Cuci+Setrika 3,5 kg @Rp7.000" dan "Bed Cover 2 item @Rp25.000", **When** transaksi disimpan, **Then** subtotal Rp24.500 dan Rp50.000, total Rp74.500, dan nama+harga layanan ter-snapshot pada item.
+2. **Given** item "Cuci+Setrika 3,5 kg @Rp7.000" dan "Bed Cover 2 item @Rp25.000", **When** transaksi disimpan, **Then** subtotal Rp24.500 dan Rp50.000, total Rp74.500, dan nama+satuan+harga layanan serta subtotal final ter-snapshot pada item.
 3. **Given** layanan berberat minimum 3 kg, **When** berat diisi 2 kg, **Then** subtotal dihitung memakai 3 kg.
 4. **Given** kolom catatan kondisi diisi "noda di kerah", **When** disimpan, **Then** catatan tampil di resi dan halaman status.
 5. **Given** transaksi tersimpan, **When** kode resi dibuat, **Then** kode 6 karakter tanpa O/0/I/1/L dan unik global.
 6. **Given** pelanggan membawa cucian express dan reguler yang ingin diambil terpisah, **When** admin mencatat, **Then** dicatat sebagai dua resi terpisah (panduan 7.7 tampil sebagai petunjuk di form).
+7. **Given** customer memiliki email saat transaksi dibuat, **When** transaksi disimpan, **Then** email itu disalin ke `transactions.notification_email`; perubahan email customer di kemudian hari tidak mengubah transaksi lama.
 
 ### US-204 — Estimasi selesai otomatis
 FR: aturan 7.3 · M2
@@ -132,7 +138,7 @@ FR: aturan 7.3 · M2
 Sebagai admin, saya ingin estimasi selesai terisi otomatis namun bisa dikoreksi, agar akurat tanpa menghitung manual.
 
 1. **Given** transaksi berisi layanan berdurasi 48 jam dan 6 jam, **When** disimpan pukul 08.00, **Then** estimasi = waktu masuk + 48 jam.
-2. **Given** antrean sedang penuh, **When** admin mengubah estimasi manual, **Then** nilai manual yang berlaku dan tampil di resi/halaman status.
+2. **Given** antrean sedang penuh dan transaksi masih `DITERIMA`, **When** admin mengubah estimasi manual, **Then** nilai manual berlaku di resi/halaman status; sejak `DIPROSES` perubahan estimasi ditolak.
 
 ### US-205 — Memperbarui status cucian
 FR: FR-A05; Bagian 6 · M2
@@ -153,6 +159,8 @@ Sebagai admin, saya ingin mencatat pembayaran penuh maupun DP sebagai catatan pe
 3. **Given** sisa tagihan Rp44.500, **When** admin mencoba mencatat Rp50.000, **Then** ditolak (melebihi sisa).
 4. **Given** saklar DP dimatikan owner, **When** admin membuat transaksi baru, **Then** pilihan pembayaran hanya lunas penuh atau belum bayar; **Given** transaksi ber-DP lama, **Then** tetap bisa dilunasi.
 5. **Given** catatan pembayaran tersimpan, **When** siapa pun mencoba mengubah/menghapusnya, **Then** tidak ada jalur untuk itu (tidak ada endpoint).
+6. **Given** total akhir Rp0, **When** transaksi dibuat atau dihitung ulang sebelum terkunci, **Then** `status_bayar=LUNAS`, tidak ada baris pembayaran Rp0, dan penyerahan saat siap diambil diizinkan.
+7. **Given** sisa Rp50.000, **When** dua request masing-masing Rp50.000 datang bersamaan, **Then** hanya satu berhasil; total pembayaran tetap ≤ total akhir dan status bayar konsisten.
 
 ### US-207 — Larangan penyerahan sebelum lunas
 FR: FR-A07 · M2
@@ -167,12 +175,15 @@ FR: FR-A15, FR-A16; aturan 7.6 · M2
 
 Sebagai owner, saya ingin transaksi terkunci sejak diproses dan kesalahan dipulihkan lewat pembatalan berjejak, agar tidak ada manipulasi data.
 
-1. **Given** transaksi `DITERIMA`, **When** admin mengedit item/berat/catatan, **Then** diperbolehkan dan total dihitung ulang.
-2. **Given** transaksi `DIPROSES` atau setelahnya, **When** admin **atau owner** mencoba mengedit, **Then** ditolak — tidak ada fitur buka-kunci.
-3. **Given** salah timbang ketahuan saat `DIPROSES`, **When** admin membatalkan (dengan alasan) lalu membuat transaksi baru yang benar, **Then** transaksi lama keluar dari pendapatan, pembayarannya dikecualikan dari laporan, stempelnya (bila ada) dicabut, dan transaksi baru berjalan normal.
+1. **Given** transaksi `DITERIMA` tanpa pembayaran dan tanpa penukaran, **When** admin mengedit item/berat/jumlah/promo, **Then** diperbolehkan dan total serta status bayar dihitung ulang.
+2. **Given** transaksi `DITERIMA` sudah dibayar Rp80.000 dari total Rp100.000, **When** admin/owner mencoba mengubah item sehingga total Rp60.000, **Then** perubahan ditolak dan tidak terjadi overpay.
+3. **Given** transaksi `DITERIMA` sudah menukar stempel, **When** admin/owner mencoba mengubah item, berat, jumlah, promo, atau penukaran, **Then** perubahan ditolak.
+4. **Given** transaksi `DITERIMA` sudah dibayar atau menukar stempel, **When** catatan kondisi/estimasi selesai diubah, **Then** perubahan berhasil tanpa mengubah angka keuangan.
+5. **Given** transaksi `DIPROSES` atau setelahnya, **When** admin **atau owner** mencoba mengedit field operasional, **Then** ditolak — tidak ada fitur buka-kunci; hanya form email FR-C04 sebelum `SIAP_DIAMBIL` yang boleh memperbarui tujuan notifikasi.
+6. **Given** salah timbang ketahuan saat `DIPROSES`, **When** admin membatalkan (dengan alasan) lalu membuat transaksi baru yang benar, **Then** transaksi lama keluar dari pendapatan, pembayarannya dikecualikan dari laporan, dan transaksi baru berjalan normal; kompensasi stempel saat program M4 tersedia diuji di US-402.
 
 ### US-209 — Resi, QR, dan cetak thermal
-FR: FR-A08, FR-R01–R04 · M2
+FR: FR-A08, FR-R01, FR-R02, FR-R03, FR-R04 · M2
 
 Sebagai admin, saya ingin mencetak resi 58 mm ber-QR, agar pelanggan bisa cek status dengan sekali scan.
 
@@ -193,7 +204,7 @@ FR: FR-A10, FR-A11 · M2
 Sebagai admin, saya ingin melihat pekerjaan hari ini, cucian menumpuk, dan yang terlambat dalam satu layar, agar tahu prioritas.
 
 1. **Given** dashboard dibuka, **When** data tampil, **Then** ada: transaksi hari ini, transaksi aktif per status, daftar "Siap Diambil — belum diambil" terurut umur menunggu (hari), dan daftar "Terlambat" (melewati estimasi, belum siap).
-2. **Given** admin cabang X, **When** dashboard tampil, **Then** hanya data cabang X.
+2. **Given** admin cabang 1, **When** dashboard tampil, **Then** hanya data cabang 1.
 
 ### US-212 — Pencarian transaksi
 FR: FR-A12 · M2
@@ -216,7 +227,7 @@ FR: FR-A14 · M2
 
 Sebagai admin, saya ingin menggabungkan pelanggan ganda, agar stempel dan riwayat tidak terpecah.
 
-1. **Given** pelanggan sumber & tujuan dipilih, **When** penggabungan dikonfirmasi, **Then** seluruh transaksi dan stempel pindah ke tujuan, data sumber terhapus, dan aksi tercatat di `audit_logs`.
+1. **Given** pelanggan sumber & tujuan satu bisnis dipilih, **When** penggabungan dikonfirmasi, **Then** seluruh transaksi dan ledger stempel sumber pindah ke tujuan, nama/no. HP/email tujuan dipertahankan, saldo tujuan dihitung ulang sebagai `SUM(jumlah)` gabungan, sumber dihapus, dan aksi tercatat di `audit_logs`.
 2. **Given** dialog penggabungan, **When** belum dikonfirmasi eksplisit, **Then** tidak ada perubahan data.
 
 ### US-215 — Owner mengerjakan operasional lintas cabang
@@ -236,8 +247,8 @@ FR: FR-N01 · M3
 
 Sebagai pelanggan, saya ingin diberi tahu lewat email saat cucian selesai, agar tidak datang sia-sia.
 
-1. **Given** transaksi berpelanggan ber-email, **When** status menjadi `SIAP_DIAMBIL`, **Then** tepat satu email terkirim (info laundry, kode, total, sisa tagihan bila ada, link status) dan `notified_ready_at` terisi.
-2. **Given** status diubah bolak-balik oleh sistem/ulang render, **When** peristiwa terpicu lagi, **Then** email tidak terkirim dua kali.
+1. **Given** `notification_email` transaksi terisi, **When** status menjadi `SIAP_DIAMBIL`, **Then** tepat satu email untuk identitas logis (`transaction_id`, `siap_diambil`, `email`, 0) dikirim berisi info laundry, kode, total, sisa bila ada, dan link status.
+2. **Given** job diulang atau render diulang, **When** peristiwa yang sama diproses, **Then** kanal dengan log berhasil tidak dikirim dua kali; hasil email tidak menentukan hasil WA.
 3. **Given** pelanggan tanpa email, **When** status menjadi `SIAP_DIAMBIL`, **Then** tidak ada email dan tidak ada error.
 
 ### US-302 — Pengingat otomatis cucian belum diambil
@@ -249,14 +260,18 @@ Sebagai owner, saya ingin pelanggan diingatkan berkala, agar cucian selesai tida
 2. **Given** pengingat sudah 3 kali, **When** penjadwal berjalan lagi, **Then** tidak ada pengingat tambahan.
 3. **Given** transaksi diambil (`SUDAH_DIAMBIL`), **When** penjadwal berjalan, **Then** transaksi itu tidak menerima pengingat.
 4. **Given** owner mengubah N/M/K, **When** penjadwal berjalan, **Then** aturan baru dipakai.
+5. **Given** satu nomor pengingat jatuh tempo, **When** scheduler/job dipicu ulang, **Then** email dan WA masing-masing memakai identitas logis sendiri dengan nomor tersebut; nomor berikutnya baru dijadwalkan sesuai interval dan batas K.
 
 ### US-303 — Pelanggan mendaftarkan email dari halaman status
 FR: FR-C04 · M3
 
 Sebagai pelanggan, saya ingin memasukkan email saya di halaman status, agar dapat kabar saat cucian selesai.
 
-1. **Given** transaksi belum `SIAP_DIAMBIL` dan pelanggan belum ber-email, **When** email valid dikirim lewat form, **Then** email tersimpan ke transaksi & data pelanggan dan dipakai pada US-301.
+1. **Given** transaksi belum `SIAP_DIAMBIL` pada bisnis aktif/tenggang, **When** email valid dikirim lewat form, **Then** `transactions.notification_email` dan `customers.email` berubah atomik; US-301 menggunakan snapshot transaksi tersebut.
 2. **Given** format email tidak valid, **When** dikirim, **Then** ditolak dengan pesan validasi.
+3. **Given** email customer berubah kemudian melalui panel, **When** transaksi lama diberi notifikasi, **Then** tujuan tetap `notification_email` transaksi lama.
+4. **Given** bisnis `BACA_SAJA`/`NONAKTIF`, **When** pelanggan membuka status atau mengirim POST langsung, **Then** halaman status tetap tersedia, form email tidak tersedia, dan POST ditolak server.
+5. **Given** transaksi `DIPROSES` tetapi belum `SIAP_DIAMBIL` pada tenant aktif, **When** pelanggan mengisi email, **Then** hanya tujuan notifikasi transaksi dan email customer berubah; item, total, pembayaran, status, dan catatan tetap terkunci.
 
 ### US-304 — Ingatkan pelanggan secara manual
 FR: FR-A17 · M3
@@ -264,6 +279,7 @@ FR: FR-A17 · M3
 Sebagai admin, saya ingin tombol pengingat manual, agar bisa menindak cucian menumpuk kapan saja.
 
 1. **Given** transaksi `SIAP_DIAMBIL`, **When** "Ingatkan pelanggan" ditekan, **Then** email pengingat terkirim ulang (bila ber-email) dan/atau `wa.me` terbuka berisi teks pengingat; aksi tercatat di log notifikasi.
+2. **Given** `wa.me` manual dibuka tetapi pengguna membatalkan pengiriman, **When** log diperiksa, **Then** status hanya `dibuka_manual`, bukan `berhasil`; penghitungan batas WA otomatis tidak berubah.
 
 ### US-305 — Konfigurasi teknis per bisnis (developer)
 FR: FR-D06 · M3
@@ -297,6 +313,9 @@ Sebagai admin, saya ingin melihat riwayat notifikasi per transaksi dan yakin keg
 
 1. **Given** detail transaksi dibuka, **When** melihat bagian notifikasi, **Then** tampil semua log (kanal, tipe, tujuan, status, waktu).
 2. **Given** penyedia WA/SMTP sedang gagal, **When** status diubah ke `SIAP_DIAMBIL`, **Then** perubahan status tetap sukses; job kirim dicoba ulang hingga 3 kali lalu tercatat `gagal`.
+3. **Given** email berhasil dan WA gagal untuk peristiwa sama, **When** WA dicoba ulang, **Then** email tidak terkirim ulang; setiap kanal memakai baris/logical key terpisah.
+4. **Given** hasil pengiriman ke penyedia tidak diketahui setelah timeout, **When** job diulang, **Then** idempotency key yang sama dipakai jika didukung penyedia; tanpa kepastian/idempotensi penyedia, status tetap perlu pemeriksaan dan job tidak mengirim buta sehingga duplikasi dihindari.
+5. **Given** admin membuka `wa.me` untuk resi atau pengingat, **When** log dicatat, **Then** kanal `whatsapp_manual`, tipe `resi`/`pengingat`, status `dibuka_manual`, dan tidak masuk hitungan WA API berhasil.
 
 ---
 
@@ -309,6 +328,7 @@ Sebagai owner, saya ingin mengatur program stempel, agar pelanggan terdorong kem
 
 1. **Given** form pengaturan (aktif, N, layanan gratis satuan-kg dari master, berat maks), **When** disimpan, **Then** program berlaku untuk seluruh cabang bisnis.
 2. **Given** program nonaktif, **When** transaksi berjalan, **Then** tidak ada perolehan/penawaran penukaran dan halaman status tidak menampilkan stempel.
+3. **Given** program nonaktif dengan layanan hadiah/berat maks kosong, **When** disimpan, **Then** valid; **When** diaktifkan tanpa N≥1, master layanan kg milik bisnis, dan berat maks >0, **Then** ditolak.
 
 ### US-402 — Perolehan & pencabutan stempel
 FR: FR-L02 · M4
@@ -318,6 +338,8 @@ Sebagai pelanggan, saya ingin stempel bertambah tiap transaksi lunas, agar hadia
 1. **Given** program aktif, **When** transaksi mencapai `LUNAS` (dan tidak dibatalkan), **Then** stempel pelanggan +1 dan `loyalty_histories` mencatat perolehan — berlaku lintas cabang.
 2. **Given** transaksi pemberi stempel dibatalkan, **When** pembatalan diproses, **Then** stempel tersebut dicabut dan tercatat.
 3. **Given** transaksi hasil penukaran, **When** mencapai `LUNAS`, **Then** **tidak** menambah stempel.
+4. **Given** transaksi penukaran N=10 dibatalkan setelah N berubah, **When** dibatalkan, **Then** entry `pengembalian_penukaran` bernilai +10 ditambah tanpa menghapus `penukaran` −10.
+5. **Given** transaksi pemberi stempel dibatalkan, **When** dibatalkan, **Then** entry `pencabutan_perolehan` bernilai −1 ditambah; pembatalan tidak menggandakan kompensasi.
 
 ### US-403 — Penukaran stempel
 FR: FR-L03, FR-A18 · M4
@@ -328,13 +350,14 @@ Sebagai pelanggan setia, saya ingin menukar stempel dengan cucian gratis berbata
 2. **Given** pelanggan yang sama membawa 2 kg, **When** ditukar, **Then** potongan Rp14.000 dan sisa kuota 1 kg hangus.
 3. **Given** stempel pelanggan < N, **When** transaksi dibuat, **Then** penawaran penukaran tidak muncul.
 4. **Given** satu transaksi, **When** admin mencoba menukar dua kali, **Then** ditolak (maksimal satu penukaran per transaksi).
+5. **Given** saldo 10 dan dua transaksi menukar masing-masing 10 bersamaan, **When** keduanya diproses, **Then** lock customer membuat hanya satu berhasil; penukaran tidak membuat saldo negatif.
 
 ### US-404 — Riwayat stempel
 FR: FR-L04 · M4
 
 Sebagai owner, saya ingin melihat riwayat stempel tiap pelanggan, agar program bisa diaudit.
 
-1. **Given** halaman pelanggan, **When** riwayat dibuka, **Then** tampil perolehan/penukaran/pencabutan beserta transaksi terkait dan waktunya, dan saldo = penjumlahan riwayat.
+1. **Given** halaman pelanggan, **When** riwayat dibuka, **Then** tampil `perolehan`, `penukaran`, `pengembalian_penukaran`, `pencabutan_perolehan` beserta delta bertanda, transaksi, waktu; saldo = `SUM(jumlah)` dan sama dengan cache `stamp_count`.
 
 ### US-405 — Stempel di halaman status
 FR: FR-C07 · M4
@@ -359,6 +382,7 @@ Sebagai admin, saya ingin memilih satu promo dari daftar yang sah, agar potongan
 2. **Given** promo kedaluwarsa, di luar cabang, atau minimal tak terpenuhi, **When** admin memilih promo, **Then** promo itu tidak tersedia/ditolak validasi.
 3. **Given** transaksi memakai penukaran stempel dan promo persen 10%, **When** total dihitung, **Then** persen diambil dari subtotal **setelah** potongan stempel, dibulatkan ke rupiah terdekat, dan total akhir tidak pernah negatif.
 4. **Given** promo diubah/dihapus owner, **When** transaksi lama dilihat, **Then** angka transaksi lama tidak berubah.
+5. **Given** subtotal Rp100.000, potongan stempel Rp20.000, dan `minimal_total` Rp90.000, **When** promo dipilih, **Then** ditolak karena `promo_eligible_base` Rp80.000. Pada minimum Rp80.000, promo 10% memberi Rp8.000 atau promo nominal Rp100.000 dibatasi Rp80.000; `total_akhir` tidak negatif.
 
 ---
 
@@ -392,7 +416,7 @@ FR: FR-O13 · M5
 
 Sebagai owner, saya ingin ringkasan harian lintas cabang dalam kartu angka besar, agar kondisi bisnis terbaca sekali pandang.
 
-1. **Given** dashboard dibuka, **When** data tampil, **Then** ada kartu: transaksi & total kg masuk hari ini, pendapatan hari ini, jumlah "Siap Diambil" menumpuk > X hari, total tagihan berjalan — mengikuti aturan desain `prd.md` 12.2.
+1. **Given** `reminder_first_days=2`, **When** dashboard dibuka, **Then** kartu menumpuk menghitung transaksi `SIAP_DIAMBIL` dengan `waktu_siap_diambil` berusia ≥ 2 hari tepat pada waktu query; kartu lain menampilkan transaksi & total kg masuk hari ini, pendapatan hari ini, serta tagihan berjalan.
 
 ### US-505 — Grafik pendapatan
 FR: FR-O15 · M5

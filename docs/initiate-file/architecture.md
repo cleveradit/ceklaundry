@@ -10,7 +10,7 @@ Aplikasi monolit Laravel dengan satu database MySQL, melayani banyak bisnis laun
 
 Prinsip yang wajib dipegang:
 
-1. **Isolasi tenant di lapisan data**, bukan hanya UI — semua model operasional memakai global scope `business_id` (Bagian 5).
+1. **Isolasi tenant di lapisan data**, bukan hanya UI — model dengan `business_id` langsung memakai scope tenant; child tanpa kolom itu wajib diakses melalui parent terscope (Bagian 5).
 2. **Aturan bisnis di lapisan service**, bukan di controller/komponen React — controller tipis, React hanya presentasi.
 3. **Server adalah penegak terakhir** — pembatasan (baca-saja, kunci transaksi, batas WA) selalu divalidasi di server; penonaktifan tombol di UI hanyalah kenyamanan.
 4. **Tanpa infrastruktur tambahan** — queue memakai driver database, penjadwal memakai cron; tidak ada Redis, tidak ada layanan pihak ketiga selain SMTP & penyedia WA.
@@ -38,7 +38,9 @@ Empat kelompok route dengan middleware berbeda:
 
 | Kelompok | Prefix | Middleware inti | Isi |
 |---|---|---|---|
-| Publik | `/` | `throttle:status-check` untuk pengecekan kode | Halaman depan (FR-C01), `/t/{kode_resi}` (FR-C02), form email (FR-C04), tombol Coba Demo (FR-M01) |
+| Publik baca | `/`, `GET /t/{kode_resi}` | `throttle:status-check` untuk pengecekan kode | Halaman depan dan status tetap tersedia meski tenant baca-saja/nonaktif |
+| Publik tulis | POST email halaman status | `throttle`, resolusi transaksi dari kode, `lifecycle:public-write` | FR-C04; server menolak saat tenant `BACA_SAJA`/`NONAKTIF` |
+| Publik demo | POST Coba Demo | rate limit demo | FR-M01, membuat tenant demo baru |
 | Panel Admin | `/app` | `auth`, `role:admin,owner`, `tenant`, `lifecycle` | Dashboard, transaksi, pelanggan, resi |
 | Panel Owner | `/owner` | `auth`, `role:owner`, `tenant`, `lifecycle` | Laporan, cabang, admin, layanan master, promo, stempel, pengaturan perilaku |
 | Panel Developer | `/dev` | `auth`, `role:developer` | Daftar bisnis, masa aktif, konfigurasi teknis |
@@ -49,16 +51,19 @@ Owner mengakses fungsi operasional lewat kelompok `/app` juga (FR-O06) dengan pe
 
 - Satu tabel `users` dengan kolom `role` (`developer` / `owner` / `admin`). Email unik global.
 - Kolom `must_change_password` memaksa penggantian password saat login pertama (FR-D02, FR-O01).
-- Otorisasi memakai Laravel Policy per model; aturan kunci: admin dibatasi `branch_id`-nya, owner dibatasi `business_id`-nya, developer tidak punya akses ke model operasional (transaksi, pelanggan, pembayaran) sama sekali — policy developer hanya mengizinkan model administratif (FR-D04).
+- Otorisasi memakai Laravel Policy per model; admin dibatasi `branch_id`, owner dibatasi `business_id`. Developer tidak memiliki route/policy untuk membaca baris transaksi, pelanggan, pembayaran, atau detail operasional; endpoint daftar bisnis hanya boleh mengembalikan angka agregat jumlah cabang dan transaksi 30 hari (FR-D04), tanpa ID/baris individual.
 
 ## 5. Multi-Tenancy
 
-- Semua model operasional memakai trait `BelongsToBusiness` yang: (a) menambahkan global scope `where business_id = tenant aktif`, (b) mengisi `business_id` otomatis saat membuat record.
-- Tenant aktif ditentukan dari user yang login (`$user->business_id`). Tidak ada penentuan tenant dari subdomain/URL.
-- Model per-cabang (transaksi, layanan cabang) juga difilter `branch_id` untuk peran admin melalui policy + query scope `ForUserBranch`.
+- `BelongsToBusiness` dipakai pada `BusinessSetting`, `Branch`, `MasterService`, `Service`, `Customer`, `Transaction`, `Payment`, `Promo`, `LoyaltySetting`, `LoyaltyHistory`, `StatusHistory`, dan `NotificationLog`; semua tabelnya mempunyai `business_id` langsung. Trait menerapkan `where business_id = tenant aktif` dan mengisi tenant saat create. `User` owner/admin dibatasi bisnis melalui autentikasi/policy; `AuditLog` memakai filter bisnis eksplisit karena aksi developer lintas tenant boleh `business_id=null`. `Business` adalah tenant root.
+- `TransactionItem` mengambil tenant hanya dari `Transaction` parent; `PromoBranch` dari `Promo`/`Branch` parent. Tidak boleh ada query child bebas tanpa join/parent yang sudah terscope.
+- Tenant aktif hanya dari user login (`$user->business_id`), bukan parameter URL/input. Untuk job, tenant berasal dari baris parent yang tersimpan dan diverifikasi ulang; untuk halaman publik hanya dari transaksi yang ditemukan melalui kode resi global.
+- Pengecualian internal yang terpercaya: `DemoProvisioner` dan service pendaftaran bisnis developer membuat `Business` dulu, lalu mengisi `business_id` anak dari ID bisnis **yang baru dibuat** secara eksplisit dengan bypass scope terbatas di service tersebut. Statistik FR-D04 memakai kueri agregat internal. Route publik mencari transaksi hanya lewat kode resi global, kemudian memakai `business_id`/`customer_id` dari baris transaksi tersimpan untuk menulis FR-C04; POST tidak menerima `business_id`/`customer_id` dari form. Bypass ini tidak tersedia pada controller operasional umum.
+- `Service` dan `Transaction` juga difilter `branch_id` untuk admin memakai `ForUserBranch`; `TransactionItem`, `Payment`, `StatusHistory`, dan `NotificationLog` mengikuti cabang transaksi parent. Customer dan ledger lintas cabang dalam bisnis hanya diakses dalam konteks operasi/cabang yang diizinkan; owner bebas seluruh cabangnya.
+- Saat menulis, service memverifikasi kesamaan tenant pada cabang, layanan, customer, transaksi, promo, payment, status, notifikasi, dan ledger; FK komposit yang tersedia menguatkan relasi ini (lihat skema). Admin tidak boleh menyisipkan `branch_id` lain.
 - Route model binding wajib melewati scope ini — pengambilan record via ID milik bisnis lain menghasilkan 404, bukan 403 (tidak membocorkan keberadaan data).
 - Halaman publik `/t/{kode}` adalah satu-satunya jalur tanpa tenant: pencarian berdasarkan `kode_resi` unik global, hanya menampilkan data yang ditentukan FR-C03 dengan penyamaran FR-C06.
-- **Pengujian isolasi wajib** (NFR): test otomatis yang memastikan user bisnis A mendapat 404/kosong untuk seluruh resource bisnis B, dan admin cabang X untuk data cabang Y.
+- **Pengujian isolasi wajib** (NFR): test otomatis yang memastikan user bisnis A mendapat 404/kosong untuk seluruh resource bisnis B, dan admin cabang 1 untuk data cabang 2.
 
 ## 6. Siklus Hidup Bisnis (Masa Aktif) — FR-D05
 
@@ -76,8 +81,8 @@ Middleware `lifecycle`:
 
 - `AKTIF` dalam 7 hari sebelum `active_until` → kirim flag banner peringatan ke Inertia (shared props).
 - `TENGGANG` → semua fungsi berjalan + flag banner mencolok.
-- `BACA_SAJA` → request `GET`/`HEAD` diizinkan; metode tulis (`POST`/`PUT`/`PATCH`/`DELETE`) ditolak dengan status 423 + pesan, **kecuali** logout. Notifikasi otomatis tidak dijadwalkan/dikirim untuk bisnis ini (dicek juga di job). Frontend menonaktifkan tombol aksi berdasarkan shared prop `lifecycle`.
-- Halaman publik tidak melewati middleware ini — selalu berfungsi.
+- `BACA_SAJA` → `GET`/`HEAD` panel diizinkan; tulis **bisnis tenant** (`POST`/`PUT`/`PATCH`/`DELETE`) ditolak 423. Pengecualian operasi keamanan akun: logout, POST ganti password awal, dan alur lupa/reset password (permintaan serta penyelesaian reset); endpoint ini tetap tersedia agar `must_change_password` tidak mengunci akun. Notifikasi otomatis tidak dijadwalkan/dikirim; frontend menonaktifkan aksi bisnis.
+- `GET /t/{kode_resi}` selalu tersedia termasuk untuk bisnis `NONAKTIF`. POST email FR-C04 melewati resolusi transaksi + pemeriksaan lifecycle tenant pemilik transaksi dan ditolak 423 bila `BACA_SAJA`/`NONAKTIF`; form disembunyikan/dinonaktifkan. Jangan memakai bypass route baca untuk POST ini.
 
 ## 7. Lapisan Domain (Service Layer)
 
@@ -86,19 +91,21 @@ Semua aturan bisnis `prd.md` Bagian 7 hidup di service berikut (controller hanya
 | Service | Tanggung jawab | Rujukan |
 |---|---|---|
 | `ReceiptCodeGenerator` | Kode 6 karakter dari alfabet `ABCDEFGHJKMNPQRSTUVWXYZ23456789` (tanpa O/0/I/1/L; 31⁶ ≈ 887 juta kombinasi), coba-ulang saat tabrakan unik | FR-R01 |
-| `PricingService` | Subtotal item (berat minimum, satuan), urutan potongan stempel → promo → total akhir ≥ 0, pembulatan persen ke rupiah | 7.1–7.2 |
+| `PricingService` | Snapshot nama/satuan/harga/subtotal item; potongan stempel → `promo_eligible_base` → validasi `minimal_total` → promo → total ≥ 0 | 7.1–7.2 |
 | `EstimationService` | `waktu_masuk + durasi_terlama`; boleh dikoreksi manual | 7.3 |
 | `TransactionStateMachine` | Peta transisi sah (maju satu arah + pembatalan), pencatatan `status_histories`, kolom waktu khusus, pemicu event | Bagian 6 |
-| `PaymentService` | Tambah catatan pembayaran (permanen), tolak jika melebihi sisa, tolak DP saat saklar mati, turunkan `status_bayar`, picu stempel saat `LUNAS` | 7.4 |
-| `CancellationService` | Batalkan + alasan, cabut stempel, tandai keluar dari pendapatan | FR-A15, 7.6 |
-| `StampService` | Perolehan/penukaran/pencabutan stempel + `loyalty_histories`; matematika penukaran `min(berat, maks)` | FR-L01–L04 |
+| `PaymentService` | Dalam DB transaction: lock transaksi `FOR UPDATE`, hitung ulang pembayaran/sisa, validasi, insert payment, turunkan status (`total_akhir=0` → `LUNAS`), proses perolehan stempel, commit | 7.4 |
+| `CancellationService` | Batalkan + alasan, keluarkan pendapatan; tambah `pengembalian_penukaran` dan/atau `pencabutan_perolehan` sesuai ledger asal | FR-A15, 7.6 |
+| `StampService` | Lock customer `FOR UPDATE`, periksa saldo ledger/cache, simpan delta stempel aktual bertanda secara append-only dan perbarui cache atomik; matematika hadiah `min(berat, maks)` | FR-L01–L04 |
 | `MasterSyncService` | Pratinjau & eksekusi "Salin/Perbarui dari Master" dan "Sebarkan ke Cabang": tambah-baru, timpa-nama-sama, biarkan-khusus-cabang | FR-O05 |
-| `CustomerMergeService` | Gabung duplikat: pindahkan transaksi + stempel, hapus sumber, catat ke `audit_logs` | FR-A14 |
+| `CustomerMergeService` | Lock source/target satu bisnis, pindah transaksi + ledger, pertahankan identitas target, hitung ulang cache dari ledger, hapus source, catat audit dalam satu DB transaction | FR-A14 |
 | `NotificationDispatcher` | Alur keputusan kanal (Bagian 8 di bawah) | FR-N01–N06 |
 | `DemoProvisioner` | Buat tenant demo + seed data contoh + login otomatis; rate limit per IP | FR-M01–M06 |
-| `RevenueReportService` | Pendapatan berbasis tanggal pembayaran, kecualikan transaksi batal; tagihan berjalan | 7.5 |
+| `RevenueReportService` | Pendapatan berbasis tanggal pembayaran, kecualikan transaksi batal; tagihan berjalan; kartu menumpuk `SIAP_DIAMBIL` dengan `waktu_siap_diambil <= waktu_sekarang - reminder_first_days hari` dalam WIB | 7.5, FR-O13 |
 
 Semua operasi tulis multi-langkah (buat transaksi + item + pembayaran; pembatalan; penggabungan; sinkronisasi master) dibungkus transaksi database (atomik).
+
+Edit harga `DITERIMA` juga mengunci transaksi, mengecek ulang belum ada payment/penukaran, lalu menghitung ulang total dan status bayar. Edit catatan/estimasi tetap sah di `DITERIMA`. Sejak `DIPROSES`, hanya endpoint FR-C04 boleh mengubah `notification_email` (dan `customers.email`) sebelum `SIAP_DIAMBIL`; payload endpoint itu tidak menerima field operasional. Transaksi Rp0 menjadi `LUNAS` tanpa payment dan memicu perolehan stempel bila program aktif serta tidak memakai penukaran. Saat pembatalan perolehan lama menyebabkan saldo negatif, cache saldo memakai integer bertanda; penukaran baru tetap wajib melihat saldo cukup sesudah lock.
 
 ## 8. Arsitektur Notifikasi
 
@@ -107,19 +114,21 @@ Alur keputusan saat peristiwa terjadi (status → `SIAP_DIAMBIL`, atau pengingat
 ```
 peristiwa
  ├─ bisnis demo?            → catat log 'ditekan_demo', selesai
- ├─ bisnis BACA_SAJA?       → jangan kirim apa pun, selesai
- ├─ EMAIL: pelanggan punya email? → antre kirim email → log berhasil/gagal
+ ├─ bisnis BACA_SAJA/NONAKTIF? → jangan kirim apa pun, selesai
+ ├─ EMAIL: transaksi.notification_email ada? → reservasi identitas logis → antre email
  └─ WA:   wa_enabled bisnis?
           └─ saklar peristiwa ini aktif? (wa_on_ready / wa_on_reminder)
              └─ penghitung bulan berjalan < batas bulanan?
-                ├─ ya  → antre kirim via adapter → log berhasil/gagal
+                ├─ ya  → reservasi identitas logis → antre kirim via adapter
                 └─ tidak → log 'dilewati_batas' (email tetap terkirim)
 ```
 
 - **Adapter WA:** kontrak `WhatsAppProvider` dengan driver `FonnteProvider`, `WablasProvider`, `WabaProvider`. Kredensial per bisnis (kolom terenkripsi di `businesses`), dikonfigurasi hanya oleh developer (FR-D06). Jangan mengikat kode ke satu vendor.
 - **Penghitung bulanan:** dihitung dari `notification_logs` (`kanal = whatsapp`, `status = berhasil`, bulan berjalan, per bisnis) — tidak ada kolom penghitung terpisah.
 - **Email:** memakai SMTP global aplikasi secara default; nama & alamat pengirim per bisnis; SMTP khusus bisnis (opsional) dipakai bila diisi developer.
-- **Sekali kirim:** kolom `notified_ready_at` pada transaksi mencegah notifikasi "Siap Diambil" ganda; `reminder_count` + `last_reminder_at` mengendalikan pengingat N/M/K.
+- **Idempotensi:** `notification_logs.notification_key` unik untuk notifikasi otomatis dari `(transaction_id, tipe, kanal, reminder_number)`, dengan nomor 0 untuk `siap_diambil` dan 1..K untuk pengingat. Reservasi log dilakukan atomik sebelum antre; worker mengklaim `tertunda → diproses` secara atomik, sehingga job kedua pada key sama tidak mengirim. Kegagalan yang pasti mengembalikan key sama ke `tertunda` untuk retry, `gagal` setelah percobaan terakhir. Status `berhasil`, `dilewati_batas`, atau `ditekan_demo` tidak dikirim ulang. Email dan WA independen. `reminder_count`/`last_reminder_at` menyimpan urutan dan waktu reservasi pengingat dalam transaksi DB, bukan bukti pengiriman; `notification_logs` tetap sumber kebenaran per kanal. `notified_ready_at` tidak dipakai/dihapus dari skema.
+- **Hasil tidak pasti:** sukses dicatat hanya setelah penerimaan dari SMTP/adapter. Jika proses mati setelah penyedia menerima tetapi sebelum respons tercatat, job memakai idempotency key yang sama bila penyedia mendukung; bila tidak, tandai perlu pemeriksaan dan jangan retry kirim otomatis secara buta. Ini menjaga retry aplikasi agar tidak mengirim ganda tanpa mengklaim jaminan exactly-once dari layanan luar.
+- Pembukaan `wa.me` dicatat dengan kanal `whatsapp_manual`, tipe `resi`/`pengingat`, status `dibuka_manual`, key otomatis null. Log ini tidak masuk penghitung WA terkirim dan tidak menyatakan pelanggan telah mengirim pesan.
 - Semua pengiriman lewat queue; kegagalan tidak menggagalkan perubahan status (FR-N06).
 
 ## 9. Queue & Penjadwal
@@ -178,18 +187,20 @@ CI/CD (GitHub Actions): lint (Pint + ESLint) → test (PHPUnit/Pest) → build a
 ## 13. Strategi Pengujian
 
 1. **Isolasi tenant & cabang** — wajib, otomatis (Bagian 5).
-2. **Aturan bisnis** — unit test service: PricingService (kasus di `prd.md` Bagian 16), PaymentService (DP, tolak lebih bayar, turunan status), StampService (matematika penukaran), TransactionStateMachine (transisi ilegal ditolak), RevenueReportService (DP lintas bulan, transaksi batal).
-3. **Siklus hidup** — feature test mode tenggang & baca-saja (tulis ditolak 423, publik tetap jalan).
-4. **Notifikasi** — test alur keputusan (demo ditekan, batas bulanan → `dilewati_batas`, sekali-kirim).
+2. **Aturan bisnis** — test PricingService (basis minimum promo, snapshot), PaymentService (Rp0, DP, overpay paralel), StampService (ledger bertanda, pembatalan, dua penukaran paralel), edit harga versus catatan, merge customer, dan laporan.
+3. **Siklus hidup** — feature test tenggang/baca-saja, pengecualian keamanan akun, GET publik tetap jalan dan POST email ditolak saat baca-saja/nonaktif.
+4. **Notifikasi** — test kanal/email snapshot independen, identitas unik per nomor pengingat, retry tidak menduplikasi, demo/batas WA, `wa.me` manual hanya `dibuka_manual`.
 5. **Demo** — provisioning, isolasi, rate limit, pembersihan.
 
 ## 14. Invarian yang Wajib Dijaga (Ringkasan untuk Agentic AI)
 
-1. Tidak ada kueri operasional tanpa scope `business_id`.
+1. Model dengan `business_id` memakai scope tenant; child tanpa `business_id` hanya lewat parent terscope. Semua relasi tenant/cabang divalidasi sebelum tulis.
 2. Catatan `payments` tidak pernah di-update/delete; tidak ada route untuk itu.
-3. Transaksi tidak bisa diedit sejak `DIPROSES` — tidak ada endpoint edit untuk status tersebut, bagi peran mana pun.
+3. Field harga terkunci begitu ada payment/penukaran meski masih `DITERIMA`; sejak `DIPROSES` semua edit operasional ditolak, dengan pengecualian sempit email FR-C04 sebelum siap diambil.
 4. `SUDAH_DIAMBIL` hanya sah bila `status_bayar = LUNAS` (divalidasi di `TransactionStateMachine`).
 5. Status hanya maju sesuai peta transisi; `DIBATALKAN` wajib beralasan.
-6. Semua harga/promo yang menyentuh transaksi di-snapshot.
+6. Nama/satuan/harga/subtotal item, nama/tipe/nilai/potongan promo, dan email tujuan notifikasi transaksi di-snapshot.
 7. Notifikasi tidak pernah memblokir alur utama (selalu via queue).
 8. Server menolak aksi tulis di mode baca-saja meski UI dimanipulasi.
+9. `SUM(loyalty_histories.jumlah)` adalah saldo stempel; cache customer harus sama. Pembayaran dan penukaran memakai row lock.
+10. `notification_logs` menentukan idempotensi per kanal/peristiwa/nomor pengingat; pembukaan `wa.me` bukan pengiriman sukses.
