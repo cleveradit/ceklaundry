@@ -7,10 +7,23 @@ use App\Services\DeveloperBusinessSummary;
 use App\Services\TenantProvisioner;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Hash;
 use Tests\FoundationTestCase;
 
 class BusinessManagementTest extends FoundationTestCase
 {
+    public function test_nested_owner_password_is_preserved_and_never_flashed(): void
+    {
+        $developer = $this->developer();
+        $password = ' '.$this->password().' ';
+        $data = ['nama' => 'Password Aman', 'active_until' => now()->toDateString(), 'owner' => ['nama' => 'Owner', 'email' => 'nested@example.test', 'password' => $password]];
+        $this->actingAs($developer)->post('/dev/businesses', $data)->assertSessionHasNoErrors();
+        $owner = User::where('email', 'nested@example.test')->firstOrFail();
+        $this->assertTrue(Hash::check($password, $owner->password));
+        $this->post('/dev/businesses', $data)->assertSessionHasErrors('email');
+        $this->assertNull(session()->getOldInput('owner.password'));
+    }
+
     public function test_provision_defaults_and_duplicate_owner_rollback(): void
     {
         $developer = $this->developer();

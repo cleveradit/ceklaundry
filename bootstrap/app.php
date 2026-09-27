@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->trimStrings(except: ['owner.password']);
         $middleware->web(append: [NoStore::class, HandleInertiaRequests::class]);
         $middleware->alias([
             'tenant' => ResolveTenant::class,
@@ -30,7 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->trustProxies(at: array_values(array_filter(explode(',', (string) env('TRUSTED_PROXIES', '')))));
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->dontFlash(['password', 'password_confirmation', 'current_password', 'token']);
+        $exceptions->dontFlash(['password', 'owner.password', 'password_confirmation', 'current_password', 'token']);
         $exceptions->report(function (Throwable $error) {
             Log::error('application_error', ['type' => class_basename($error)]);
 
