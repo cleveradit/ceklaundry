@@ -25,6 +25,7 @@ jobs:
           docker run --rm ceklaundry-frontend npm run lint
           docker run --rm ceklaundry-frontend npm run typecheck
           docker run --rm ceklaundry-frontend npm run build
+          docker run --rm ceklaundry-frontend node tests/Support/quality-gate-probe.cjs
       - name: Documentation contracts
         run: python3 docs/audits/validate-final-specs.py
       - uses: actions/setup-node@v4

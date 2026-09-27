@@ -3,6 +3,7 @@
 namespace Tests\Feature\Owner;
 
 use App\Models\MasterService;
+use App\Services\MasterSyncService;
 use App\Services\ServiceCatalogService;
 use Illuminate\Support\Facades\DB;
 use Tests\FoundationTestCase;
@@ -14,7 +15,7 @@ class ServiceCatalogTest extends FoundationTestCase
         [$a, $ownerA] = $this->tenant();
         [$b, $ownerB] = $this->tenant();
         $service = app(ServiceCatalogService::class);
-        $data = ['nama' => ' Cuci   Setrika ', 'satuan' => 'kg', 'harga' => 7000, 'durasi_jam' => 24, 'berat_minimum' => 3, 'is_active' => true];
+        $data = ['nama' => "\u{00A0}Cuci \t Setrika\u{00A0}", 'satuan' => 'kg', 'harga' => 7000, 'durasi_jam' => 24, 'berat_minimum' => 3, 'is_active' => true];
         $master = $service->save($ownerA, $data);
         $this->assertSame('Cuci Setrika', $master->nama);
         $this->actingAs($ownerA)->post('/owner/masters', [...$data, 'nama' => 'cuci setrika'])->assertSessionHasErrors('nama');
@@ -47,6 +48,11 @@ class ServiceCatalogTest extends FoundationTestCase
         $catalog->save($owner, [...$data, 'harga' => 9000], $master->id);
         $this->assertSame(7000, DB::table('services')->value('harga'));
         $catalog->save($owner, [...$data, 'harga' => 8500], $local->id, $branch->id);
+        $this->assertSame(7000, DB::table('transaction_items')->value('harga_snapshot'));
+        $sync = app(MasterSyncService::class);
+        $preview = $sync->preview($owner, [$branch->id]);
+        $sync->apply($owner, [$branch->id], $preview['fingerprint']);
+        $this->assertSame(9000, DB::table('services')->value('harga'));
         $this->assertSame(7000, DB::table('transaction_items')->value('harga_snapshot'));
         DB::table('loyalty_settings')->where('business_id', $business->id)->update(['is_active' => true, 'master_service_id' => $master->id, 'berat_maks_gratis' => 3]);
         $this->actingAs($owner)->put('/owner/masters/'.$master->id, [...$data, 'is_active' => false])->assertSessionHasErrors('is_active');

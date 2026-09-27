@@ -6,6 +6,6 @@ class ServiceName
 {
     public static function normalize(string $value): string
     {
-        return preg_replace('/\s+/u', ' ', trim($value));
+        return trim(preg_replace('/\s+/u', ' ', $value));
     }
 }
