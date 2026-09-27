@@ -1,13 +1,19 @@
 # Current Session
 
-## Active Ticket
+## Hasil
 
-Pengguna mengotorisasi implementasi seluruh TICKET-001–010 pada 28 September 2026. Implementasi seluruh lingkup tersedia; penutupan TICKET-010 sedang memverifikasi suite akhir dan CI.
+Permintaan pengguna untuk implementasi seluruh TICKET-001–010 (persiapan dan M1) selesai. Semua tiket DONE di [arsip](Ticket-Implemented/index.md). Branch `codex/implement-m1` sudah dipush; tidak ada merge/deploy produksi.
 
-## Progress
+CI final [36350950049](https://github.com/cleveradit/ceklaundry/actions/runs/36350950049) lulus: 52 tes/306 assertions tanpa warning, concurrency MySQL8.4, Pint/ESLint/TypeScript/Vite, image dan perjalanan browser. Setup/rollback/restart/worker/cron juga terverifikasi lokal. [Audit M1](../audits/m1-verification.md) memetakan setiap AC beserta batas fixture.
 
-Runtime Docker PHP8.4/MySQL8.4/Node22 berjalan; migrasi, frontend quality/build, concurrency MySQL dan perjalanan browser desktop/HP lulus. Browser Chrome154 memperlihatkan defect redirect/history yang telah diperbaiki. Database test mempunyai pengaman eksplisit; environment PHPUnit diselaraskan dengan env container. Dokumen existing dipertahankan, spesifikasi sumber tidak diubah.
+## Runtime lokal
 
-## Next Steps
+Lima layanan Compose berjalan pada http://localhost:8088. Database development dipertahankan; database/volume sekali pakai dibersihkan. Tidak ada akun/password developer bawaan atau fixture di DB development. Jalankan `docker compose exec app php artisan app:bootstrap-developer` dengan password pilihan sendiri. SMTP global masih memerlukan konfigurasi operator; tes tidak mengirim email nyata.
 
-Selesaikan run akhir/CI, isi [audit M1](../audits/m1-verification.md), arsipkan tiket setelah bukti lengkap. Lanjut M2 melalui TICKET-011 berikutnya; jangan implementasikan M2–M6 dalam lingkup sesi ini. SMTP nyata perlu konfigurasi operator; belum ada deploy produksi atau akun development bawaan.
+## Handoff
+
+Mulai TICKET-011 untuk M2 sesuai [plan](../plan.md). Tambahkan skema payment/status dan domain transaksi/pricing; pakai root lock, context server dan FK komposit existing. Ulangi statistik, guard cabang, snapshot serta lifecycle terhadap transaksi/endpoint nyata ketika tersedia. Resi, WA/notifikasi pelanggan, loyalti/promo, laporan, demo dan PWA belum tersedia.
+
+## Catatan
+
+Jangan menghapus volume development untuk menjalankan tes. Browser seed dan backend suite memakai ceklaundry_test yang sama dan harus berurutan. Perubahan kode memerlukan rebuild image; [development](../development.md) memuat command aktual dan prosedur hold/cutoff auth restore.

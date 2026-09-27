@@ -1,16 +1,16 @@
 # Implementation Plan: TICKET-008 (Katalog layanan master dan cabang)
 
-**Ticket:** `TICKET-008`  
-**Status:** `READY`  
-**Target Audience:** AI Developer Agents  
-**Depends On:** `TICKET-007`  
+**Ticket:** `TICKET-008`
+**Status:** `DONE`
+**Target Audience:** AI Developer Agents
+**Depends On:** `TICKET-007`
 **Tahap:** Urutan 1 — M1, pekerjaan 8 bagian katalog
 
 ## 1. Business Decision Snapshot
 
 | Item | Approved Value |
 |---|---|
-| Sumber | [PRD](../initiate-file/prd.md) 7.8/7.9; [skema](../initiate-file/database-schema.md) 2.5/2.6 |
+| Sumber | [PRD](../../initiate-file/prd.md) 7.8/7.9; [skema](../../initiate-file/database-schema.md) 2.5/2.6 |
 | Keterlacakan | US-107 AC1–4, US-108 AC9, US-109 AC1/2/4; AND-01, AND-08, AND-19, AND-22, ISO-06, SEC-05, UX-01, UX-02, UX-04, LOK-01, LOK-02 |
 | Nama | Trim/collapse spasi; unik case-insensitive accent-sensitive per bisnis untuk master, per cabang untuk layanan lokal |
 | Nilai | Satuan kg/item, harga rupiah bulat positif, durasi1–65.535jam; minimum null atau kg positif dalam domain skema, item wajib null |
@@ -46,14 +46,14 @@ Owner dapat menyiapkan katalog master dan layanan khusus cabang dengan validasi 
 
 | Case | Input | Expected Result | Status |
 |---|---|---|---|
-| Normal | Master kg7000/durasi24/min3 dan item25000/durasi48/minnull | Tersimpan sesuai satuan; format tampilan Indonesia | `[ ]` |
-| Nama duplikat | ` Cuci   Setrika ` dan `cuci setrika` pada bisnis sama | Nama dinormalisasi; duplikat ditolak | `[ ]` |
-| Batas nilai | Harga1/4.294.967.295, durasi1/65.535 | Batas sah diterima sesuai tipe;0/overflow ditolak | `[ ]` |
-| Minimum tidak sah | Minimum0/negatif, pecahan melebihi presisi, minimum pada item | Ditolak, tidak dipotong otomatis | `[ ]` |
-| Isolasi | Nama sama bisnis berbeda; branch milik bisnis lain | Nama antarbisnis boleh; relasi silang ditolak | `[ ]` |
-| Histori | Edit harga master/lokal dengan item snapshot existing | Lokal tidak berubah saat edit master; snapshot tetap sama | `[ ]` |
-| Hadiah aktif | Nonaktifkan/ubah ke item master hadiah aktif | Ditolak; boleh setelah program nonaktif/hadiah diganti | `[ ]` |
-| Akses | Admin kirim POST owner; owner read-only kirim POST | Salah peran403; business-write read-only423 | `[ ]` |
+| Normal | Master kg7000/durasi24/min3 dan item25000/durasi48/minnull | Tersimpan sesuai satuan; format tampilan Indonesia | `[x]` |
+| Nama duplikat | ` Cuci   Setrika ` dan `cuci setrika` pada bisnis sama | Nama dinormalisasi; duplikat ditolak | `[x]` |
+| Batas nilai | Harga1/4.294.967.295, durasi1/65.535 | Batas sah diterima sesuai tipe;0/overflow ditolak | `[x]` |
+| Minimum tidak sah | Minimum0/negatif, pecahan melebihi presisi, minimum pada item | Ditolak, tidak dipotong otomatis | `[x]` |
+| Isolasi | Nama sama bisnis berbeda; branch milik bisnis lain | Nama antarbisnis boleh; relasi silang ditolak | `[x]` |
+| Histori | Edit harga master/lokal dengan item snapshot existing | Lokal tidak berubah saat edit master; snapshot tetap sama | `[x]` |
+| Hadiah aktif | Nonaktifkan/ubah ke item master hadiah aktif | Ditolak; boleh setelah program nonaktif/hadiah diganti | `[x]` |
+| Akses | Admin kirim POST owner; owner read-only kirim POST | Salah peran403; business-write read-only423 | `[x]` |
 
 ## 6. Verification Commands
 
@@ -73,8 +73,14 @@ Target sesudah implementasi. Uji database MySQL untuk collation/unique/CHECK; ba
 
 ## 8. Completion Checklist
 
-- [ ] Lingkup diotorisasi dan dependensi selesai.
-- [ ] Katalog, validasi batas/keunikan/isolasi dan guard hadiah teruji.
-- [ ] Perubahan katalog terbukti tidak mengubah snapshot.
-- [ ] UI dan pemeriksaan frontend lulus; feature docs/sesi diperbarui.
-- [ ] DONE hanya sesudah verifikasi, tanpa perubahan di luar lingkup.
+- [x] Lingkup diotorisasi dan dependensi selesai.
+- [x] Katalog, validasi batas/keunikan/isolasi dan guard hadiah teruji.
+- [x] Perubahan katalog terbukti tidak mengubah snapshot.
+- [x] UI dan pemeriksaan frontend lulus; feature docs/sesi diperbarui.
+- [x] DONE hanya sesudah verifikasi, tanpa perubahan di luar lingkup.
+
+## Hasil implementasi dan verifikasi
+
+Selesai pada 28 September 2026 sesuai otorisasi pengguna. Bukti rinci, matriks per AC dan batas integrasi M2–M6 ada di [audit M1](../../audits/m1-verification.md); perintah aktual di [development](../../development.md).
+
+CI final: [36350950049](https://github.com/cleveradit/ceklaundry/actions/runs/36350950049), 52 tes/306 assertions, quality/build/MySQL/browser lulus. Status checklist berlaku untuk lingkup M1; consumer masa depan tidak diklaim lulus E2E. Kasus kegagalan diuji melalui fault/guard dan setup bersih.

@@ -1,16 +1,16 @@
 # Implementation Plan: TICKET-004 (Isolasi tenant, policy cabang, dan protokol lock)
 
-**Ticket:** `TICKET-004`  
-**Status:** `READY`  
-**Target Audience:** AI Developer Agents  
-**Depends On:** `TICKET-003`  
+**Ticket:** `TICKET-004`
+**Status:** `DONE`
+**Target Audience:** AI Developer Agents
+**Depends On:** `TICKET-003`
 **Tahap:** Urutan 1 — M1, pekerjaan 6 dan guard dasar
 
 ## 1. Business Decision Snapshot
 
 | Item | Approved Value |
 |---|---|
-| Sumber | [Arsitektur](../initiate-file/architecture.md) bagian 2–4; [PRD](../initiate-file/prd.md) 3.2 dan 9.3 |
+| Sumber | [Arsitektur](../../initiate-file/architecture.md) bagian 2–4; [PRD](../../initiate-file/prd.md) 3.2 dan 9.3 |
 | Keterlacakan | US-109 AC1–6, fondasi US-104/105/106; ISO-01–ISO-06, SEC-05, SEC-08, AND-01, AND-19 |
 | Otoritas | Tenant dari user server, admin dari cabang terkini; konteks kosong fail closed |
 | Respons | Resource tenant/cabang lain404; route salah peran403; business-write BACA_SAJA423 |
@@ -49,14 +49,14 @@ Memberi seluruh service M1 dasar otorisasi dan transaksi yang sama sebelum route
 
 | Case | Input | Expected Result | Status |
 |---|---|---|---|
-| Normal | Owner A, dua cabang A | Mengakses resource M1 kedua cabang A | `[ ]` |
-| Tenant lain | URL/query/body menunjuk resource B | 404/daftar kosong, tanpa bocoran isi/keberadaan | `[ ]` |
-| Cabang lain | Admin A1 meminta service A2 | 404/daftar kosong; route khusus owner403 | `[ ]` |
-| Developer | Meminta model/DTO operasi lewat jalur administratif | Ditolak; hanya akses administratif eksplisit | `[ ]` |
-| Konteks kosong/gagal | Job A exception lalu job B, atau job tanpa tenant | A dibersihkan, B terisolasi, kosong fail closed | `[ ]` |
-| Batas lifecycle | −7,0,+7,+8 hari WIB; demo tepat expiry | Evaluator sesuai PRD; BACA_SAJA tetap mengizinkan keamanan akun | `[ ]` |
-| Race otorisasi | Actor dipindah/nonaktif sebelum root lock diperoleh | Mutasi membaca keadaan terbaru dan ditolak bila tak berhak | `[ ]` |
-| Kegagalan write | Fault sesudah child pertama | Seluruh unit rollback; retry maksimal3, tanpa partial commit | `[ ]` |
+| Normal | Owner A, dua cabang A | Mengakses resource M1 kedua cabang A | `[x]` |
+| Tenant lain | URL/query/body menunjuk resource B | 404/daftar kosong, tanpa bocoran isi/keberadaan | `[x]` |
+| Cabang lain | Admin A1 meminta service A2 | 404/daftar kosong; route khusus owner403 | `[x]` |
+| Developer | Meminta model/DTO operasi lewat jalur administratif | Ditolak; hanya akses administratif eksplisit | `[x]` |
+| Konteks kosong/gagal | Job A exception lalu job B, atau job tanpa tenant | A dibersihkan, B terisolasi, kosong fail closed | `[x]` |
+| Batas lifecycle | −7,0,+7,+8 hari WIB; demo tepat expiry | Evaluator sesuai PRD; BACA_SAJA tetap mengizinkan keamanan akun | `[x]` |
+| Race otorisasi | Actor dipindah/nonaktif sebelum root lock diperoleh | Mutasi membaca keadaan terbaru dan ditolak bila tak berhak | `[x]` |
+| Kegagalan write | Fault sesudah child pertama | Seluruh unit rollback; retry maksimal3, tanpa partial commit | `[x]` |
 
 ## 6. Verification Commands
 
@@ -77,8 +77,14 @@ Perintah adalah target setelah implementasi. BusinessLockTest memakai dua proses
 
 ## 8. Completion Checklist
 
-- [ ] Lingkup diotorisasi dan dependensi selesai.
-- [ ] Scope, policy, context, evaluator dan lock mengikuti satu kontrak.
-- [ ] Matriks negatif/isolation/fault dan MySQL paralel lulus.
-- [ ] Batas verifikasi dan pengujian ulang milestone berikutnya tercatat.
-- [ ] Dokumentasi fitur aktual, sesi dan status diperbarui.
+- [x] Lingkup diotorisasi dan dependensi selesai.
+- [x] Scope, policy, context, evaluator dan lock mengikuti satu kontrak.
+- [x] Matriks negatif/isolation/fault dan MySQL paralel lulus.
+- [x] Batas verifikasi dan pengujian ulang milestone berikutnya tercatat.
+- [x] Dokumentasi fitur aktual, sesi dan status diperbarui.
+
+## Hasil implementasi dan verifikasi
+
+Selesai pada 28 September 2026 sesuai otorisasi pengguna. Bukti rinci, matriks per AC dan batas integrasi M2–M6 ada di [audit M1](../../audits/m1-verification.md); perintah aktual di [development](../../development.md).
+
+CI final: [36350950049](https://github.com/cleveradit/ceklaundry/actions/runs/36350950049), 52 tes/306 assertions, quality/build/MySQL/browser lulus. Status checklist berlaku untuk lingkup M1; consumer masa depan tidak diklaim lulus E2E. Kasus kegagalan diuji melalui fault/guard dan setup bersih.

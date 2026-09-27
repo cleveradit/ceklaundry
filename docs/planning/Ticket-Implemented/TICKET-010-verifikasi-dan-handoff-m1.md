@@ -1,16 +1,16 @@
 # Implementation Plan: TICKET-010 (Verifikasi terpadu dan handoff M1)
 
-**Ticket:** `TICKET-010`  
-**Status:** `READY`  
-**Target Audience:** AI Developer Agents  
-**Depends On:** `TICKET-002`, `TICKET-003`, `TICKET-004`, `TICKET-005`, `TICKET-006`, `TICKET-007`, `TICKET-008`, `TICKET-009`  
+**Ticket:** `TICKET-010`
+**Status:** `DONE`
+**Target Audience:** AI Developer Agents
+**Depends On:** `TICKET-002`, `TICKET-003`, `TICKET-004`, `TICKET-005`, `TICKET-006`, `TICKET-007`, `TICKET-008`, `TICKET-009`
 **Tahap:** Urutan 1 — M1, pekerjaan 9 dan kriteria selesai
 
 ## 1. Business Decision Snapshot
 
 | Item | Approved Value |
 |---|---|
-| Sumber | [Plan M1](../plan.md#5-m1--fondasi-dan-tenant), [US-101–US-109](../initiate-file/user-stories.md#epic-m1--fondasi--tenant), [NFR](../initiate-file/nfr.md), [audit final](../audits/final-system-audit.md) |
+| Sumber | [Plan M1](../../plan.md#5-m1--fondasi-dan-tenant), [US-101–US-109](../../initiate-file/user-stories.md#epic-m1--fondasi--tenant), [NFR](../../initiate-file/nfr.md), [audit final](../../audits/final-system-audit.md) |
 | Keterlacakan | Seluruh US-101–US-109 pada cakupan M1; PLH-01–PLH-04, ISO-01–ISO-06, SEC-01–SEC-05, SEC-07, SEC-08, AND-01, AND-08, AND-19, AND-21, AND-27, DAT-01, UX-01, UX-02, UX-04, LOK-01–LOK-04 |
 | Bukti | Pisahkan uji service/fixture M1 dengan integrasi fitur M2–M6 yang belum tersedia; tidak memberi status lulus palsu pada AC lintas milestone |
 | CI | Gate kualitas, unit/feature, integrasi MySQL8.4 paralel, Vite dan image sejak TICKET-002; lengkapi cakupan M1 di sini |
@@ -56,13 +56,13 @@ Ini bukan pengurangan AC atau pemindahan milestone fitur M1. Perilaku M1 harus d
 
 | Case | Input | Expected Result | Status |
 |---|---|---|---|
-| Setup berulang | Checkout/DB kosong, instruksi dokumentasi | Aplikasi/build/migrasi/bootstrap/web/worker/cron dapat diulang | `[ ]` |
-| Perjalanan M1 | Developer→owner→admin→katalog/sync | Alur lengkap berfungsi, role dan wajib ganti password benar | `[ ]` |
-| Isolasi | Dua bisnis dan dua cabang, ID/body/query dimanipulasi | 404/403 sesuai kontrak; developer tanpa detail operasional | `[ ]` |
-| Batas lifecycle | WIB−7/0/+7/+8, nonaktif dan sesi lama | Banner/akses benar; keamanan akun tidak deadlock | `[ ]` |
-| Integritas | Stale sync, fault multi-cabang, perubahan role paralel | Konflik/rollback sesuai kontrak; tanpa partial commit/bocoran | `[ ]` |
-| CI gagal | Salah satu gate gagal | Pipeline gagal dan M1 belum ditutup sampai diperbaiki | `[ ]` |
-| Bukti belum tersedia | AC menyentuh route transaksi/WA/report/demo | Dicatat belum diverifikasi integrasinya beserta milestone pemilik; tidak ditandai lulus | `[ ]` |
+| Setup berulang | Checkout/DB kosong, instruksi dokumentasi | Aplikasi/build/migrasi/bootstrap/web/worker/cron dapat diulang | `[x]` |
+| Perjalanan M1 | Developer→owner→admin→katalog/sync | Alur lengkap berfungsi, role dan wajib ganti password benar | `[x]` |
+| Isolasi | Dua bisnis dan dua cabang, ID/body/query dimanipulasi | 404/403 sesuai kontrak; developer tanpa detail operasional | `[x]` |
+| Batas lifecycle | WIB−7/0/+7/+8, nonaktif dan sesi lama | Banner/akses benar; keamanan akun tidak deadlock | `[x]` |
+| Integritas | Stale sync, fault multi-cabang, perubahan role paralel | Konflik/rollback sesuai kontrak; tanpa partial commit/bocoran | `[x]` |
+| CI gagal | Salah satu gate gagal | Pipeline gagal dan M1 belum ditutup sampai diperbaiki | `[x]` |
+| Bukti belum tersedia | AC menyentuh route transaksi/WA/report/demo | Dicatat belum diverifikasi integrasinya beserta milestone pemilik; tidak ditandai lulus | `[x]` |
 
 ## 6. Verification Commands
 
@@ -92,8 +92,14 @@ Simpan ringkasan hasil test, CI, setup bersih dan browser dalam audit M1. Bukti 
 
 ## 8. Completion Checklist
 
-- [ ] Lingkup diotorisasi; semua dependensi diimplementasikan dan diverifikasi.
-- [ ] Setup bersih serta seluruh gate CI M1 lulus dengan bukti aktual.
-- [ ] Matriks AC M1 lengkap dengan batas fixture/integrasi masa depan yang jujur.
-- [ ] Perjalanan manual, isolasi, failure dan concurrency M1 selesai tanpa blocker.
-- [ ] Dokumentasi/feature docs/status/arsip/sesi diperbarui; langkah M2 jelas.
+- [x] Lingkup diotorisasi; semua dependensi diimplementasikan dan diverifikasi.
+- [x] Setup bersih serta seluruh gate CI M1 lulus dengan bukti aktual.
+- [x] Matriks AC M1 lengkap dengan batas fixture/integrasi masa depan yang jujur.
+- [x] Perjalanan manual, isolasi, failure dan concurrency M1 selesai tanpa blocker.
+- [x] Dokumentasi/feature docs/status/arsip/sesi diperbarui; langkah M2 jelas.
+
+## Hasil implementasi dan verifikasi
+
+Selesai pada 28 September 2026 sesuai otorisasi pengguna. Bukti rinci, matriks per AC dan batas integrasi M2–M6 ada di [audit M1](../../audits/m1-verification.md); perintah aktual di [development](../../development.md).
+
+CI final: [36350950049](https://github.com/cleveradit/ceklaundry/actions/runs/36350950049), 52 tes/306 assertions, quality/build/MySQL/browser lulus. Status checklist berlaku untuk lingkup M1; consumer masa depan tidak diklaim lulus E2E. Kasus kegagalan diuji melalui fault/guard dan setup bersih.

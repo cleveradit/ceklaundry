@@ -33,6 +33,8 @@ Seeder alternatif `DatabaseSeeder`/`DeveloperSeeder` memerlukan environment `CEK
 | worker | Database queue, retry_after180/durasi kerja120; job auth mempunyai tries1 |
 | cron | `schedule:run` tiap menit, scanner lifecycle dan heartbeat cache |
 
+Environment diinjeksi oleh Compose. Entrypoint membuat placeholder `.env` kosong bila tidak ada; tidak menyalin rahasia ke image. Volume storage memakai nocopy dan direktori dibuat saat runtime untuk menghindari perebutan inisialisasi tiga container.
+
 Kode disalin ke image. Setelah mengubah kode, jalankan `docker compose build` lalu `docker compose up -d --wait`; perubahan migrasi diterapkan melalui command migrate. `docker compose down` menghentikan runtime tanpa menghapus volume. Jangan gunakan `down -v` pada data development pengguna.
 
 Konfigurasi SMTP global ada di `.env` (`MAIL_*`). Default localhost1025 adalah placeholder lokal, bukan provider aktif. Uji memakai transport array/mock; pengiriman nyata perlu konfigurasi SMTP operator. Jangan memakai mailer log untuk reset karena body berisi token. Tidak ada pengiriman email ke pihak nyata dalam verifikasi ini.
@@ -43,7 +45,7 @@ Produksi kelak wajib `APP_ENV=production`, `APP_DEBUG=false`, HTTPS/reverse prox
 
 ```bash
 docker compose exec -T app vendor/bin/pint --test
-docker compose exec -T app php artisan test
+docker compose exec -T app php artisan test --fail-on-warning
 docker build --target frontend -t ceklaundry-frontend -f docker/php/Dockerfile .
 docker run --rm ceklaundry-frontend npm run lint
 docker run --rm ceklaundry-frontend npm run typecheck
@@ -78,3 +80,7 @@ Node22 lokal diperlukan hanya untuk browser runner ini; CI memasangnya otomatis.
 Sebelum memulihkan data: hentikan producer/web dan worker, aktifkan `OUTBOUND_RESTORE_HOLD=true` pada semua instance dan muat ulang konfigurasi. Selama hold, request reset tetap generik dan tidak membuat token/job; job lama tidak mengirim. Dengan hold aktif, jalankan `php artisan app:reconcile-auth-restore`: token serta job/failed-job auth dibuang atomik, job jenis lain dipertahankan.
 
 Tetapkan `OUTBOUND_RESUME_AT` waktu WIB format `YYYY-MM-DD HH:MM:SS` yang sama di semua instance. Setelah rekonsiliasi, buka hold dan jalankan ulang instance. Hanya request token setelah cutoff yang boleh mengirim; waktu sama/sebelumnya atau konfigurasi cutoff tidak valid ditolak. Pengguna meminta tautan baru. Jangan retry manual job auth gagal/ambigu: hanya satu percobaan SMTP diizinkan. Rekonsiliasi transport operasional penuh menjadi pekerjaan M3/M6.
+
+## Probe runtime non-destruktif
+
+Pada runtime lokal/CI sesudah migrasi, `docker compose exec -T app php tests/Support/runtime-check.php dispatch` mengantrekan probe tanpa email/data bisnis. Setelah worker memproses dan cron berdetak (maksimal satu menit), jalankan command yang sama dengan `verify`. Hasil PASS membuktikan worker database dan heartbeat cron. Probe ditolak pada APP_ENV=production.

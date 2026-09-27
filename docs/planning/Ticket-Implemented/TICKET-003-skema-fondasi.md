@@ -1,16 +1,16 @@
 # Implementation Plan: TICKET-003 (Skema fondasi dan tabel pendukung M1)
 
-**Ticket:** `TICKET-003`  
-**Status:** `READY`  
-**Target Audience:** AI Developer Agents  
-**Depends On:** `TICKET-002`  
+**Ticket:** `TICKET-003`
+**Status:** `DONE`
+**Target Audience:** AI Developer Agents
+**Depends On:** `TICKET-002`
 **Tahap:** Urutan 1 — M1, pekerjaan 3
 
 ## 1. Business Decision Snapshot
 
 | Item | Approved Value |
 |---|---|
-| Sumber | [Skema database](../initiate-file/database-schema.md) bagian 2–5; [arsitektur](../initiate-file/architecture.md) bagian 3–5 |
+| Sumber | [Skema database](../../initiate-file/database-schema.md) bagian 2–5; [arsitektur](../../initiate-file/architecture.md) bagian 3–5 |
 | Keterlacakan | US-102 AC1–4, US-103 AC1/4, US-105 AC2/5, US-106 AC1/2/4, US-107 AC1/4, US-108 AC6/8, US-109 AC4; ISO-06, AND-01, AND-08, AND-19, DAT-01, SEC-03, PLH-03 |
 | Database | Migrasi satu-satunya sumber skema; MySQL 8.4/InnoDB/utf8mb4; constraint, indeks, FK dan collation mengikuti spesifikasi |
 | Loyalti awal | Satu row per bisnis, is_active=false, stempel_dibutuhkan=10, master_service_id=null, berat_maks_gratis=null; provisioning di TICKET-006 |
@@ -48,15 +48,15 @@ Membuat struktur data yang dapat menegakkan kepemilikan bisnis/cabang dan menduk
 
 | Case | Input | Expected Result | Status |
 |---|---|---|---|
-| DB kosong | Migrasi semua tabel lingkup | Berhasil sesuai urutan FK; migrasi kedua no-op | `[ ]` |
-| Satu owner | Insert dua owner bisnis sama | Owner kedua ditolak oleh database | `[ ]` |
-| Batas role | Developer tanpa tenant; admin tanpa cabang | Developer sah, admin ditolak CHECK | `[ ]` |
-| Relasi silang | Service/user/transaksi menunjuk cabang bisnis lain | FK komposit menolak, tidak ada data parsial | `[ ]` |
-| Defaults | Row loyalty_settings baru tanpa hadiah | Nonaktif, N10, hadiah/maks null; N0 ditolak | `[ ]` |
-| Nilai katalog | Harga0, durasi0, minimum item terisi | Constraint menolak; nilai domain sah diterima | `[ ]` |
-| Histori | Hapus parent yang memiliki child | RESTRICT; snapshot FK opsional mengikuti SET NULL yang ditetapkan | `[ ]` |
-| Rahasia | Serialisasi model bisnis bercredential | Rahasia hidden; ciphertext tersimpan pada TEXT | `[ ]` |
-| Rollback migrasi | Rollback pada DB uji terpisah lalu migrate | Tidak ada kegagalan urutan FK; data lokal pengguna tidak disentuh | `[ ]` |
+| DB kosong | Migrasi semua tabel lingkup | Berhasil sesuai urutan FK; migrasi kedua no-op | `[x]` |
+| Satu owner | Insert dua owner bisnis sama | Owner kedua ditolak oleh database | `[x]` |
+| Batas role | Developer tanpa tenant; admin tanpa cabang | Developer sah, admin ditolak CHECK | `[x]` |
+| Relasi silang | Service/user/transaksi menunjuk cabang bisnis lain | FK komposit menolak, tidak ada data parsial | `[x]` |
+| Defaults | Row loyalty_settings baru tanpa hadiah | Nonaktif, N10, hadiah/maks null; N0 ditolak | `[x]` |
+| Nilai katalog | Harga0, durasi0, minimum item terisi | Constraint menolak; nilai domain sah diterima | `[x]` |
+| Histori | Hapus parent yang memiliki child | RESTRICT; snapshot FK opsional mengikuti SET NULL yang ditetapkan | `[x]` |
+| Rahasia | Serialisasi model bisnis bercredential | Rahasia hidden; ciphertext tersimpan pada TEXT | `[x]` |
+| Rollback migrasi | Rollback pada DB uji terpisah lalu migrate | Tidak ada kegagalan urutan FK; data lokal pengguna tidak disentuh | `[x]` |
 
 ## 6. Verification Commands
 
@@ -81,8 +81,14 @@ Ekspektasi: constraint diuji dengan insert gagal/sukses nyata; tidak menganggap 
 
 ## 8. Completion Checklist
 
-- [ ] Lingkup diotorisasi dan dependensi selesai.
-- [ ] Seluruh tabel lingkup dan constraint diverifikasi di MySQL 8.4.
-- [ ] Matriks penerimaan selesai; tidak ada skema dummy atau migrasi ganda.
-- [ ] Data model membedakan implementasi skema dan fitur yang belum ada.
-- [ ] Handoff, sesi dan arsip diperbarui sesuai workflow.
+- [x] Lingkup diotorisasi dan dependensi selesai.
+- [x] Seluruh tabel lingkup dan constraint diverifikasi di MySQL 8.4.
+- [x] Matriks penerimaan selesai; tidak ada skema dummy atau migrasi ganda.
+- [x] Data model membedakan implementasi skema dan fitur yang belum ada.
+- [x] Handoff, sesi dan arsip diperbarui sesuai workflow.
+
+## Hasil implementasi dan verifikasi
+
+Selesai pada 28 September 2026 sesuai otorisasi pengguna. Bukti rinci, matriks per AC dan batas integrasi M2–M6 ada di [audit M1](../../audits/m1-verification.md); perintah aktual di [development](../../development.md).
+
+CI final: [36350950049](https://github.com/cleveradit/ceklaundry/actions/runs/36350950049), 52 tes/306 assertions, quality/build/MySQL/browser lulus. Status checklist berlaku untuk lingkup M1; consumer masa depan tidak diklaim lulus E2E. Kasus kegagalan diuji melalui fault/guard dan setup bersih.

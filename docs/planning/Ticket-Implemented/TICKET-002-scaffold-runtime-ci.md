@@ -1,16 +1,16 @@
 # Implementation Plan: TICKET-002 (Scaffold, runtime, dan CI dasar)
 
-**Ticket:** `TICKET-002`  
-**Status:** `READY`  
-**Target Audience:** AI Developer Agents  
-**Depends On:** `TICKET-001`  
+**Ticket:** `TICKET-002`
+**Status:** `DONE`
+**Target Audience:** AI Developer Agents
+**Depends On:** `TICKET-001`
 **Tahap:** Urutan 1 — M1, pekerjaan 1–2 dan CI awal
 
 ## 1. Business Decision Snapshot
 
 | Item | Approved Value |
 |---|---|
-| Sumber | [Plan M1](../plan.md#5-m1--fondasi-dan-tenant), [arsitektur](../initiate-file/architecture.md) bagian 1 dan 9 |
+| Sumber | [Plan M1](../../plan.md#5-m1--fondasi-dan-tenant), [arsitektur](../../initiate-file/architecture.md) bagian 1 dan 9 |
 | Keterlacakan | Prasyarat US-101–US-109; PLH-01–PLH-04, KIN-02, UX-05, SEC-04, LOK-01, LOK-03 |
 | Stack | PHP 8.4/Laravel 12, MySQL 8.4, Inertia React TypeScript strict, Tailwind, shadcn/ui, Vite; tanpa SSR |
 | Runtime | Docker Compose app/web/db/worker/cron; queue/session/cache database; tanpa Redis |
@@ -52,13 +52,13 @@ Menyediakan aplikasi dasar yang bisa dijalankan dari checkout bersih, dengan pan
 
 | Case | Input | Expected Result | Status |
 |---|---|---|---|
-| Checkout baru | Lockfile + konfigurasi lokal + DB kosong | Build dan lima layanan dapat dijalankan; smoke test berhasil | `[ ]` |
-| Batas versi host | Host tanpa Node/PHP 8.4 | Build/runtime container tetap memakai versi target | `[ ]` |
-| Publik tanpa JS | Halaman shell publik, JS dimatikan | Blade terbaca; tidak mengunduh bundle panel | `[ ]` |
-| Persistensi | Restart container tanpa menghapus volume | Data uji dan storage tetap ada | `[ ]` |
-| DB belum siap | Start layanan bersamaan | Healthcheck/readiness menangani ketergantungan; error aman | `[ ]` |
-| Mutu kode gagal | Kesalahan tipe/lint pada branch uji sementara | CI gagal; sesudah diperbaiki seluruh gate lulus | `[ ]` |
-| Rahasia | Git diff dan image build context | Tidak memuat .env/kredensial nyata | `[ ]` |
+| Checkout baru | Lockfile + konfigurasi lokal + DB kosong | Build dan lima layanan dapat dijalankan; smoke test berhasil | `[x]` |
+| Batas versi host | Host tanpa Node/PHP 8.4 | Build/runtime container tetap memakai versi target | `[x]` |
+| Publik tanpa JS | Halaman shell publik, JS dimatikan | Blade terbaca; tidak mengunduh bundle panel | `[x]` |
+| Persistensi | Restart container tanpa menghapus volume | Data uji dan storage tetap ada | `[x]` |
+| DB belum siap | Start layanan bersamaan | Healthcheck/readiness menangani ketergantungan; error aman | `[x]` |
+| Mutu kode gagal | Kesalahan tipe/lint pada branch uji sementara | CI gagal; sesudah diperbaiki seluruh gate lulus | `[x]` |
+| Rahasia | Git diff dan image build context | Tidak memuat .env/kredensial nyata | `[x]` |
 
 ## 6. Verification Commands
 
@@ -88,8 +88,14 @@ Ekspektasi: runtime sehat, pemeriksaan lulus, build reproducible; periksa schedu
 
 ## 8. Completion Checklist
 
-- [ ] Lingkup diotorisasi dan dependensi selesai sebelum eksekusi.
-- [ ] Kontrak runtime/build/CI diimplementasikan dan seluruh kasus diverifikasi.
-- [ ] Perintah aktual dan versi terpilih tersimpan dalam dokumentasi/lockfile.
-- [ ] Tidak ada rahasia atau perubahan di luar lingkup.
-- [ ] Sesi dan dokumentasi diperbarui; DONE diarsipkan sesuai workflow.
+- [x] Lingkup diotorisasi dan dependensi selesai sebelum eksekusi.
+- [x] Kontrak runtime/build/CI diimplementasikan dan seluruh kasus diverifikasi.
+- [x] Perintah aktual dan versi terpilih tersimpan dalam dokumentasi/lockfile.
+- [x] Tidak ada rahasia atau perubahan di luar lingkup.
+- [x] Sesi dan dokumentasi diperbarui; DONE diarsipkan sesuai workflow.
+
+## Hasil implementasi dan verifikasi
+
+Selesai pada 28 September 2026 sesuai otorisasi pengguna. Bukti rinci, matriks per AC dan batas integrasi M2–M6 ada di [audit M1](../../audits/m1-verification.md); perintah aktual di [development](../../development.md).
+
+CI final: [36350950049](https://github.com/cleveradit/ceklaundry/actions/runs/36350950049), 52 tes/306 assertions, quality/build/MySQL/browser lulus. Status checklist berlaku untuk lingkup M1; consumer masa depan tidak diklaim lulus E2E. Kasus kegagalan diuji melalui fault/guard dan setup bersih.

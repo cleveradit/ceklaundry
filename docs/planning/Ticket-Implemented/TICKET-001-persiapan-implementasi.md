@@ -1,16 +1,16 @@
 # Implementation Plan: TICKET-001 (Persiapan implementasi)
 
-**Ticket:** `TICKET-001`  
-**Status:** `READY`  
-**Target Audience:** AI Developer Agents  
-**Depends On:** Tidak ada  
+**Ticket:** `TICKET-001`
+**Status:** `DONE`
+**Target Audience:** AI Developer Agents
+**Depends On:** Tidak ada
 **Tahap:** Urutan 0 — Persiapan
 
 ## 1. Business Decision Snapshot
 
 | Item | Approved Value |
 |---|---|
-| Sumber | [Plan tahap 0](../plan.md#4-tahap-0--persiapan), [konteks proyek](../ai-context.md), [audit final](../audits/final-system-audit.md) |
+| Sumber | [Plan tahap 0](../../plan.md#4-tahap-0--persiapan), [konteks proyek](../../ai-context.md), [audit final](../../audits/final-system-audit.md) |
 | Keterlacakan | Prasyarat US-101–US-109; NFR PLH-01, PLH-03, PLH-04, LOK-03, SEC-01 |
 | Target tetap | PHP 8.4, Laravel 12, MySQL 8.4, panel Inertia/React/TypeScript strict; publik Blade |
 | Jalur lingkungan yang direncanakan | Checkout dan perintah pengembangan di WSL Ubuntu; runtime PHP/Composer dan build Node/npm dalam Docker, tanpa mensyaratkan PHP/Node host |
@@ -52,12 +52,12 @@ Menghasilkan jalur setup yang dapat dipakai untuk memulai M1 serta daftar prasya
 
 | Case | Input | Expected Result | Status |
 |---|---|---|---|
-| Jalur utama | Checkout WSL dan daemon Docker tersedia | Runtime PHP 8.4 dan build frontend container dapat disiapkan; port tercatat | `[ ]` |
-| Batas lingkungan host | PHP host berbeda versi atau Node host tidak ada | Jalur container tetap dapat digunakan; tidak mengklaim alat host sebagai prasyarat | `[ ]` |
-| Port terpakai | Port web pilihan sudah dipakai | Pilih port kosong dan catat, tanpa menghentikan proses pengguna | `[ ]` |
-| Gagal akses Docker | Daemon/registry tidak dapat diakses | Blocker dan langkah pemulihan tercatat; tahap 0 belum DONE | `[ ]` |
-| Perubahan existing | Working tree berisi pekerjaan pengguna | Tidak ditimpa/direset oleh persiapan | `[ ]` |
-| Rahasia | Contoh konfigurasi dan dokumentasi diperiksa | Tidak ada password, APP_KEY, token atau kredensial asli | `[ ]` |
+| Jalur utama | Checkout WSL dan daemon Docker tersedia | Runtime PHP 8.4 dan build frontend container dapat disiapkan; port tercatat | `[x]` |
+| Batas lingkungan host | PHP host berbeda versi atau Node host tidak ada | Jalur container tetap dapat digunakan; tidak mengklaim alat host sebagai prasyarat | `[x]` |
+| Port terpakai | Port web pilihan sudah dipakai | Pilih port kosong dan catat, tanpa menghentikan proses pengguna | `[x]` |
+| Gagal akses Docker | Daemon/registry tidak dapat diakses | Blocker dan langkah pemulihan tercatat; tahap 0 belum DONE | `[x]` |
+| Perubahan existing | Working tree berisi pekerjaan pengguna | Tidak ditimpa/direset oleh persiapan | `[x]` |
+| Rahasia | Contoh konfigurasi dan dokumentasi diperiksa | Tidak ada password, APP_KEY, token atau kredensial asli | `[x]` |
 
 ## 6. Verification Commands
 
@@ -84,8 +84,14 @@ Hasil yang diharapkan: akses Docker dan port teridentifikasi, validator dokument
 
 ## 8. Completion Checklist
 
-- [ ] Lingkup eksekusi telah diotorisasi; status READY sebelum eksekusi.
-- [ ] Pemeriksaan lingkungan dan pengelolaan rahasia terdokumentasi dengan bukti.
-- [ ] Matriks penerimaan dan verifikasi selesai; tidak ada blocker fondasi tersisa.
-- [ ] Dokumentasi, indeks dan sesi diperbarui tanpa perubahan di luar lingkup.
-- [ ] DONE hanya setelah pekerjaan diverifikasi; arsipkan sesuai workflow.
+- [x] Lingkup eksekusi telah diotorisasi; status READY sebelum eksekusi.
+- [x] Pemeriksaan lingkungan dan pengelolaan rahasia terdokumentasi dengan bukti.
+- [x] Matriks penerimaan dan verifikasi selesai; tidak ada blocker fondasi tersisa.
+- [x] Dokumentasi, indeks dan sesi diperbarui tanpa perubahan di luar lingkup.
+- [x] DONE hanya setelah pekerjaan diverifikasi; arsipkan sesuai workflow.
+
+## Hasil implementasi dan verifikasi
+
+Selesai pada 28 September 2026 sesuai otorisasi pengguna. Bukti rinci, matriks per AC dan batas integrasi M2–M6 ada di [audit M1](../../audits/m1-verification.md); perintah aktual di [development](../../development.md).
+
+CI final: [36350950049](https://github.com/cleveradit/ceklaundry/actions/runs/36350950049), 52 tes/306 assertions, quality/build/MySQL/browser lulus. Status checklist berlaku untuk lingkup M1; consumer masa depan tidak diklaim lulus E2E. Kasus kegagalan diuji melalui fault/guard dan setup bersih.

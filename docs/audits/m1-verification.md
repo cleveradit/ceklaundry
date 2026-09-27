@@ -82,7 +82,17 @@ Nama test berada di `tests/Feature/` atau `tests/Integration/`; runner browser d
 
 ## Penutupan gate
 
-Verifikasi final dan tautan run GitHub Actions dicatat setelah run aktual selesai. Tidak boleh menandai remote CI lulus dari hasil lokal saja.
+[GitHub Actions run 36350950049](https://github.com/cleveradit/ceklaundry/actions/runs/36350950049) **success**, kode `27c1d72`. Checkout bersih membangun image, menyalakan DB/runtime, migrasi, Pint103 file, **52 tes/306 assertions tanpa warning**, TypeScript strict, ESLint, Vite, fault gate type/lint, validator spesifikasi dan browser Chromium153.0.8010.12 semuanya lulus. Runner browser menyimpan empat screenshot sebagai artifact; credential fixture tidak diunggah.
+
+Verifikasi lokal tambahan: rollback seluruh lima migrasi lalu migrate ulang pada ceklaundry_test berhasil; proyek Compose sekali pakai ceklaundry-clean-m1 di port8090 menjalankan worker probe dan cron heartbeat. Restart mempertahankan cache DB dan marker storage; migrate berikutnya no-op. Container/volume uji sekali pakai dibersihkan; volume development dipertahankan.
+
+Run awal36349672071 gagal saat inisialisasi volume storage; gate menghentikan langkah selanjutnya. Perbaikan memakai volume nocopy serta mkdir runtime. Init MySQL diisolasi dalam subshell dan healthcheck memakai TCP agar tidak salah membaca server sementara saat bootstrap. [Run ulang36350064687](https://github.com/cleveradit/ceklaundry/actions/runs/36350064687) berhasil; final run di atas juga menghapus warning dotenv melalui placeholder .env kosong dan mengaktifkan --fail-on-warning.
+
+Password owner bersarang tidak di-trim dan tidak masuk old input pada validation error; regression test BusinessManagementTest lulus. Whitespace Unicode nama katalog dinormalisasi sebelum uniqueness; edit lokal dan sinkronisasi tidak mengubah snapshot fixture.
+
+Reset password admin oleh owner tetap tersedia di BACA_SAJA sebagai operasi keamanan, sementara CRUD bisnis tetap423; BranchAdminTest memverifikasi password/flag/audit dan penolakan business-write. POST login tanpa token CSRF pada runtime lokal menghasilkan419.
+
+Seluruh TICKET-001–010 DONE dan berada di [arsip](../planning/Ticket-Implemented/index.md). Dokumentasi penutupan dapat mempunyai commit terpisah dari kode yang diverifikasi; tidak mengubah kode runtime.
 
 ## Handoff M2
 

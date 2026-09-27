@@ -1,16 +1,16 @@
 # Implementation Plan: TICKET-006 (Panel developer, provisioning bisnis, dan lifecycle)
 
-**Ticket:** `TICKET-006`  
-**Status:** `READY`  
-**Target Audience:** AI Developer Agents  
-**Depends On:** `TICKET-005`  
+**Ticket:** `TICKET-006`
+**Status:** `DONE`
+**Target Audience:** AI Developer Agents
+**Depends On:** `TICKET-005`
 **Tahap:** Urutan 1 — M1, pekerjaan 7
 
 ## 1. Business Decision Snapshot
 
 | Item | Approved Value |
 |---|---|
-| Sumber | [User stories](../initiate-file/user-stories.md) US-102/103/104; [PRD](../initiate-file/prd.md) 7.10/9.3 |
+| Sumber | [User stories](../../initiate-file/user-stories.md) US-102/103/104; [PRD](../../initiate-file/prd.md) 7.10/9.3 |
 | Keterlacakan | US-102 AC1–4, US-103 AC1–4, US-104 AC1–8; AND-01, AND-21, ISO-03, ISO-06, SEC-01, SEC-07, SEC-08, LOK-03 |
 | Provisioning | Tepat satu business+owner+business_settings+loyalty_settings dalam satu commit; active_until wajib bisnis nyata |
 | Lifecycle | Evaluator TICKET-004; AKTIF sampai akhir active_until, tenggang+1..+7, baca-saja+8 WIB; warning mulai−7 |
@@ -49,15 +49,15 @@ Developer dapat mendaftarkan bisnis dan mengelola masa aktif tanpa membuka data 
 
 | Case | Input | Expected Result | Status |
 |---|---|---|---|
-| Provision sah | Bisnis, owner unik, tanggal aktif | Empat row domain utama terbentuk atomik; owner wajib ganti | `[ ]` |
-| Gagal parsial | Email duplikat/fault sesudah owner insert | Seluruh provisioning rollback, tidak ada orphan | `[ ]` |
-| Batas kalender | −7, hari0 23.59.59, +1, +7 23.59.59, +8 00.00 WIB | Warning/aktif/tenggang/read-only tepat | `[ ]` |
-| Read-only | Owner/admin baca dan direct POST bisnis | Baca boleh, tulis423; ganti/reset/logout tetap bekerja | `[ ]` |
-| Sesi lama | Developer menonaktifkan bisnis | Login/sesi panel tenant ditolak; developer tetap boleh mengelola administrasinya | `[ ]` |
-| Agregat batas | Transaksi tepat now−30×24jam, batal, cabang nonaktif | Semua yang memenuhi rentang inklusif dihitung; tanpa data individual | `[ ]` |
-| Tidak drill-down | Developer mencoba detail transaksi/audit operasi | Ditolak tanpa bocoran DTO/ID/credential | `[ ]` |
-| Pending lama | Off→on/perpanjang sebelum job diproses | Pending lama tidak hidup kembali; audit dan perubahan atomik | `[ ]` |
-| Prioritas | is_active=false, demo tepat expiry | Nonaktif prioritas; demo expired ditolak, bukan baca-saja | `[ ]` |
+| Provision sah | Bisnis, owner unik, tanggal aktif | Empat row domain utama terbentuk atomik; owner wajib ganti | `[x]` |
+| Gagal parsial | Email duplikat/fault sesudah owner insert | Seluruh provisioning rollback, tidak ada orphan | `[x]` |
+| Batas kalender | −7, hari0 23.59.59, +1, +7 23.59.59, +8 00.00 WIB | Warning/aktif/tenggang/read-only tepat | `[x]` |
+| Read-only | Owner/admin baca dan direct POST bisnis | Baca boleh, tulis423; ganti/reset/logout tetap bekerja | `[x]` |
+| Sesi lama | Developer menonaktifkan bisnis | Login/sesi panel tenant ditolak; developer tetap boleh mengelola administrasinya | `[x]` |
+| Agregat batas | Transaksi tepat now−30×24jam, batal, cabang nonaktif | Semua yang memenuhi rentang inklusif dihitung; tanpa data individual | `[x]` |
+| Tidak drill-down | Developer mencoba detail transaksi/audit operasi | Ditolak tanpa bocoran DTO/ID/credential | `[x]` |
+| Pending lama | Off→on/perpanjang sebelum job diproses | Pending lama tidak hidup kembali; audit dan perubahan atomik | `[x]` |
+| Prioritas | is_active=false, demo tepat expiry | Nonaktif prioritas; demo expired ditolak, bukan baca-saja | `[x]` |
 
 ## 6. Verification Commands
 
@@ -79,8 +79,14 @@ Target setelah implementasi; gunakan frozen clock untuk batas kalender, fault in
 
 ## 8. Completion Checklist
 
-- [ ] Lingkup diotorisasi dan dependensi selesai.
-- [ ] Provisioning, agregat, lifecycle dan audit teruji termasuk failure/race.
-- [ ] Seluruh matriks lulus pada area M1; integrasi milestone berikutnya tercatat eksplisit.
-- [ ] UI Indonesia dan batas privasi diverifikasi di browser/API.
-- [ ] Dokumentasi fitur, sesi dan status diperbarui sesuai bukti.
+- [x] Lingkup diotorisasi dan dependensi selesai.
+- [x] Provisioning, agregat, lifecycle dan audit teruji termasuk failure/race.
+- [x] Seluruh matriks lulus pada area M1; integrasi milestone berikutnya tercatat eksplisit.
+- [x] UI Indonesia dan batas privasi diverifikasi di browser/API.
+- [x] Dokumentasi fitur, sesi dan status diperbarui sesuai bukti.
+
+## Hasil implementasi dan verifikasi
+
+Selesai pada 28 September 2026 sesuai otorisasi pengguna. Bukti rinci, matriks per AC dan batas integrasi M2–M6 ada di [audit M1](../../audits/m1-verification.md); perintah aktual di [development](../../development.md).
+
+CI final: [36350950049](https://github.com/cleveradit/ceklaundry/actions/runs/36350950049), 52 tes/306 assertions, quality/build/MySQL/browser lulus. Status checklist berlaku untuk lingkup M1; consumer masa depan tidak diklaim lulus E2E. Kasus kegagalan diuji melalui fault/guard dan setup bersih.

@@ -1,16 +1,16 @@
 # Implementation Plan: TICKET-007 (Pengelolaan cabang dan akun admin)
 
-**Ticket:** `TICKET-007`  
-**Status:** `READY`  
-**Target Audience:** AI Developer Agents  
-**Depends On:** `TICKET-006`  
+**Ticket:** `TICKET-007`
+**Status:** `DONE`
+**Target Audience:** AI Developer Agents
+**Depends On:** `TICKET-006`
 **Tahap:** Urutan 1 — M1, pekerjaan 8 bagian cabang/admin
 
 ## 1. Business Decision Snapshot
 
 | Item | Approved Value |
 |---|---|
-| Sumber | [User stories](../initiate-file/user-stories.md) US-105/106; [PRD](../initiate-file/prd.md) 7.9 dan 9.3 |
+| Sumber | [User stories](../../initiate-file/user-stories.md) US-105/106; [PRD](../../initiate-file/prd.md) 7.9 dan 9.3 |
 | Keterlacakan | US-105 AC1–5, US-106 AC1–5, US-109 AC1/2/4; AND-01, AND-19, DAT-01, ISO-01, ISO-02, ISO-06, SEC-01, SEC-05, SEC-07, SEC-08, LOK-04, UX-01, UX-02, UX-04 |
 | Cabang | Owner mengelola satu bisnis; nonaktif ditolak bila ada DITERIMA/DIPROSES/SIAP_DIAMBIL; riwayat tetap ada |
 | Admin | Tepat satu cabang per akun; satu cabang boleh banyak admin; reset oleh owner wajib ganti dan mencabut sesi/token |
@@ -45,16 +45,16 @@ Owner dapat mengelola identitas cabang dan menempatkan operator dengan aman. Per
 
 | Case | Input | Expected Result | Status |
 |---|---|---|---|
-| Cabang baru | Nomor08/+62/62 dengan spasi/tanda hubung | Normalisasi62…; identitas tersimpan dan dapat diedit | `[ ]` |
-| Nomor batas/gagal | Prefix62 diikuti8–13 digit; digit pertama0/terlalu panjang | Domain valid diterima; yang di luar batas ditolak tanpa pemotongan | `[ ]` |
-| Cabang sibuk | Salah satu dari tiga status transaksi aktif | Penonaktifan ditolak dengan pesan jelas | `[ ]` |
-| Hanya histori | Semua transaksi diambil/batal | Boleh nonaktif; histori tetap ada; aktifkan kembali berhasil | `[ ]` |
-| Banyak admin | Dua email unik pada cabang sama | Keduanya valid, masing-masing tepat satu cabang dan wajib ganti password | `[ ]` |
-| Pindah cabang | Admin A1 dipindah A2 dengan sesi lama | A1 tidak terbuka lagi; A2 sesuai policy terbaru | `[ ]` |
-| Pemalsuan | OwnerA kirim branchB atau ubah role/business_id admin | Ditolak; tidak naik hak atau pindah tenant | `[ ]` |
-| Reset/email/nonaktif | Owner reset atau ubah email/nonaktif admin | Sesi/token dicabut sesuai kontrak; audit reset tanpa rahasia; nonaktif tetap tidak login | `[ ]` |
-| Race | Penonaktifan cabang vs writer transaksi fixture | Root lock memberi urutan sah; tidak ada cabang nonaktif bertransaksi aktif | `[ ]` |
-| Read-only | POST owner pada bisnis BACA_SAJA | Tulis bisnis423, tidak mengubah cabang/admin | `[ ]` |
+| Cabang baru | Nomor08/+62/62 dengan spasi/tanda hubung | Normalisasi62…; identitas tersimpan dan dapat diedit | `[x]` |
+| Nomor batas/gagal | Prefix62 diikuti8–13 digit; digit pertama0/terlalu panjang | Domain valid diterima; yang di luar batas ditolak tanpa pemotongan | `[x]` |
+| Cabang sibuk | Salah satu dari tiga status transaksi aktif | Penonaktifan ditolak dengan pesan jelas | `[x]` |
+| Hanya histori | Semua transaksi diambil/batal | Boleh nonaktif; histori tetap ada; aktifkan kembali berhasil | `[x]` |
+| Banyak admin | Dua email unik pada cabang sama | Keduanya valid, masing-masing tepat satu cabang dan wajib ganti password | `[x]` |
+| Pindah cabang | Admin A1 dipindah A2 dengan sesi lama | A1 tidak terbuka lagi; A2 sesuai policy terbaru | `[x]` |
+| Pemalsuan | OwnerA kirim branchB atau ubah role/business_id admin | Ditolak; tidak naik hak atau pindah tenant | `[x]` |
+| Reset/email/nonaktif | Owner reset atau ubah email/nonaktif admin | Sesi/token dicabut sesuai kontrak; audit reset tanpa rahasia; nonaktif tetap tidak login | `[x]` |
+| Race | Penonaktifan cabang vs writer transaksi fixture | Root lock memberi urutan sah; tidak ada cabang nonaktif bertransaksi aktif | `[x]` |
+| Read-only | POST owner pada bisnis BACA_SAJA | Tulis bisnis423, tidak mengubah cabang/admin | `[x]` |
 
 ## 6. Verification Commands
 
@@ -75,8 +75,14 @@ Target sesudah implementasi. Uji concurrency di MySQL8.4 dua proses/barrier tanp
 
 ## 8. Completion Checklist
 
-- [ ] Lingkup diotorisasi dan dependensi selesai.
-- [ ] CRUD yang diizinkan, revocation dan isolasi teruji.
-- [ ] Guard cabang dan race MySQL lulus; uji ulang service M2 tercatat.
-- [ ] UI owner diverifikasi di HP dan dokumentasi fitur aktual diperbarui.
-- [ ] Sesi dan status diperbarui, tidak ada perubahan di luar lingkup.
+- [x] Lingkup diotorisasi dan dependensi selesai.
+- [x] CRUD yang diizinkan, revocation dan isolasi teruji.
+- [x] Guard cabang dan race MySQL lulus; uji ulang service M2 tercatat.
+- [x] UI owner diverifikasi di HP dan dokumentasi fitur aktual diperbarui.
+- [x] Sesi dan status diperbarui, tidak ada perubahan di luar lingkup.
+
+## Hasil implementasi dan verifikasi
+
+Selesai pada 28 September 2026 sesuai otorisasi pengguna. Bukti rinci, matriks per AC dan batas integrasi M2–M6 ada di [audit M1](../../audits/m1-verification.md); perintah aktual di [development](../../development.md).
+
+CI final: [36350950049](https://github.com/cleveradit/ceklaundry/actions/runs/36350950049), 52 tes/306 assertions, quality/build/MySQL/browser lulus. Status checklist berlaku untuk lingkup M1; consumer masa depan tidak diklaim lulus E2E. Kasus kegagalan diuji melalui fault/guard dan setup bersih.

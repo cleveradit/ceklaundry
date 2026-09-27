@@ -1,16 +1,16 @@
 # Implementation Plan: TICKET-005 (Bootstrap developer dan autentikasi)
 
-**Ticket:** `TICKET-005`  
-**Status:** `READY`  
-**Target Audience:** AI Developer Agents  
-**Depends On:** `TICKET-004`  
+**Ticket:** `TICKET-005`
+**Status:** `DONE`
+**Target Audience:** AI Developer Agents
+**Depends On:** `TICKET-004`
 **Tahap:** Urutan 1 — M1, pekerjaan 4–5
 
 ## 1. Business Decision Snapshot
 
 | Item | Approved Value |
 |---|---|
-| Sumber | [PRD](../initiate-file/prd.md) 9.2.1/9.3, [arsitektur](../initiate-file/architecture.md) 2/6.4/8/9 |
+| Sumber | [PRD](../../initiate-file/prd.md) 9.2.1/9.3, [arsitektur](../../initiate-file/architecture.md) 2/6.4/8/9 |
 | Keterlacakan | US-101 AC1–9; fondasi reset US-103 AC2, US-106 AC3–5; SEC-01–SEC-05, SEC-07, SEC-08, ISO-05, AND-27, PLH-03, PLH-04, LOK-01 |
 | Password | bcrypt, minimal12 karakter, maksimal72 byte UTF-8; awal/reset operator wajib ganti; tanpa remember-me/signup |
 | Reset email | Token60 menit sekali pakai; SMTP global via encrypted auth job, tries1; bukan notification_logs transaksi |
@@ -50,16 +50,16 @@ Developer dapat membuat akun awal secara aman; ketiga peran dapat login, logout 
 
 | Case | Input | Expected Result | Status |
 |---|---|---|---|
-| Login normal | Tiga role aktif, password benar | Panel tepat, session ID diregenerasi | `[ ]` |
-| Wajib ganti + read-only | Owner BACA_SAJA dengan flag awal | Ganti/logout boleh; business-write423; panel lain terblokir hingga ganti | `[ ]` |
-| Batas password | 11/12 karakter, 72/73 byte multibyte | Batas minimum/maksimum benar; tidak memotong password | `[ ]` |
-| Sesi usang | User/cabang/bisnis dinonaktifkan | Request panel berikutnya ditolak; logout tetap tersedia | `[ ]` |
-| Reset sekali pakai | Token baru, replay, tepat60 menit | Token valid sekali; replay/expired ditolak; seluruh sesi dicabut | `[ ]` |
-| Email/job usang | Dua request reset lalu worker job lama | Hanya token terbaru eligible; tanpa kebocoran token/recipient | `[ ]` |
-| Hold/demo/cutoff | Hold aktif; demo; token request sebelum/sama cutoff | Nol SMTP; hold/demo tanpa token/job baru; request baru setelah cutoff tetap divalidasi | `[ ]` |
-| Rate limit paralel | Request ke-6 login/email+IP dalam window sama | Maksimal5 lolos limiter; selebihnya429, batas IP juga bekerja | `[ ]` |
-| SMTP gagal/ambigu | Error setelah satu panggilan transport | Respons request generik; exception aman; tidak retry otomatis | `[ ]` |
-| Bootstrap ulang | Email developer existing | Tidak menimpa akun/password secara diam-diam | `[ ]` |
+| Login normal | Tiga role aktif, password benar | Panel tepat, session ID diregenerasi | `[x]` |
+| Wajib ganti + read-only | Owner BACA_SAJA dengan flag awal | Ganti/logout boleh; business-write423; panel lain terblokir hingga ganti | `[x]` |
+| Batas password | 11/12 karakter, 72/73 byte multibyte | Batas minimum/maksimum benar; tidak memotong password | `[x]` |
+| Sesi usang | User/cabang/bisnis dinonaktifkan | Request panel berikutnya ditolak; logout tetap tersedia | `[x]` |
+| Reset sekali pakai | Token baru, replay, tepat60 menit | Token valid sekali; replay/expired ditolak; seluruh sesi dicabut | `[x]` |
+| Email/job usang | Dua request reset lalu worker job lama | Hanya token terbaru eligible; tanpa kebocoran token/recipient | `[x]` |
+| Hold/demo/cutoff | Hold aktif; demo; token request sebelum/sama cutoff | Nol SMTP; hold/demo tanpa token/job baru; request baru setelah cutoff tetap divalidasi | `[x]` |
+| Rate limit paralel | Request ke-6 login/email+IP dalam window sama | Maksimal5 lolos limiter; selebihnya429, batas IP juga bekerja | `[x]` |
+| SMTP gagal/ambigu | Error setelah satu panggilan transport | Respons request generik; exception aman; tidak retry otomatis | `[x]` |
+| Bootstrap ulang | Email developer existing | Tidak menimpa akun/password secara diam-diam | `[x]` |
 
 ## 6. Verification Commands
 
@@ -84,8 +84,14 @@ Bangun ulang image frontend memakai perintah TICKET-002 setelah perubahan UI. Uj
 
 ## 8. Completion Checklist
 
-- [ ] Lingkup diotorisasi dan dependensi selesai.
-- [ ] Bootstrap, seluruh AC US-101 dan primitive reset operator teruji.
-- [ ] Batas password/session/rate limit/hold/cutoff/demo dan queue atomik lulus.
-- [ ] Dokumentasi memuat cara bootstrap dan reset aman tanpa kredensial.
-- [ ] Feature docs, sesi dan status diperbarui sesuai bukti aktual.
+- [x] Lingkup diotorisasi dan dependensi selesai.
+- [x] Bootstrap, seluruh AC US-101 dan primitive reset operator teruji.
+- [x] Batas password/session/rate limit/hold/cutoff/demo dan queue atomik lulus.
+- [x] Dokumentasi memuat cara bootstrap dan reset aman tanpa kredensial.
+- [x] Feature docs, sesi dan status diperbarui sesuai bukti aktual.
+
+## Hasil implementasi dan verifikasi
+
+Selesai pada 28 September 2026 sesuai otorisasi pengguna. Bukti rinci, matriks per AC dan batas integrasi M2–M6 ada di [audit M1](../../audits/m1-verification.md); perintah aktual di [development](../../development.md).
+
+CI final: [36350950049](https://github.com/cleveradit/ceklaundry/actions/runs/36350950049), 52 tes/306 assertions, quality/build/MySQL/browser lulus. Status checklist berlaku untuk lingkup M1; consumer masa depan tidak diklaim lulus E2E. Kasus kegagalan diuji melalui fault/guard dan setup bersih.

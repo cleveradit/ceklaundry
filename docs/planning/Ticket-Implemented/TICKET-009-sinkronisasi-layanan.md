@@ -1,16 +1,16 @@
 # Implementation Plan: TICKET-009 (Pratinjau dan sinkronisasi layanan master)
 
-**Ticket:** `TICKET-009`  
-**Status:** `READY`  
-**Target Audience:** AI Developer Agents  
-**Depends On:** `TICKET-008`  
+**Ticket:** `TICKET-009`
+**Status:** `DONE`
+**Target Audience:** AI Developer Agents
+**Depends On:** `TICKET-008`
 **Tahap:** Urutan 1 — M1, pekerjaan 8 bagian sinkronisasi
 
 ## 1. Business Decision Snapshot
 
 | Item | Approved Value |
 |---|---|
-| Sumber | [User stories](../initiate-file/user-stories.md) US-108; [PRD](../initiate-file/prd.md) 7.9; [arsitektur](../initiate-file/architecture.md) 4/5 |
+| Sumber | [User stories](../../initiate-file/user-stories.md) US-108; [PRD](../../initiate-file/prd.md) 7.9; [arsitektur](../../initiate-file/architecture.md) 4/5 |
 | Keterlacakan | US-108 AC1–9 (edit langsung AC9 pada TICKET-008), US-109 AC1/4; AND-01, AND-08, AND-19, SEC-05, SEC-07, ISO-06, UX-04 |
 | Pencocokan | Nama normalized dengan collation katalog; hanya master aktif dan cabang aktif yang dipilih |
 | Efek | Nama sama timpa harga/durasi/minimum/satuan dan aktifkan lokal; nama baru tambah; lokal lain tetap |
@@ -47,15 +47,15 @@ Owner dapat menyebarkan katalog dengan mengetahui dampaknya sebelum menyimpan. P
 
 | Case | Input | Expected Result | Status |
 |---|---|---|---|
-| Cabang kosong | Dua master aktif, satu nonaktif | Preview2 tambah; hanya dua aktif disalin setelah konfirmasi | `[ ]` |
-| Timpa/pertahankan |5 nama sama harga berbeda,2 baru,1 lokal khusus | Preview5 perbarui+2 tambah; lokal khusus tetap | `[ ]` |
-| Reaktivasi | Lokal nama sama nonaktif, master aktif | Preview reaktivasi; aktif kembali dan semua atribut sesuai master | `[ ]` |
-| Rename | Master A diubah B, lokal A existing | B ditambah, A tetap; tidak rename otomatis | `[ ]` |
-| Stale | Harga/master/cabang/lokal berubah setelah preview | Apply409; tidak ada write/audit sukses; perlu preview dan konfirmasi baru | `[ ]` |
-| Multi-cabang gagal | Fault pada write cabang kedua atau audit | Seluruh cabang rollback bersama | `[ ]` |
-| Snapshot | Transaksi lama memakai harga sebelum sync | Item/snapshot lama tetap persis | `[ ]` |
-| Akses/batas | Pilihan kosong, cabang nonaktif/asing, admin, read-only | Validasi/policy menolak sesuai kontrak; tidak ada partial apply | `[ ]` |
-| Dua apply paralel | Dua preview sama, apply bersamaan | Root lock serial; request kedua stale bila state berubah, tidak menggandakan layanan | `[ ]` |
+| Cabang kosong | Dua master aktif, satu nonaktif | Preview2 tambah; hanya dua aktif disalin setelah konfirmasi | `[x]` |
+| Timpa/pertahankan |5 nama sama harga berbeda,2 baru,1 lokal khusus | Preview5 perbarui+2 tambah; lokal khusus tetap | `[x]` |
+| Reaktivasi | Lokal nama sama nonaktif, master aktif | Preview reaktivasi; aktif kembali dan semua atribut sesuai master | `[x]` |
+| Rename | Master A diubah B, lokal A existing | B ditambah, A tetap; tidak rename otomatis | `[x]` |
+| Stale | Harga/master/cabang/lokal berubah setelah preview | Apply409; tidak ada write/audit sukses; perlu preview dan konfirmasi baru | `[x]` |
+| Multi-cabang gagal | Fault pada write cabang kedua atau audit | Seluruh cabang rollback bersama | `[x]` |
+| Snapshot | Transaksi lama memakai harga sebelum sync | Item/snapshot lama tetap persis | `[x]` |
+| Akses/batas | Pilihan kosong, cabang nonaktif/asing, admin, read-only | Validasi/policy menolak sesuai kontrak; tidak ada partial apply | `[x]` |
+| Dua apply paralel | Dua preview sama, apply bersamaan | Root lock serial; request kedua stale bila state berubah, tidak menggandakan layanan | `[x]` |
 
 ## 6. Verification Commands
 
@@ -76,8 +76,14 @@ Target setelah implementasi; concurrency memakai dua proses/koneksi MySQL8.4 dan
 
 ## 8. Completion Checklist
 
-- [ ] Lingkup diotorisasi dan dependensi selesai.
-- [ ] Preview, apply, audit dan semua AC US-108 lingkup M1 terverifikasi.
-- [ ] Stale409, isolasi, rollback multi-cabang dan concurrency lulus.
-- [ ] Browser/quality checks lulus; batas integrasi M2 tercatat.
-- [ ] Dokumentasi fitur, sesi dan status diperbarui.
+- [x] Lingkup diotorisasi dan dependensi selesai.
+- [x] Preview, apply, audit dan semua AC US-108 lingkup M1 terverifikasi.
+- [x] Stale409, isolasi, rollback multi-cabang dan concurrency lulus.
+- [x] Browser/quality checks lulus; batas integrasi M2 tercatat.
+- [x] Dokumentasi fitur, sesi dan status diperbarui.
+
+## Hasil implementasi dan verifikasi
+
+Selesai pada 28 September 2026 sesuai otorisasi pengguna. Bukti rinci, matriks per AC dan batas integrasi M2–M6 ada di [audit M1](../../audits/m1-verification.md); perintah aktual di [development](../../development.md).
+
+CI final: [36350950049](https://github.com/cleveradit/ceklaundry/actions/runs/36350950049), 52 tes/306 assertions, quality/build/MySQL/browser lulus. Status checklist berlaku untuk lingkup M1; consumer masa depan tidak diklaim lulus E2E. Kasus kegagalan diuji melalui fault/guard dan setup bersih.
