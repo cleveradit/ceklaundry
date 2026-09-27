@@ -1,0 +1,53 @@
+name: Quality and M1 integration
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create ephemeral configuration
+        run: python3 bin/setup-env
+      - name: Build runtime and frontend
+        run: docker compose build
+      - name: Start database and application
+        run: docker compose up -d --wait
+      - name: Migrate
+        run: docker compose exec -T app php artisan migrate --force
+      - name: PHP format
+        run: docker compose exec -T app vendor/bin/pint --test
+      - name: Unit, feature and real MySQL integration
+        run: docker compose exec -T app php artisan test
+      - name: Frontend tooling
+        run: |
+          docker build --target frontend -t ceklaundry-frontend -f docker/php/Dockerfile .
+          docker run --rm ceklaundry-frontend npm run lint
+          docker run --rm ceklaundry-frontend npm run typecheck
+          docker run --rm ceklaundry-frontend npm run build
+      - name: Documentation contracts
+        run: python3 docs/audits/validate-final-specs.py
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Browser dependencies
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+      - name: Browser journey on isolated database
+        run: |
+          docker compose -f compose.yaml -f compose.qa.yaml up -d qa
+          docker compose -f compose.yaml -f compose.qa.yaml exec -T qa php tests/Support/browser-seed.php
+          mkdir -p test-results
+          docker compose -f compose.yaml -f compose.qa.yaml cp qa:/app/storage/app/private/browser-fixture.json test-results/browser-fixture.json
+          npm run test:browser
+      - name: Browser screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: m1-browser-screenshots
+          path: test-results/*.png
+      - name: Shut down isolated CI containers
+        if: always()
+        run: docker compose -f compose.yaml -f compose.qa.yaml down -v

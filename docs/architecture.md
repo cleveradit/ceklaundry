@@ -1,28 +1,27 @@
 # Architecture Map — CekLaundry
 
-**Status:** rancangan; belum diverifikasi terhadap kode. Spesifikasi lengkap ada di [architecture.md](initiate-file/architecture.md), dengan kebutuhan di [user-stories.md](initiate-file/user-stories.md) dan [nfr.md](initiate-file/nfr.md).
+**Status:** fondasi M1 diimplementasikan; lihat [verifikasi M1](audits/m1-verification.md). Spesifikasi keseluruhan tetap [arsitektur sumber](initiate-file/architecture.md). Operasional M2–M6 masih rancangan.
 
-## Ringkasan
+Monolit Laravel12, PHP8.4 dan MySQL8.4/InnoDB. Panel Inertia/React/TypeScript strict memakai Vite tanpa SSR; halaman depan Blade dengan CSS terpisah tidak mengunduh React.
 
-Satu monolit Laravel dirancang melayani beberapa bisnis laundry dalam satu MySQL. Panel developer, owner, dan admin memakai Inertia + React; halaman publik pengecekan resi memakai Blade. Isolasi tenant dan cabang ditegakkan di lapisan data dan server.
+| Komponen aktual | Tanggung jawab |
+|---|---|
+| `routes/auth.php`, `AuthenticationController`, `AccountService` | Login, wajib ganti password, logout/reset, revocation sesi/token |
+| `ResolveTenant`, `EnsureBusinessAccess`, `RequireRole`, policies | Identitas terbaru setiap request; tenant/cabang/peran dan lifecycle |
+| `TenantContext`, model concerns | Scope fail closed; admin satu cabang; job membersihkan context dalam finally |
+| `BusinessTransaction` | Root business lock lalu baca ulang actor/lifecycle, READ COMMITTED, retry unit maksimal3 |
+| `TenantProvisioner`, `DeveloperBusinessSummary`, `LifecycleService` | Provision atomik, DTO agregat developer, kalender WIB dan invalidasi pending |
+| `BranchService`, `AccountService`, `ServiceCatalogService` | Cabang/admin/master/lokal dan guard invariannya |
+| `MasterSyncService` | Snapshot/fingerprint server, preview tanpa long transaction, apply semua cabang + audit atomik |
+| `SendPasswordReset`, `OutboundGuard` | Job terenkripsi, token+queue satu transaksi, SMTP global sekali, hold/cutoff |
+| `resources/js/Pages/Management.tsx`, `Owner/Sync.tsx` | Form reusable per resource, daftar, konfirmasi dan pratinjau |
+| `NoStore`, konfigurasi Inertia | No-store/no-referrer, history terenkripsi, clear history setelah logout |
+| Docker app/web/db/worker/cron | Runtime lokal dan CI; panduan [development](development.md) |
 
-## Komponen yang direncanakan
+Controller memakai validasi request sederhana langsung dan meneruskan validasi domain ke service; form frontend katalog/cabang/admin memakai komponen bersama. Tidak diperlukan kelas Request/Page kosong per variasi resource. Ini pilihan organisasi kode; kontrak validasi/otorisasi tiket tetap ditegakkan server.
 
-| Komponen | Tanggung jawab | Lokasi target |
-|---|---|---|
-| Routes, middleware, controller, policy | Akses publik dan panel, otorisasi, tenant, masa aktif | `routes/`, `app/Http/`, `app/Policies/` |
-| Service layer | Harga, transaksi, pembayaran, stempel, sinkronisasi, laporan, demo | `app/Services/` |
-| Model dan migrasi | Skema, scope tenant, relasi | `app/Models/`, `database/migrations/` |
-| Panel | UI developer/owner/admin | `resources/js/` |
-| Halaman publik dan resi | Cek status, penyamaran data, cetak | `resources/views/` |
-| Jobs dan scheduler | Notifikasi email/WA, pengingat, pembersihan demo | `app/Jobs/`, `app/Console/Commands/` |
+Developer tidak mempunyai bypass policy operasional. Bisnis root dan User tidak memakai scope implisit, sehingga setiap akses administratif dibatasi eksplisit. Model operasional wajib context. Composite FK menjaga parent satu bisnis. Tidak ada network call di dalam root lock. Keamanan akun memakai root business/user lock tetapi tidak memerlukan hak tulis bisnis; BACA_SAJA tetap boleh ganti/reset.
 
-Lokasi di tabel adalah target rancangan Laravel, belum direktori yang sudah ada.
+Business write: autentikasi → identitas terkini → root lock → cek ulang akun/cabang/lifecycle → validasi domain → write child/audit → commit. HTTP lintas tenant404, salah peran403, business-write baca-saja423, preview stale409.
 
-## Alur utama yang direncanakan
-
-Admin/owner membuat transaksi pada tenant dan cabang yang sah → service menghitung harga dan menyimpan item serta snapshot → pembayaran dicatat secara tambah-saja → status cucian maju sesuai state machine → pelanggan melihat status melalui kode resi global → notifikasi dikirim asinkron ketika memenuhi aturan. Detail transisi, masa aktif, dan batas akses berada di [spesifikasi arsitektur](initiate-file/architecture.md).
-
-## Integrasi dan operasi yang direncanakan
-
-MySQL 8.4 untuk data dan queue; SMTP global/per bisnis untuk email; adapter Fonnte/Wablas/WABA untuk WA bila diaktifkan; cron untuk scheduler; Docker Compose dan reverse proxy HTTPS untuk deployment. Belum ada integrasi yang terpasang.
+Belum diimplementasikan: TransactionService/PricingService/payment, status/resi, notifikasi pelanggan/WA, loyalti/promo operasional, laporan, provisioning demo, PWA. Tabel pendukung hanya memungkinkan pengujian fondasi/guard M1; bukan bukti alur operasional tersedia.

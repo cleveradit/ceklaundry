@@ -1,15 +1,9 @@
 # Feature Docs — Index
 
-Daftar fitur yang telah diimplementasikan dan diverifikasi. Saat ini belum ada fitur live karena repository baru berisi spesifikasi. Kebutuhan yang direncanakan ada di [user-stories.md](../initiate-file/user-stories.md).
+Fitur yang telah diimplementasikan dan diverifikasi dalam lingkungan lokal/CI; Live tidak berarti sudah dideploy produksi.
 
-Untuk pemahaman menyeluruh, mulai dari [architecture.md](../architecture.md) dan [data-model.md](../data-model.md) lebih dulu.
+| Fitur | Status | File utama |
+|---|---|---|
+| [M1 — Fondasi dan tenant](m1-fondasi-dan-tenant.md) | Live | app/Services, app/Policies, resources/js/Pages, database/migrations |
 
-<!-- Tambahkan fitur setelah implementasi dan verifikasi. -->
-<!-- Format tabel: nama dan tautan file | deskripsi singkat | key files. -->
-
-## Konvensi penulisan
-
-- Tanpa emoji dekoratif di header; tanpa commit hash/branch di Status.
-- Setiap klaim diverifikasi terhadap kode aktual. Hal yang tak terverifikasi tidak ditulis.
-- Katalog (method/field/kolom) selalu berupa tabel.
-- Cross-link antar-doc memakai `[[nama-file]]` di body.
+Rancangan M2–M6 ada di [user stories](../initiate-file/user-stories.md). Mulai orientasi dari [architecture](../architecture.md), [data model](../data-model.md) dan [verifikasi](../audits/m1-verification.md).

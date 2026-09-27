@@ -1,0 +1,5 @@
+import AppLayout from '@/Layouts/AppLayout';
+import { rupiah } from '@/lib/utils';
+export default function AdminHome({ branch, services }: { branch: { nama: string; alamat: string; telepon: string }; services: { id: number; nama: string; harga: number; satuan: string; durasi_jam: number }[] }) {
+  return <AppLayout title={branch.nama} subtitle="Informasi cabang dan layanan yang tersedia."><div className="panel section-heading"><div><h2>Cabang Anda</h2><p>{branch.alamat}</p><p>{branch.telepon}</p></div><span className="pill">Admin cabang</span></div><section className="panel"><div className="section-heading"><h2>Daftar layanan</h2></div>{services.length === 0 ? <div className="empty-state">Belum ada layanan. Minta owner menyiapkan layanan cabang.</div> : services.map(service => <div className="data-row" key={service.id}><strong>{service.nama}</strong><span>{rupiah(service.harga)} / {service.satuan}</span><span>{service.durasi_jam} jam</span></div>)}</section><p className="muted roadmap-note">Pencatatan transaksi belum tersedia pada tahap fondasi ini.</p></AppLayout>;
+}

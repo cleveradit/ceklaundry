@@ -1,25 +1,20 @@
 # Data Model Reference — CekLaundry
 
-**Status:** rancangan; belum ada migrasi atau database berjalan. Nama tabel, kolom, tipe, indeks, dan aturan integritas lengkap ada di [database-schema.md](initiate-file/database-schema.md). Setelah migrasi dibuat, verifikasi ringkasan ini terhadap kode.
+**Status:** migrasi M1 berjalan pada MySQL8.4/InnoDB/utf8mb4_0900_as_ci. Skema lengkap target ada di [database-schema.md](initiate-file/database-schema.md); batas bukti ada di [audit M1](audits/m1-verification.md).
 
-## Penyimpanan data
-
-Rancangan memakai MySQL 8.4/InnoDB dengan `utf8mb4`. Data operasional dipisahkan oleh bisnis; transaksi berada pada cabang, sedangkan pelanggan dan layanan master berada pada bisnis. Queue dan sesi memakai tabel Laravel.
-
-## Kelompok tabel yang direncanakan
-
-| Kelompok | Tabel | Peran |
+| Kelompok | Tabel aktual | Cakupan |
 |---|---|---|
-| Tenant dan akses | `businesses`, `business_settings`, `users`, `branches` | Bisnis, masa aktif, peran, cabang, pengaturan |
-| Layanan dan pelanggan | `master_services`, `services`, `customers` | Katalog master/cabang dan pelanggan per bisnis |
-| Operasional | `transactions`, `transaction_items`, `payments`, `status_histories` | Cucian, item snapshot, pembayaran, riwayat status |
-| Promosi dan loyalti | `promos`, `promo_branches`, `loyalty_settings`, `loyalty_histories` | Potongan dan stempel |
-| Komunikasi dan audit | `notification_logs`, `audit_logs` | Hasil pengiriman dan aksi berisiko |
-| Infrastruktur | `jobs`, `failed_jobs`, `job_batches`, `password_reset_tokens`, `sessions`, `cache` | Fasilitas Laravel |
+| Tenant/akses | businesses, business_settings, users, branches | M1, lifecycle dan satu owner per bisnis melalui generated unique key |
+| Katalog | master_services, services | M1, unique nama per bisnis/cabang, domain angka/check dan composite FK |
+| Pengaturan hadiah | loyalty_settings | Default false/10/null/null dan guard hadiah; pengelolaan program M4 |
+| Pendukung | customers, promos, transactions, transaction_items, notification_logs | Struktur untuk fixture statistik, snapshot, guard dan pending invalidation; UI/service operasional belum ada |
+| Audit | audit_logs | Append-only model, safe JSON, tanpa updated_at |
+| Infrastruktur | sessions, password_reset_tokens, jobs, job_batches, failed_jobs, cache, cache_locks | Database session/queue/cache; payload auth terenkripsi |
 
-## Aturan data utama
+Migrasi `2026_09_28_000001_create_m1_foundation.php` dan `...000002_create_m1_supporting_tables.php` melengkapi migrasi infrastruktur Laravel. `payments`, `status_histories`, `promo_branches`, `loyalty_histories` menunggu milestone pemilik; tidak disajikan sebagai tabel yang sudah tersedia.
 
-- `business_id` membatasi seluruh data operasional; admin juga dibatasi `branch_id`. `kode_resi` unik global untuk jalur publik.
-- Harga layanan dan promo disalin sebagai snapshot pada transaksi/item agar transaksi lama tidak berubah ketika katalog berubah.
-- `payments`, `status_histories`, `loyalty_histories`, dan `audit_logs` bersifat tambah-saja selama bisnis ada, kecuali pembersihan tenant demo sesuai [NFR](initiate-file/nfr.md).
-- `status_bayar` diturunkan dari pembayaran; jumlah kumulatif tidak boleh melebihi `total_akhir`. Aturan yang tidak dapat menjadi constraint SQL dijaga service.
+Data tenant memakai business_id; admin wajib branch_id dan peran memiliki CHECK. FK komposit mencegah parent/cabang/pelanggan lintas bisnis. Harga dan durasi bilangan bulat positif, minimum kg maksimal satu desimal; minimum item harus null. Nama dinormalisasi whitespace oleh service, case-insensitive dan accent-sensitive oleh kolasi DB.
+
+Credential bisnis memakai cast encrypted dan hidden; .env/APP_KEY tidak masuk repo. Password bcrypt dibatasi72 byte sebelum hash. Tidak ada remember_token. Token reset di-hash; token plaintext hanya ada pada payload job terenkripsi dan tautan yang dikirim.
+
+Snapshot transaksi tidak berubah akibat edit master/lokal/sync. Statistik developer hanya COUNT cabang dan transaksi rentang30×24jam termasuk batal/nonaktif; tidak membawa ID/baris operasional. FK RESTRICT mempertahankan histori. Demo cleanup menyeluruh belum diimplementasikan.

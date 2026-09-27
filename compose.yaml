@@ -1,0 +1,66 @@
+name: ceklaundry
+x-app: &app
+  image: ceklaundry-app
+  build:
+    context: .
+    dockerfile: docker/php/Dockerfile
+    target: app
+  env_file: .env
+  environment:
+    DB_HOST: db
+  volumes:
+    - storage:/app/storage
+  depends_on:
+    db:
+      condition: service_healthy
+  restart: unless-stopped
+services:
+  app:
+    <<: *app
+    healthcheck:
+      test: [CMD-SHELL, 'php -r "exit(@fsockopen(\"127.0.0.1\", 9000) ? 0 : 1);"']
+      interval: 10s
+      timeout: 5s
+      retries: 12
+  web:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+      target: web
+    ports:
+      - '127.0.0.1:${APP_PORT:-8088}:80'
+    depends_on:
+      app:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD, wget, -q, --spider, http://127.0.0.1/up]
+      interval: 10s
+      retries: 6
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: ceklaundry
+      MYSQL_USER: ceklaundry
+      MYSQL_PASSWORD: ${DB_PASSWORD:?Run bin/setup-env first}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?Run bin/setup-env first}
+      TZ: Asia/Jakarta
+    command: ['--character-set-server=utf8mb4', '--collation-server=utf8mb4_0900_as_ci', '--default-time-zone=+07:00', '--transaction-isolation=READ-COMMITTED']
+    volumes:
+      - database:/var/lib/mysql
+      - ./docker/mysql/init-test-db.sh:/docker-entrypoint-initdb.d/init-test-db.sh:ro
+    healthcheck:
+      test: [CMD-SHELL, 'MYSQL_PWD="$$MYSQL_PASSWORD" mysql -u"$$MYSQL_USER" -e "SELECT 1" "$$MYSQL_DATABASE" >/dev/null']
+      interval: 5s
+      retries: 30
+      start_period: 20s
+    restart: unless-stopped
+  worker:
+    <<: *app
+    command: [php, artisan, 'queue:work', database, '--timeout=120', '--tries=0', '--sleep=2']
+  cron:
+    <<: *app
+    command: [crond, -f, -l, '8']
+volumes:
+  database:
+  storage:

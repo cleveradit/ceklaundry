@@ -2,9 +2,9 @@
 
 Baca dokumen ini sebelum merencanakan atau mengubah proyek. Urutan orientasi: [index.md](index.md) → [architecture.md](architecture.md) → [data-model.md](data-model.md) → [user-stories.md](initiate-file/user-stories.md) dan [nfr.md](initiate-file/nfr.md).
 
-**Tahap proyek:** pra-implementasi. Saat inisialisasi hanya ada spesifikasi Markdown; belum ada aplikasi, migrasi, tes, atau konfigurasi runtime. Rancangan tidak boleh ditulis sebagai fitur yang sudah berjalan.
+**Tahap proyek:** persiapan dan fondasi M1 diimplementasikan. Bukti aktual dan batas fixture/integrasi masa depan ada di [audit M1](audits/m1-verification.md). M2–M6 belum tersedia; jangan menyebut seluruh produk selesai.
 
-## 1. Tech Stack (target rancangan)
+## 1. Tech Stack (runtime M1)
 
 | Lapisan | Pilihan dalam rancangan |
 |---|---|
@@ -37,7 +37,7 @@ Versi library yang tidak disebut di [spesifikasi arsitektur](initiate-file/archi
 
 ## 4. Local Development Environment
 
-Saat ini tidak ada aplikasi yang dapat dijalankan: belum ada `composer.json`, `package.json`, `artisan`, atau `docker-compose.yml`. Pekerjaan dokumentasi cukup memakai editor Markdown. Setelah scaffold Laravel dibuat, ticket fondasi harus mencatat prasyarat, cara menjalankan layanan, migrasi/seeder, worker, scheduler, build frontend, lint, dan tes berdasarkan perintah yang benar-benar ada; lalu perbarui bagian ini.
+Gunakan [development.md](development.md): Docker Compose PHP8.4/MySQL8.4 dan Node22 build stage. `python3 bin/setup-env`, build/up/migrate, lalu bootstrap developer interaktif. Tidak ada password default. Database uji `ceklaundry_test` terpisah dan destruktif; jangan jalankan browser seed bersamaan backend suite. Lihat current-session untuk status verifikasi/CI.
 
 ## 5. Documentation Workflow
 
