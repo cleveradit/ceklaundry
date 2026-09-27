@@ -1,208 +1,185 @@
 # Dokumen Arsitektur & Teknologi — CekLaundry
 
-> **Kedudukan dokumen:** turunan teknis dari `prd.md`. Jika ada pertentangan, `prd.md` menang. Dokumen ini menetapkan keputusan implementasi agar agentic AI tidak perlu menebak. ID kebutuhan (`FR-…`) merujuk ke `prd.md`; ID NFR merujuk ke `nfr.md`.
+> Rancangan implementasi dari `prd.md`, bukan klaim fitur sudah berjalan. Hierarki: produk → acceptance criteria → arsitektur → skema → NFR. Kontrak kolom pada `database-schema.md`, matriks FR/AC di `user-stories.md`.
 
----
+## 1. Stack dan bentuk aplikasi
 
-## 1. Ringkasan & Prinsip Arsitektur
+Monolit Laravel 12, PHP 8.4, MySQL 8.4/InnoDB satu database. Panel Inertia + React/TypeScript strict + Tailwind + shadcn/ui, Vite, tanpa SSR. Publik Blade + CSS/JS vanila tanpa bundle panel. QR SVG lokal sisi server melalui paket QR yang dipatok saat scaffold. Queue `database`, session/cache/rate limiter database, cron Laravel tiap menit. Docker Compose (`app`, `web`, `db`, `worker`, `cron`), reverse proxy HTTPS, GitHub Actions. Tidak ada Redis/broker eksternal/offline write.
 
-Aplikasi monolit Laravel dengan satu database MySQL, melayani banyak bisnis laundry (multi-tenant baris-per-baris via kolom `business_id`). Tiga panel ber-login (developer, owner, admin) dibangun dengan Inertia + React; halaman publik (halaman depan, cek status, resi) dibangun sebagai Blade ringan terpisah dari bundle panel.
+Controller tipis; FormRequest memvalidasi bentuk, Policy akses, service memeriksa ulang seluruh kondisi setelah lock; UI bukan batas integritas.
 
-Prinsip yang wajib dipegang:
+## 2. Route, autentikasi, dan lifecycle
 
-1. **Isolasi tenant di lapisan data**, bukan hanya UI — model dengan `business_id` langsung memakai scope tenant; child tanpa kolom itu wajib diakses melalui parent terscope (Bagian 5).
-2. **Aturan bisnis di lapisan service**, bukan di controller/komponen React — controller tipis, React hanya presentasi.
-3. **Server adalah penegak terakhir** — pembatasan (baca-saja, kunci transaksi, batas WA) selalu divalidasi di server; penonaktifan tombol di UI hanyalah kenyamanan.
-4. **Tanpa infrastruktur tambahan** — queue memakai driver database, penjadwal memakai cron; tidak ada Redis, tidak ada layanan pihak ketiga selain SMTP & penyedia WA.
-
-## 2. Stack (Keputusan Final)
-
-| Lapisan | Teknologi |
+| Route | Guard / perilaku |
 |---|---|
-| Bahasa & framework | PHP 8.3+, Laravel 12 |
-| Database | MySQL 8 |
-| Panel (developer/owner/admin) | Inertia.js + React (TypeScript, mode strict) + Tailwind CSS + shadcn/ui, build via Vite |
-| Halaman publik | Blade + CSS ringan + JavaScript vanila seperlunya (tanpa bundle React) |
-| Queue | Laravel queue, driver `database` |
-| Penjadwal | Laravel scheduler via cron (`schedule:run` tiap menit) |
-| QR code | Paket pembuat QR sisi server (mis. `simplesoftwareio/simple-qrcode`), dirender inline (SVG) di halaman resi |
-| PWA | Web app manifest + service worker buatan sendiri (FR-W01–W02) |
-| Deployment | Docker Compose di VPS, di belakang reverse proxy (mis. Nginx Proxy Manager) |
-| CI/CD | GitHub Actions |
+| `/`, `GET /t/{kode_resi}` | Blade, shared receipt limiter, whitelist publik PRD 9.1 |
+| `POST /t/{kode_resi}/email` | CSRF, shared+email limiter, resolver resi, writable, DITERIMA/DIPROSES |
+| `GET/POST /t/{kode_resi}/email/confirm` | Signed URL kode+versi+expiry; GET baca; POST CSRF+lock+validasi ulang; tanpa ID internal |
+| `POST /demo`, `POST /demo/role` | CSRF, limiter provision; role switch hanya pasangan ID demo pada sesi server |
+| `/app` | Auth admin/owner, tenant, akun/cabang aktif, must-change-password, lifecycle, branch policy |
+| `/owner` | Auth owner, tenant, lifecycle; laporan/export khusus owner |
+| `/dev` | Auth developer, administrasi tenant dan angka agregat FR-D04 saja |
+| Login/logout/ganti/lupa/reset password | Guard keamanan terpisah dari business-write, matriks PRD 9.3 |
 
-Keputusan tambahan: **tidak memakai SSR Inertia** (panel berada di balik login; halaman publik sudah Blade murni, jadi SSR tidak memberi manfaat). Basis autentikasi memakai starter kit resmi Laravel (React), disesuaikan.
+`LifecycleService` menerapkan prioritas/tanggal persis PRD 9.3. NONAKTIF menolak login dan sesi lama; BACA_SAJA mengizinkan baca dan keamanan akun, menolak business-write 423; developer tetap dapat mengelola administrasinya. Demo expired ditolak termasuk GET resi walau purge tertunda. Semua pemeriksaan berlaku pada request serta preflight worker. Ketika is_active dimatikan, saklar channel/pengingat dimatikan, atau transaksi diambil/batal, terminalkan log terkait yang tertunda atau diproses dengan delivery_started_at null. Tick expiry memakai scanner tiap menit. Reaktivasi/perpanjangan dari keadaan lama BACA_SAJA terlebih dahulu menutup log pending lama di lock yang sama, sehingga off→on cepat tidak memutar ulang pesan. Log dengan delivery marker tidak disentuh karena in-flight/unknown. Metadata session/rate limiter/cleanup log merupakan infrastruktur, bukan tulis bisnis pengguna. Tidak ada GET yang mengubah data bisnis.
 
-## 3. Struktur Aplikasi & Routing
+Email user trim+lowercase unik global; satu owner/bisnis; admin tepat satu cabang; tidak ada public signup atau mass assignment role/business. Setup developer tanpa password contoh di repo. Password minimal 12 karakter, maksimal 72 byte UTF-8, bcrypt; remember-me tidak disediakan. Login/role switch meregenerasi session. `must_change_password` hanya mengizinkan halaman/POST ganti password dan logout pada panel. Ganti password mencabut sesi lain dan token reset. Reset link 60 menit sekali pakai mencabut semua sesi, menghabiskan token, menuntut login ulang. Reset operator menerima password sementara, set flag wajib ganti, cabut sesi/token, audit tanpa rahasia. Request reset generik; reset tidak mengaktifkan akun/bisnis/cabang. Role/assignment/is_active dibaca ulang setiap request. Perubahan email user mencabut token reset alamat lama/baru dan sesi user, memerlukan login ulang. Operasi keamanan pada user tenant mengambil root lock lalu row user, tetapi tidak menuntut lifecycle writable; user developer global memakai row lock user tanpa tenant.
 
-Empat kelompok route dengan middleware berbeda:
+## 3. Multi-tenancy, cabang, dan privasi
 
-| Kelompok | Prefix | Middleware inti | Isi |
-|---|---|---|---|
-| Publik baca | `/`, `GET /t/{kode_resi}` | `throttle:status-check` untuk pengecekan kode | Halaman depan dan status tetap tersedia meski tenant baca-saja/nonaktif |
-| Publik tulis | POST permintaan/konfirmasi email halaman status | `throttle`, resolusi transaksi dari kode, `lifecycle:public-write` | FR-C04; verifikasi email sebelum mengubah data aktif; server menolak saat tenant `BACA_SAJA`/`NONAKTIF` |
-| Publik demo | POST Coba Demo | rate limit demo | FR-M01, membuat tenant demo baru |
-| Panel Admin | `/app` | `auth`, `role:admin,owner`, `tenant`, `lifecycle` | Dashboard, transaksi, pelanggan, resi |
-| Panel Owner | `/owner` | `auth`, `role:owner`, `tenant`, `lifecycle` | Laporan, cabang, admin, layanan master, promo, stempel, pengaturan perilaku |
-| Panel Developer | `/dev` | `auth`, `role:developer` | Daftar bisnis, masa aktif, konfigurasi teknis |
+- `BelongsToBusiness` pada BusinessSetting, Branch, MasterService, Service, Customer, Transaction, Payment, Promo, LoyaltySetting, LoyaltyHistory, StatusHistory, NotificationLog. Konteks tenant hilang → fail closed. User dan AuditLog memakai filter/policy eksplisit; Business root. Infra tidak memakai tenant scope dan tidak terekspos route operasional.
+- TransactionItem hanya melalui Transaction terscope; PromoBranch melalui Promo/Branch satu tenant. Admin difilter cabang pada Transaction/Service serta child payment/status/log. Customer direktori bersama bisnis: CRUD identitas dan saldo total boleh; ledger/transaksi yang dilampirkan hanya cabangnya. Owner seluruh bisnis. Saldo global tidak memberi hak membuka transaksi sumber cabang lain. Audit merge lengkap hanya owner.
+- Tenant dari user server; IDs business/actor/creator/recorder, totals/snapshots/status_bayar tidak mass-assignable. Branch admin ditetapkan server; owner memilih branch miliknya. Validasi relasi customer/service/item/promo/actor setelah lock. Actor baru harus owner tenant atau admin cabang aktif saat event; reassignment berikutnya tidak mengubah histori.
+- Binding/query/search/export/report terscope. ID tenant/branch lain →404; route salah peran →403. Merge admin yang menyentuh cabang lain →403 generik tanpa rincian. FK memperkuat service, tidak menggantikan policy.
+- Bypass terbatas untuk provisioning developer/demo, resolver kode global, enumerasi scheduler, purge demo, agregat developer, serta pemeliharaan recipient WA pada edit identitas customer bersama (Bagian 6.2.1). Pengecualian terakhir hanya menulis log terkait customer dalam tenant yang sudah diotorisasi, tidak mengembalikan data cabang lain dan tidak melonggarkan policy merge. Setelah root ditemukan, job membentuk konteks tenant, memverifikasi parent, membersihkan konteks dalam `finally`. Job notifikasi transaksi hanya membawa business_id+log_id; mismatch/parent hilang → berhenti tanpa send.
+- Developer tidak membaca operasi individual melalui panel/API/audit detail/exception/failed_jobs/log. Statistik hanya PRD FR-D04, tidak drill-down. Observabilitas hanya tipe job, tenant, waktu, kode error aman; job transaksi tidak serialize model/payload/credential; pengecualian encrypted auth job dijelaskan di6.4 dan tidak diekspos developer. Publik tetap terbuka bagi siapa pun pemegang resi dengan whitelist sama, tanpa privilege developer.
+- Rahasia `wa_token`/`smtp_config` memakai TEXT encrypted/encrypted:array, hidden dari serialisasi. Form developer hanya configured indicator dan input pengganti; rahasia tersimpan tidak dikirim ke browser. Client SMTP/HTTP dibuat per job/tenant, tidak mengubah singleton mailer global. Sender/config bisnis incomplete → fallback SMTP/name/address global. WA aktif memerlukan provider/token/sender lengkap. Audit dan raw response tidak menyimpan rahasia.
 
-Owner mengakses fungsi operasional lewat kelompok `/app` juga (FR-O06) dengan pemilih cabang.
+## 4. Transaksi database dan concurrency
 
-## 4. Autentikasi & Otorisasi
+### 4.1 Protokol lock tunggal
 
-- Satu tabel `users` dengan kolom `role` (`developer` / `owner` / `admin`). Email unik global.
-- Kolom `must_change_password` memaksa penggantian password saat login pertama (FR-D02, FR-O01).
-- Otorisasi memakai Laravel Policy per model; admin dibatasi `branch_id`, owner dibatasi `business_id`. Developer tidak memiliki route/policy untuk membaca baris transaksi, pelanggan, pembayaran, atau detail operasional; endpoint daftar bisnis hanya boleh mengembalikan angka agregat jumlah cabang dan transaksi 30 hari (FR-D04), tanpa ID/baris individual.
+**Semua** mutasi domain satu bisnis—katalog/settings/user assignment/lifecycle oleh developer, customer/create/edit/payment/status/batal/merge, reservasi/claim/finalisasi notification/quota/purge—memakai protokol:
 
-## 5. Multi-Tenancy
+1. DB transaction write connection **READ COMMITTED**; `SELECT ... FOR UPDATE` pada `businesses` **terlebih dahulu**, sebelum write/lock child. Satu unit hanya satu tenant; provision membuat root baru sebelum child.
+2. Sesudah root lock, baca ulang actor/role/branch/lifecycle dan jam keputusan. Untuk operasi customer/transaksi, lock customer **ID menaik**, lalu transactions **ID menaik**, lalu notification_logs **ID menaik**. Tentukan customer_id dari transaksi setelah root lock agar merge tidak mengubahnya paralel. Row settings/katalog/anak lain hanya diakses untuk write sesudah root lock; tidak mengambil root bisnis lain.
+3. Validasi, kalkulasi, tulis child/ledger/cache/audit/log/job lalu commit. Service teratas memiliki unit DB; helper tidak commit sendiri.
 
-- `BelongsToBusiness` dipakai pada `BusinessSetting`, `Branch`, `MasterService`, `Service`, `Customer`, `Transaction`, `Payment`, `Promo`, `LoyaltySetting`, `LoyaltyHistory`, `StatusHistory`, dan `NotificationLog`; semua tabelnya mempunyai `business_id` langsung. Trait menerapkan `where business_id = tenant aktif` dan mengisi tenant saat create. `User` owner/admin dibatasi bisnis melalui autentikasi/policy; `AuditLog` memakai filter bisnis eksplisit karena aksi developer lintas tenant boleh `business_id=null`. `Business` adalah tenant root.
-- `TransactionItem` mengambil tenant hanya dari `Transaction` parent; `PromoBranch` dari `Promo`/`Branch` parent. Tidak boleh ada query child bebas tanpa join/parent yang sudah terscope.
-- Tenant aktif hanya dari user login (`$user->business_id`), bukan parameter URL/input. Untuk job, tenant berasal dari baris parent yang tersimpan dan diverifikasi ulang; untuk halaman publik hanya dari transaksi yang ditemukan melalui kode resi global.
-- Pengecualian internal yang terpercaya: `DemoProvisioner` dan service pendaftaran bisnis developer membuat `Business` dulu, lalu mengisi `business_id` anak dari ID bisnis **yang baru dibuat** secara eksplisit dengan bypass scope terbatas di service tersebut. Statistik FR-D04 memakai kueri agregat internal. Route publik mencari transaksi hanya lewat kode resi global, kemudian memakai `business_id`/`customer_id` dari baris transaksi tersimpan untuk memulai atau mengonfirmasi FR-C04; POST tidak menerima `business_id`/`customer_id` dari form. Bypass ini tidak tersedia pada controller operasional umum.
-- `Service` dan `Transaction` juga difilter `branch_id` untuk admin memakai `ForUserBranch`; `TransactionItem`, `Payment`, `StatusHistory`, dan `NotificationLog` mengikuti cabang transaksi parent. Customer dan ledger lintas cabang dalam bisnis hanya diakses dalam konteks operasi/cabang yang diizinkan; owner bebas seluruh cabangnya.
-- Saat menulis, service memverifikasi kesamaan tenant pada cabang, layanan, customer, transaksi, promo, payment, status, notifikasi, dan ledger; FK komposit yang tersedia menguatkan relasi ini (lihat skema). Admin tidak boleh menyisipkan `branch_id` lain.
-- Route model binding wajib melewati scope ini — pengambilan record via ID milik bisnis lain menghasilkan 404, bukan 403 (tidak membocorkan keberadaan data).
-- Halaman publik `/t/{kode}` adalah satu-satunya jalur tanpa tenant: pencarian berdasarkan `kode_resi` unik global, hanya menampilkan data yang ditentukan FR-C03 dengan penyamaran FR-C06.
-- **Pengujian isolasi wajib** (NFR): test otomatis yang memastikan user bisnis A mendapat 404/kosong untuk seluruh resource bisnis B, dan admin cabang 1 untuk data cabang 2.
+Lock business sengaja menserialkan write satu laundry pada skala PRD; tenant berbeda paralel. Ini mencegah cycle transaction→customer versus merge→transaction serta branch-deactivation/create. Lock singkat tanpa SMTP/HTTP/render/CSV/input manusia. Reads biasa tanpa lock. Queue pop/ack memiliki transaksi infra pendek terpisah, jangan menahan lock jobs saat memperoleh business. Limiter menyelesaikan lock infra sebelum domain. Deadlock/lock timeout dicoba ulang seluruh unit maksimal 3 kali, hanya tanpa efek eksternal; sesudahnya error ramah tanpa commit parsial.
 
-## 6. Siklus Hidup Bisnis (Masa Aktif) — FR-D05
+### 4.2 Request ulang dan stale edit
 
-Status turunan bisnis dihitung dari `active_until` (tidak disimpan sebagai kolom status):
+Create memakai UUID `create_request_key` + SHA-256 `create_request_hash` dari input sah kanonis (termasuk quote fingerprint dan payment awal, tanpa CSRF), UNIQUE business+key. Payment tambahan memakai `request_key`/`request_hash`, UNIQUE business+key. Sama key+hash mengembalikan resource existing setelah policy; hash berbeda →409. Jika customer baru inline bertabrakan unique phone, rollback seluruh create dan minta memilih customer yang sudah ada; tidak merge otomatis. Initial payment memakai key deterministik dari UUID create. Key disimpan sepanjang histori. Client mempertahankan UUID saat double-click/retry sampai hasil definitif. Replay adalah read hasil lama: setelah auth/cabang tetapi sebelum business-write lifecycle/validasi relasi existence ulang; tidak membuka resource yang kini di luar cabang.
 
-```
-AKTIF        : hari_ini ≤ active_until
-TENGGANG     : active_until < hari_ini ≤ active_until + 7 hari
-BACA_SAJA    : hari_ini > active_until + 7 hari
-NONAKTIF     : is_active = false (dimatikan developer, menolak login)
-DEMO         : is_demo = true (abaikan active_until; pakai demo_expires_at)
-```
+Edit/transisi mengirim `expected_version`; mismatch →409/reload. Mutasi transaksi (termasuk payment/email/merge) menaikkan `transactions.version`. Setelah policy, periksa target status sama sebagai no-op sebelum expected_version; batal ulang tidak mengganti alasan pertama. Payment tanpa expected_version memakai lock+sisa+request key. SUM payment server, bukan status client: total0 LUNAS tanpa payment; selebihnya 0/BELUM_BAYAR, antara/DP, sama/LUNAS. Tidak ada snapshot izin DP. Untuk payment baru (termasuk initial payment create), setelah root lock baca `business_settings.dp_enabled` dan `total_paid = SUM(payments.jumlah)`: nominal positif ≤sisa; jika total_paid=0 dan nominal<sisa, saklar harus true; jika total_paid>0, cicilan berikutnya tetap boleh saat saklar false; nominal=sisa selalu sah pada transaksi yang boleh menerima payment. Rp0 menolak baris payment. Mutasi toggle mengambil root lock yang sama: off commit dahulu menolak partial pertama; partial commit dahulu mempertahankan hak melanjutkan DP. Replay key/hash sah tetap mengembalikan payment existing sebelum aturan payment baru, termasuk setelah toggle berubah.
 
-Middleware `lifecycle`:
+PricingService mengeluarkan fingerprint canonical penawaran server (item/config/promo/hadiah/DP+hasil). Save di bawah lock menghitung ulang; beda fingerprint →409 preview baru. Tidak perlu quote table. Financial edit memperbarui seluruh snapshot dengan katalog kini; nonfinancial edit tidak reprice. Harga terkunci jika sudah LUNAS/payment/ledger, termasuk Rp0 tanpa program stempel.
 
-- `AKTIF` dalam 7 hari sebelum `active_until` → kirim flag banner peringatan ke Inertia (shared props).
-- `TENGGANG` → semua fungsi berjalan + flag banner mencolok.
-- `BACA_SAJA` → `GET`/`HEAD` panel diizinkan; tulis **bisnis tenant** (`POST`/`PUT`/`PATCH`/`DELETE`) ditolak 423. Pengecualian operasi keamanan akun: logout, POST ganti password awal, dan alur lupa/reset password (permintaan serta penyelesaian reset); endpoint ini tetap tersedia agar `must_change_password` tidak mengunci akun. Notifikasi otomatis tidak dijadwalkan/dikirim; frontend menonaktifkan aksi bisnis.
-- `GET /t/{kode_resi}` selalu tersedia termasuk untuk bisnis `NONAKTIF`. POST permintaan **dan** konfirmasi email FR-C04 melewati resolusi transaksi + pemeriksaan lifecycle tenant pemilik transaksi dan ditolak 423 bila `BACA_SAJA`/`NONAKTIF`; form disembunyikan/dinonaktifkan. Jangan memakai bypass route baca untuk POST ini.
+## 5. Service domain
 
-## 7. Lapisan Domain (Service Layer)
-
-Semua aturan bisnis `prd.md` Bagian 7 hidup di service berikut (controller hanya memanggil):
-
-| Service | Tanggung jawab | Rujukan |
-|---|---|---|
-| `ReceiptCodeGenerator` | Kode 6 karakter dari alfabet `ABCDEFGHJKMNPQRSTUVWXYZ23456789` (tanpa O/0/I/1/L; 31⁶ ≈ 887 juta kombinasi), coba-ulang saat tabrakan unik | FR-R01 |
-| `PricingService` | Snapshot nama/satuan/harga/subtotal item; potongan stempel → `promo_eligible_base` → validasi `minimal_total` → promo → total ≥ 0 | 7.1–7.2 |
-| `EstimationService` | `waktu_masuk + durasi_terlama`; boleh dikoreksi manual | 7.3 |
-| `TransactionStateMachine` | Peta transisi sah (maju satu arah + pembatalan), pencatatan `status_histories`, kolom waktu khusus, pemicu event | Bagian 6 |
-| `PaymentService` | Dalam DB transaction: lock transaksi `FOR UPDATE`, hitung ulang pembayaran/sisa, validasi, insert payment, turunkan status (`total_akhir=0` → `LUNAS`), proses perolehan stempel, commit | 7.4 |
-| `CancellationService` | Batalkan + alasan, keluarkan pendapatan; tambah `pengembalian_penukaran` dan/atau `pencabutan_perolehan` sesuai ledger asal; tulis pelaku/alasan ke `audit_logs` dalam transaksi DB yang sama | FR-A15, 7.6 |
-| `StampService` | Lock customer `FOR UPDATE`, periksa saldo ledger/cache, simpan delta stempel aktual bertanda secara append-only dan perbarui cache atomik; matematika hadiah `min(berat, maks)` | FR-L01–L04 |
-| `MasterSyncService` | Pratinjau & eksekusi "Salin/Perbarui dari Master" dan "Sebarkan ke Cabang": tambah-baru, timpa-nama-sama, biarkan-khusus-cabang | FR-O05 |
-| `CustomerMergeService` | Lock source/target satu bisnis, batalkan semua verifikasi email pending transaksi source, pindah transaksi + ledger, pertahankan identitas target, hitung ulang cache, hapus source, catat audit dalam satu DB transaction | FR-A14 |
-| `EmailVerificationService` | FR-C04: simpan email pending + versi terbaru, antre tautan 24 jam, validasi tanda tangan/status/lifecycle, lalu perbarui email transaksi dan customer atomik | FR-C04 |
-| `NotificationDispatcher` | Alur keputusan kanal (Bagian 8 di bawah) | FR-N01–N06 |
-| `DemoProvisioner` | Buat tenant demo + seed data contoh dan satu admin demo di cabang pertama + login owner otomatis; rate limit per IP | FR-M01–M06 |
-| `RevenueReportService` | Pendapatan berbasis tanggal pembayaran, kecualikan transaksi batal; tagihan berjalan; kartu menumpuk `SIAP_DIAMBIL` dengan `waktu_siap_diambil <= waktu_sekarang - reminder_first_days hari` dalam WIB | 7.5, FR-O13 |
-
-Semua operasi tulis multi-langkah (buat transaksi + item + pembayaran; pembatalan; penggabungan; sinkronisasi master) dibungkus transaksi database (atomik).
-
-Edit harga `DITERIMA` juga mengunci transaksi, mengecek ulang belum ada payment **dan belum ada `loyalty_histories` jenis apa pun** untuk transaksi itu, lalu menghitung ulang total dan status bayar. Edit catatan/estimasi tetap sah di `DITERIMA`. Sejak `DIPROSES`, hanya konfirmasi email FR-C04 yang boleh mengubah `notification_email` dan `customers.email` sebelum `SIAP_DIAMBIL`; payload endpoint itu tidak menerima field operasional. Permintaan publik lebih dahulu hanya mengisi email pending dan versi verifikasi pada transaksi, bukan email aktif. Transaksi Rp0 menjadi `LUNAS` tanpa payment dan memicu perolehan stempel bila program aktif serta tidak memakai penukaran; entry +1 tersebut mengunci edit harga. Saat pembatalan perolehan lama menyebabkan saldo negatif, cache saldo memakai integer bertanda; penukaran baru tetap wajib melihat saldo cukup sesudah lock.
-
-## 8. Arsitektur Notifikasi
-
-Alur keputusan saat peristiwa terjadi (status → `SIAP_DIAMBIL`, atau pengingat jatuh tempo):
-
-```
-peristiwa
- ├─ bisnis BACA_SAJA/NONAKTIF? → jangan kirim otomatis
- ├─ tentukan kanal eligible: email bila notification_email ada;
- │   WA bila token/nomor/saklar peristiwa aktif dan batas bulan tersedia
- ├─ bisnis demo? → satu log 'ditekan_demo' per kanal eligible (kanal+tujuan terisi), tanpa kirim
- └─ bisnis nyata → reservasi log+job email dan/atau slot WA secara atomik;
-                  jika slot WA penuh, log 'dilewati_batas' dan email tetap berjalan
-```
-
-- **Adapter WA:** kontrak `WhatsAppProvider` dengan driver `FonnteProvider`, `WablasProvider`, `WabaProvider`. Kredensial per bisnis (kolom terenkripsi di `businesses`), dikonfigurasi hanya oleh developer (FR-D06). Jangan mengikat kode ke satu vendor.
-- **Kuota WA bulanan:** saat mereservasi kanal WA, lock baris `businesses` dengan `FOR UPDATE`. Dalam transaksi yang sama hitung slot bulan WIB berjalan pada `notification_logs` berkanal `whatsapp` dengan status `tertunda`, `diproses`, `berhasil`, atau `perlu_pemeriksaan`; hanya jika jumlah < `wa_monthly_limit`, isi `wa_quota_month`, buat log/job, lalu commit. `gagal` final melepas slot; `perlu_pemeriksaan` tetap memegang slot sampai diselesaikan agar hasil tak pasti tidak melebihi batas. Jika job baru mengirim pada bulan berikutnya, reservasi bulan lama dilepas dan slot bulan baru diperiksa ulang di bawah lock sebelum pemanggilan penyedia. Penghitung owner **pesan berhasil terkirim** memakai `sent_at` bulan berjalan, bukan slot pending. `wa_monthly_limit=null` berarti tanpa batas.
-- **Email:** memakai SMTP global aplikasi secara default; nama & alamat pengirim per bisnis; SMTP khusus bisnis (opsional) dipakai bila diisi developer.
-- **Reservasi dan enqueue atomik:** perubahan status atau reservasi urutan pengingat, insert `notification_logs` dan insert job ke queue `database` dilakukan dalam **satu transaksi MySQL pada koneksi yang sama**. Dispatch pada jalur ini tidak ditunda ke `after_commit`; worker baru melihat job setelah commit. Jika transaksi rollback, log dan job sama-sama hilang. Kegagalan pengiriman eksternal setelah commit tidak mengubah status transaksi. Email verifikasi FR-C04 juga mereservasi log/job bersama metadata pending dalam satu transaksi.
-- **Idempotensi:** `notification_logs.notification_key` unik untuk notifikasi otomatis dari `(transaction_id, tipe, kanal, reminder_number)`, nomor 0 untuk siap-diambil dan 1..K untuk pengingat. Permintaan verifikasi email memakai key tersendiri dari ID transaksi dan versi verifikasi. Worker mengklaim `tertunda → diproses` dengan `processing_token` unik dan `processing_started_at`; sebelum memanggil penyedia, worker harus berhasil mengisi `delivery_started_at` **dan menaikkan `attempt_count`** memakai compare-and-swap pada token yang sama. Claim yang mati sebelum panggilan tidak menghabiskan jatah tiga percobaan. Worker kedua tidak mengirim key yang sedang diklaim. Kegagalan yang pasti mengembalikan key sama ke `tertunda` serta mengosongkan metadata claim/delivery untuk retry, `gagal` setelah percobaan ketiga. Status `berhasil`, `dilewati_batas`, atau `ditekan_demo` terminal. Email dan WA independen; `reminder_count`/`last_reminder_at` menyimpan urutan jadwal, bukan bukti pengiriman.
-- **Pemulihan claim:** lease `diproses` adalah 5 menit; worker queue diberi timeout 2 menit dan `retry_after` queue 3 menit. Scanner terjadwal mereclaim log stale **hanya jika `delivery_started_at` masih null**: ganti token dan sisipkan job ulang untuk key yang sama secara atomik, sehingga worker lama gagal compare-and-swap. Bila pemanggilan penyedia mungkin sudah dimulai, gunakan idempotency key yang sama jika didukung penyedia; tanpa itu ubah ke `perlu_pemeriksaan` dan jangan kirim ulang buta. Sukses dicatat hanya setelah penyedia menerima; tidak diklaim ada jaminan exactly-once dari layanan luar. `notified_ready_at` tidak dipakai.
-- **Verifikasi email publik:** permintaan FR-C04 menyimpan `pending_notification_email`, menaikkan `email_verification_version`, dan menetapkan kedaluwarsa 24 jam. Email berisi URL bertanda tangan yang mengikat transaksi+versi. GET URL itu hanya menampilkan halaman konfirmasi; POST konfirmasi mengunci transaksi/customer, memeriksa tanda tangan, versi terbaru, masa berlaku, status `DITERIMA`/`DIPROSES`, dan lifecycle writable; baru lalu memindahkan pending ke `notification_email` serta `customers.email` dan menghapus pending. Job verifikasi memeriksa versi/pending terbaru sebelum mengirim; transisi ke `SIAP_DIAMBIL`/pembatalan dan merge customer sumber menghapus pending serta menaikkan versi agar tautan lama gugur. Link lama atau ulang tidak berlaku. Batasi permintaan 3 kali/jam per kode resi **dan** 10 kali/hari per IP.
-- Pembukaan `wa.me` dicatat dengan kanal `whatsapp_manual`, tipe `resi`/`pengingat`, status `dibuka_manual`, key otomatis null. Log ini tidak masuk penghitung WA terkirim dan tidak menyatakan pelanggan telah mengirim pesan.
-- Semua pengiriman lewat queue; kegagalan tidak menggagalkan perubahan status (FR-N06).
-
-## 9. Queue & Penjadwal
-
-| Pekerjaan | Mekanisme | Jadwal |
-|---|---|---|
-| Kirim email/WA instan | Job di queue `database`, retry 3x backoff | Saat peristiwa |
-| Pengingat "belum diambil" (FR-N02) | Perintah terjadwal yang memindai `SIAP_DIAMBIL` sesuai N/M/K lalu mengantre job kirim | Harian 08.00 WIB |
-| Pulihkan claim notifikasi stale | Periksa `diproses` lebih dari 5 menit: reclaim + antre ulang key sama jika belum `delivery_started_at`; jika sudah mulai, gunakan idempotensi penyedia/`perlu_pemeriksaan` | Setiap menit |
-| Pembersihan bisnis demo (FR-M05) | Perintah terjadwal, hapus tenant demo kedaluwarsa beserta seluruh datanya | Harian 03.00 WIB |
-| Worker queue | `php artisan queue:work database --timeout=120` di container terpisah; `retry_after=180` pada koneksi database queue | Terus-menerus |
-
-## 10. Halaman Publik, Resi & PWA
-
-- Halaman publik dibangun Blade + CSS minimal; anggaran berat halaman ada di `nfr.md`. Tidak memuat bundle panel.
-- Resi: satu view dengan dua mode render — layar (menyatu dengan halaman status) dan cetak (`@media print`, lebar 58 mm) (FR-R03–R04). QR berisi URL `/t/{kode}` dirender SVG inline.
-- PWA (FR-W01–W02): manifest lengkap; service worker meng-cache aset statis hasil build Vite (nama file sudah ber-hash, sehingga cache busting otomatis per deploy); data/API tidak di-cache; saat offline tampilkan halaman "Anda sedang offline". Cakupan install: panel admin & owner.
-
-## 11. Struktur Direktori (Backend)
-
-Memakai struktur Laravel standar (bukan DDD modular) — paling mudah dinavigasi agentic AI dan cukup untuk ukuran aplikasi ini:
-
-```
-app/
-  Enums/            (TransactionStatus, PaymentStatus, Role, ...)
-  Http/
-    Controllers/    (Public/, App/, Owner/, Dev/)
-    Middleware/     (ResolveTenant, EnsureLifecycle, EnsureRole, DemoOnly)
-    Requests/       (validasi form per aksi)
-  Models/
-  Policies/
-  Services/         (seluruh service Bagian 7)
-  Jobs/             (SendEmailNotification, SendWhatsAppNotification)
-  Console/Commands/ (SendPickupReminders, PurgeExpiredDemos)
-  Notifications/    (template email)
-resources/
-  js/               (React panel: Pages/, Components/, Layouts/)
-  views/            (Blade publik: home, status, resi; email)
-```
-
-## 12. Deployment & Lingkungan
-
-Docker Compose dengan service:
-
-| Service | Peran |
+| Service | Kontrak |
 |---|---|
-| `app` | PHP-FPM (kode aplikasi) |
-| `web` | Nginx internal, meneruskan ke `app` |
-| `db` | MySQL 8 + volume data |
-| `worker` | `queue:work database --timeout=120`, koneksi queue dengan `retry_after=180` |
-| `cron` | `schedule:run` tiap menit |
+| `TenantProvisioner`, `AccountService`, `LifecycleService` | Satu owner+settings default, akun/reset, matriks lifecycle/cabang |
+| `ReceiptCodeGenerator` | CSPRNG alfabet `ABCDEFGHJKMNPQRSTUVWXYZ23456789` (31⁶=887.503.681), UNIQUE global, 10 percobaan collision lalu error retry |
+| `PricingService`, `EstimationService` | Integer per 0,1 kg half-up, range PRD 7.8, snapshot minimum/durasi/harga, promo base setelah stamp, nominal cap, estimasi ≥ waktu masuk |
+| `TransactionService` | Create atomik customer baru inline (jika ada)+item+history awal+redemption/payment/earning; identity immutable; versi/keys; edit sesuai matriks PRD 6.1 |
+| `PaymentService` | Protokol lock bersama toggle DP; izin partial pertama dari setting kini dan SUM payment; cicilan DP berjalan/pelunasan tetap sah, payment immutable, status bayar turunan, +1 pertama LUNAS jika eligible |
+| `TransactionStateMachine` | Hanya DITERIMA→DIPROSES→SIAP_DIAMBIL→SUDAH_DIAMBIL; tiga state aktif→DIBATALKAN; akhir terminal; history awal/transisi unik; LUNAS sebelum diambil |
+| `CancellationService` | Alasan+audit+history; payments tetap; compensation delta asal sekali; invalidasi pending email; stop kiriman belum diotorisasi |
+| `StampService` | SUM delta sebagai otoritas; cache atomik; −N saldo cukup; +1 pertama LUNAS saat aktif; kompensasi walau mati; tidak retroaktif |
+| `CustomerService`, `CustomerMergeService` | Normalize no. HP, unique tenant; source/target/branch sesuai PRD 7.9; penyesuaian recipient WA atomik Bagian 6.2.1, pindah FK transaksi+ledger, saldo gabungan, source dihapus terakhir |
+| `MasterSyncService` | Normalize nama trim/collapse spaces; aktif saja; preview fingerprint; semua cabang atomik; audit |
+| `EmailVerificationService` | Pending/version/expiry, signed URL kode; POST hanya ubah notification_email transaksi |
+| `NotificationDispatcher`, `NotificationRecoveryService` | Log/key/job/quota, state machine Bagian 6 |
+| `RevenueReportService` | PRD 7.10, payment date, exclude cancelled, snapshot baca, CSV safe |
+| `DemoProvisioner`, `DemoPurgeService` | Fixture PRD 9.4, sesi demo, suppress transport, expiry/purge |
 
-Reverse proxy publik (mis. Nginx Proxy Manager) berada di luar compose ini dan meneruskan HTTPS ke `web`. Variabel lingkungan penting: `APP_URL`, kredensial DB, `QUEUE_CONNECTION=database`, SMTP global, `APP_TIMEZONE=Asia/Jakarta`. Kredensial WA per bisnis **tidak** di `.env` — tersimpan terenkripsi di database (Laravel encrypted cast).
+M1 membuat loyalty_settings nonaktif tanpa hadiah; ledger/promo UI dan event baru M4, tanpa perolehan retroaktif transaksi LUNAS lama. Redemption tepat satu item kg bernama sama master hadiah aktif menurut collation case-insensitive accent-sensitive, harga cabang dan berat aktual. Simpan `stamp_reward_max_kg_snapshot`, flag item, ledger −N. Minimum tertagih tidak memperbesar hadiah. Semua ledger terkait transaksi non-null, earning dan redemption saling eksklusif; kompensasi hanya bila event asal ada.
 
-CI/CD (GitHub Actions): lint (Pint + ESLint) → test (PHPUnit/Pest) → build aset Vite → build & push image → deploy ke VPS (SSH/pull). Migrasi dijalankan saat deploy.
+Merge mempertahankan identitas target, snapshot finansial/email dan payment; FK transaksi+ledger serta penyesuaian log WA Bagian 6.2.1 atomik; pending verifikasi email source gugur, target tetap; jenis/jumlah/transaction_id/created_at ledger tidak berubah. Audit source/target identities dan saldo tersimpan JSON, tidak FK source. Admin hanya bila semua transaksi kedua customer cabangnya, termasuk historis/batal. Source dihapus terakhir; nomor baru bebas sesudah commit seluruh domain. Master customer terkini untuk display, nominal selalu snapshot.
 
-## 13. Strategi Pengujian
+## 6. Notifikasi asinkron
 
-1. **Isolasi tenant & cabang** — wajib, otomatis (Bagian 5).
-2. **Aturan bisnis** — test PricingService (basis minimum promo, snapshot), PaymentService (Rp0, DP, overpay paralel), StampService (ledger bertanda, pembatalan, dua penukaran paralel), edit harga versus catatan, merge customer, dan laporan.
-3. **Siklus hidup** — feature test tenggang/baca-saja, pengecualian keamanan akun, GET publik tetap jalan dan POST email ditolak saat baca-saja/nonaktif.
-4. **Notifikasi** — test kanal/email snapshot independen, identitas unik per nomor pengingat, reservasi log+job atomik saat crash, lease stale aman, kuota WA paralel, demo per kanal, `wa.me` manual hanya `dibuka_manual`, dan verifikasi email publik.
-5. **Demo** — provisioning, isolasi, rate limit, pembersihan.
+### 6.1 Reservasi dan identity
 
-## 14. Invarian yang Wajib Dijaga (Ringkasan untuk Agentic AI)
+Di bawah protokol lock tentukan channel email dari notification_email, WA dari configured+enabled+event switch; terapkan hold/cutoff Bagian 9 sebelum reservasi outbound. Demo memakai saklar simulasi tanpa credential. Tujuan di-snapshot saat reservasi; tujuan WA belum pernah attempt dapat diselaraskan menurut Bagian 6.2.1. Kolom fisik `notification_logs.tujuan` adalah destination; tidak ada kolom destination tambahan. Key: `tx:{id}:ready:{channel}:0`, `tx:{id}:reminder:{channel}:{n}`, `tx:{id}:verify:email:{version}`, manual `tx:{id}:manual:{type}:{channel}:{request_uuid}`. Semua log memiliki notification_key non-null UNIQUE; manual UUID sama/payload beda →409. Kanal wa.me berbeda dari WA API.
 
-1. Model dengan `business_id` memakai scope tenant; child tanpa `business_id` hanya lewat parent terscope. Semua relasi tenant/cabang divalidasi sebelum tulis.
-2. Catatan `payments` tidak pernah di-update/delete; tidak ada route untuk itu.
-3. Field harga terkunci begitu ada payment atau loyalty history jenis apa pun meski masih `DITERIMA`; sejak `DIPROSES` semua edit operasional ditolak, dengan pengecualian sempit verifikasi email FR-C04 sebelum siap diambil.
-4. `SUDAH_DIAMBIL` hanya sah bila `status_bayar = LUNAS` (divalidasi di `TransactionStateMachine`).
-5. Status hanya maju sesuai peta transisi; `DIBATALKAN` wajib beralasan.
-6. Nama/satuan/harga/subtotal item, nama/tipe/nilai/potongan promo, dan email tujuan notifikasi transaksi di-snapshot.
-7. Notifikasi tidak pernah memblokir alur utama (selalu via queue).
-8. Server menolak aksi tulis di mode baca-saja meski UI dimanipulasi.
-9. `SUM(loyalty_histories.jumlah)` adalah saldo stempel; cache customer harus sama. Pembayaran dan penukaran memakai row lock.
-10. `notification_logs` menentukan idempotensi per kanal/peristiwa/nomor pengingat; pembukaan `wa.me` bukan pengiriman sukses.
+Cursor `reminder_count`/`last_reminder_at` persisten, diperbarui bersama reservasi satu nomor semua kanal menurut PRD 9.2, bukan bukti sukses. WA eligible tetapi penuh tetap log skipped dan menghabiskan nomor; sama sekali tak ada channel tidak menaikkan cursor. Manual tidak memakainya; settings tidak mereset cursor.
+
+Status/cursor+log tertunda+insert job **satu transaksi/koneksi/PDO MySQL**, queue database `after_commit=false`. Gunakan push segera atau dispatch `beforeCommit()` yang dieksekusi sebelum closure DB berakhir, bukan listener/observer deferred. Queue tidak menunjuk koneksi lain. Worker melihat hanya row committed; rollback menghilangkan semuanya. Skipped/demo/manual-open tidak punya job. Semua job tenant menyimpan metadata business_id top-level JSON melalui payload hook server, untuk purge tanpa menelusuri serialized command; job transaksi tetap hanya membawa ID. Notification log sendiri adalah catatan kerja recovery, tanpa outbox kedua.
+
+### 6.2 State machine send dan recovery
+
+| Keadaan | Tindakan |
+|---|---|
+| tertunda due | Claim atomik diproses + UUID processing_token + processing_started_at, delivery_started_at null |
+| diproses belum send | Preflight root+customer+tx+log lock berurut; token/status/lease harus cocok; validasi recipient Bagian 6.2.1, hold/cutoff Bagian 9, lifecycle/state/switch/version/demo; tak eligible →terminal sesuai alasan |
+| preflight sah | delivery_started_at=now, attempt_count++ (maks3), freeze payload/provider saat panggilan pertama, commit; panggil sekali di luar lock, tanpa retry tersembunyi client |
+| accepted | Token masih sah dan sama →berhasil, sent_at=now; berarti penyedia menerima, bukan pelanggan membaca; token yang dicabut edit/merge/restore tidak boleh finalize |
+| definitely_rejected | Jika token masih sah, recipient sama, tidak hold/cutoff dan <3: tertunda, next_attempt_at +60 lalu +300 detik, clear claim/delivery tetapi attempt_count tetap, enqueue key sama atomik; ketiga terminal gagal + code aman, job ditandai failed |
+| unknown/timeout/crash setelah delivery marker | perlu_pemeriksaan, terminal bagi automation, tanpa retry otomatis untuk semua provider/SMTP |
+| lease 5 menit habis tanpa delivery marker | Scanner invalidasi token lama →tertunda due+enqueue atomik; worker lama gagal preflight CAS |
+| lease habis dengan delivery marker | Scanner →perlu_pemeriksaan; token tetap hanya untuk unknown biasa dengan recipient tetap dan tanpa hold/cutoff; hanya accepted terlambat token sah boleh memperbaiki ke berhasil, tidak network call baru |
+| terminal | berhasil/gagal/dilewati_batas/dilewati_kondisi/ditekan_demo/dibuka_manual/perlu_pemeriksaan tidak dikirim ulang, termasuk queue:retry |
+
+Preflight ready/reminder/manual-email perlu SIAP_DIAMBIL; verifikasi perlu pending version/latest/expiry dan DITERIMA/DIPROSES. Reminder switch hanya untuk reminder otomatis; WA event switch sesuai tipe; email independen WA. Email tetap snapshot; WA mengikuti Bagian 6.2.1. Payload dibentuk dari state terbaru sebelum panggilan pertama; retry definite-rejection memakai payload sama dan tetap memeriksa relevansi termasuk nomor customer kini. payload_snapshot juga menyimpan provider_options nonrahasia (WABA phone_number_id/api_version/template_name/language_code atau Wablas base_url), agar perubahan konfigurasi tidak mengganti arti attempt retry; hanya credential boleh diambil terbaru. Payment/pickup/cancel/lifecycle atau edit nomor/merge sesudah otorisasi tidak dapat menarik pesan in-flight; UI/link status memberi kondisi terkini. Tidak ada network call di dalam business lock.
+
+Worker timeout120, provider connect5/total30 detik, queue retry_after180, lease300. `$tries=0` untuk infra recovery; attempt_count log membatasi tiga panggilan provider, bukan jumlah claim. Error sebelum marker tunduk recovery, tidak langsung send. Sanitized exception saja saat job fail. Scanner setiap menit juga mengambil tertunda due dengan `last_enqueued_at <= now−5 menit`, enqueue key sama dan perbarui timestamp atomik walau job hilang/failed. Duplicate jobs aman oleh claim+key. Tidak ada state aktif tanpa recovery.
+
+Log pada hasil accepted menyimpan sent_at dengan token yang masih sah dan sama, tanpa dispatch tambahan. Unknown tidak pernah otomatis diulang walau vendor mengklaim dukungan idempotensi. UI owner/admin: hasil belum diketahui, periksa pelanggan sebelum kontak manual baru; tidak ada tombol retry otomatis atau pelepasan slot berdasarkan dugaan. Token finalisasi harus attempt sama; definite failure yang terlambat sesudah unknown tidak membebaskan slot. Tidak ada jaminan exactly-once eksternal, khususnya efek setelah backup yang hilang pada restore (Bagian 9).
+
+### 6.2.1 Recipient WA setelah edit customer / merge
+
+`CustomerService` dan `CustomerMergeService` memakai root → customers ID menaik → transactions ID menaik → notification_logs ID menaik. Edit nomor menelusuri seluruh transaksi customer satu bisnis, termasuk cabang lain sebagai pemeliharaan internal tanpa DTO/ID/log lintas cabang ke admin. Merge tetap memvalidasi policy seluruh histori kedua customer, memindahkan FK ke target, lalu menyesuaikan log source sebelum menghapus source terakhir. Seluruh perubahan rollback bersama bila salah satu gagal. No. HP dinormalisasi sebelum dibandingkan.
+
+- Batasi ke kanal `whatsapp` API. `never_attempted := delivery_started_at IS NULL AND attempt_count == 0`; attempt_count tidak pernah diturunkan, termasuk saat delivery marker dibersihkan oleh definite rejection. Tidak menambah flag/kolom recipient atau attempt baru.
+- Aturan penyesuaian berikut hanya ketika nomor normalized terbaru berbeda dari tujuan log. Jika sama, tidak retarget atau membatalkan claim; preflight melanjutkan guard lain. Log terminal tidak dihidupkan kembali walau nomornya kembali sama.
+- Untuk `tertunda`/`diproses` never_attempted yang masih eligible menurut lifecycle/state/switch/demo/hold/cutoff, set `tujuan` ke nomor customer terbaru/target. Pertahankan notification_key, reminder_number, created_at dan slot/bucket (pemindahan bulan tetap hanya di preflight kuota). Cabut processing_token/start, kembalikan tertunda due dan enqueue ID/key sama satu commit; payload/provider belum dibekukan. Worker lama wajib gagal CAS; worker baru membaca tujuan dari row terkunci, tidak dari job/cache. Duplicate jobs hanya satu claim yang sah. Jika tidak eligible, terminalkan sesuai alasan existing; jangan revive log terminal.
+- Untuk marker ada **atau** attempt_count>0 dengan nomor kini berbeda, log nonterminal dan `perlu_pemeriksaan` yang masih punya token menjadi `perlu_pemeriksaan`, reason_code=`recipient_berubah`; cabut processing_token/start/next_attempt_at. Simpan tujuan, payload/provider snapshot, attempt_count, delivery marker yang ada dan wa_quota_month. Tidak enqueue retry, retarget, atau reserve slot baru. Reclassify ini mengalahkan retry definite-rejection, pemindahan bulan/provider dan accepted terlambat; hasil worker lama gagal CAS. Terminal berhasil/gagal/skipped/manual/demo tetap histori. A→B→A tidak menghidupkan identity yang sudah terminal.
+- Dispatcher preflight, retry finalization dan recovery mengulang pemeriksaan recipient di bawah protokol yang sama, melalui transaction.customer_id terkini; jangan resolve customer melalui nomor tujuan. Recovery hanya mengantre ulang pekerjaan yang tetap sah; lease tanpa marker namun attempt_count>0 tetap dianggap pernah attempt. Claim/marker commit sebelum edit berarti panggilan itu sudah diotorisasi dan dapat tetap mencapai provider; sistem tidak mengklaim dapat menarik kembali in-flight. Edit commit sebelum marker berarti worker lama tidak dapat mengotorisasi kiriman ke nomor lama.
+- Email transaksi/log dan histori whatsapp_manual tidak disentuh aturan nomor. Log WA terminal hanya dapat diikuti event baru sah atau aksi manual baru menurut kontrak existing, bukan key lama dibuka ulang. Detail review hanya owner/admin terscope; tidak menambah akses developer.
+
+### 6.3 Kuota dan adapter
+
+Di bawah root lock, hitung slot WA pada `wa_quota_month` dengan status tertunda/diproses/berhasil/perlu_pemeriksaan. <limit atau limit null baru dapat reserve. Skipped/failed/demo/manual tidak memegang slot; retry key sama tetap satu slot. Menurunkan limit di bawah occupied bulan kini ditolak; null tanpa batas, 0 tanpa slot. Untuk stop gunakan switch.
+
+Retarget never_attempted tidak menambah slot/key. Reclassify recipient_berubah atau restore_hold mempertahankan slot/bucket yang sudah ada secara konservatif; accepted/definite rejection terlambat dengan token dicabut tidak mengubah status atau melepas slot. Log yang sudah tidak eligible tanpa kemungkinan send menjadi skipped menurut aturan existing. Guard recipient dan restore dijalankan sebelum keputusan pindah bucket/retry biasa.
+
+Sebelum panggilan pertama, bulan berubah → pindahkan slot setelah cek limit bulan kini; penuh →dilewati_batas. Setelah panggilan mungkin terjadi bucket immutable; accepted lewat tengah malam tetap bulan otorisasi pertama. Retry definite-rejection jatuh bulan berbeda →dilewati_kondisi (`bulan_retry_berubah`), bukan memakai kuota bulan lampau. UI menghitung berhasil **menurut bucket**, pending/unknown terpisah; batas aplikasi bukan billing/receipt-time penyedia.
+
+Interface WhatsAppProvider dengan FonnteProvider/WablasProvider/WabaProvider, input recipient+payload+credential lokal, output accepted/definitely_rejected/unknown+safe code. HTTP200 bukan sukses tanpa body penerimaan menurut kontrak vendor. Definitely_rejected hanya jika koneksi pasti gagal sebelum request dikirim atau provider menyatakan request ditolak tanpa acceptance; HTTP5xx, response rusak, dan error transport yang tidak membuktikan batas kirim masuk unknown. Tidak fallback vendor setelah unknown. SMTP setelah DATA mungkin accepted →unknown. Retry definite-rejection boleh credential baru, payload sama, provider jenis awal harus sama atau dilewati_kondisi (`provider_berubah`). Credential tidak masuk log; provider_name_snapshot dicatat.
+
+Konfigurasi tambahan disimpan pada `businesses.wa_config` TEXT encrypted:array: Fonnte object kosong (endpoint tetap `https://api.fonnte.com/send`, token perangkat); Wablas `base_url` HTTPS server akun dan `secret_key` (authorization token.secret_key); WABA `phone_number_id`, `api_version`, `ready_template_name`, `reminder_template_name`, `language_code` (default id). Token tetap wa_token, sender display tetap wa_sender_number. WABA memakai template yang sudah disetujui untuk dua tipe, body tepat5 parameter berurutan: nama cabang, kode resi, total rupiah, sisa rupiah, URL status. Tidak fallback ke free-text bila template gagal. Developer memasang template/credential milik tenant; tidak ada UI teknis owner. Missing required fields menolak aktivasi, invalid credentials tercatat gagal/unknown sesuai response, bukan rollback status. Wablas URL hanya HTTPS host wablas.com/subdomain yang disetujui konfigurasi server, tanpa redirect ke host lain; seluruh adapter memverifikasi TLS.
+
+SMTP custom encrypted object: host, port1..65535, encryption (`tls` atau `ssl`), username/password (keduanya null atau keduanya terisi). Blank object berarti null/global; object parsial ditolak save. Email sender name/address keduanya kosong→global atau keduanya terisi valid. Validasi credential/provider dilakukan terpisah dari alur transaksi; tidak ada automatic test-send yang melewati demo/quota/log.
+
+Rujukan kontrak provider: [Fonnte](https://docs.fonnte.com/api-send-message/), [Wablas](https://wablas.com/documentation/api), [Cloud API resmi Meta](https://www.postman.com/meta/whatsapp-business-platform/documentation/wlk6lh4/whatsapp-cloud-api). Parameter endpoint/response diverifikasi dengan contract tests adapter saat implementasi; semua mapping produk di atas tetap.
+
+### 6.4 Email publik dan manual
+
+Request: pending_notification_email+version++/expiry24h+verification log/job atomik. Signed URL kode+versi+expiry, tanpa email/ID; signature tidak masuk access log. GET konfirmasi tidak mutasi. POST di lock validasi semuanya lalu **hanya notification_email transaksi** berubah; pending/expiry null, verification version++ dan transaction version++. Customer email tidak disentuh. Siap/batal/merge source invalidasi pending; stale verification job →dilewati_kondisi. Demo hanya log simulasi, tidak menghasilkan tautan untuk melewati verifikasi.
+
+Manual email memakai UUID/request_hash, cooldown PRD 9.2, log+job atomik; jika unknown sebelumnya perlu konfirmasi peringatan untuk tindakan baru. Manual wa.me writable: POST+CSRF log dibuka_manual sebelum frontend membuka URL; tidak berarti pesan dikirim. BACA_SAJA link dari DTO scoped tanpa log. Demo semua link komunikasi keluar diganti preview, reset password generik tanpa token/email. Guard demo berada di transport pusat juga, termasuk mail autentikasi.
+
+Email keamanan akun bukan notification_logs karena tidak terkait transaksi: request reset membuat hash token pada password_reset_tokens dan enqueue `SendPasswordReset` **ShouldBeEncrypted** di DB transaction sama, membawa user_id, recipient snapshot, token/expiry terenkripsi; metadata business_id top-level nullable untuk developer. `$tries=1`, satu panggilan SMTP global (tanpa automatic retry atau fallback); response request tetap generik. Worker memeriksa token masih terbaru/belum habis, email user masih sama, dan bukan demo sebelum send. Request ulang mengganti token; perubahan password menghapus token sehingga job lama dilewati. Queue retry manual tetap memeriksa token; operator tidak memakai retry auth yang hasilnya tidak pasti, pengguna meminta reset baru. Tidak menyimpan email/URL/token ke failed exception/log; transport demo juga menekan jalur ini. Akun demo reserved tidak menerima credential login/ganti password/reset, tetapi CRUD akun demo tambahan tetap dapat dipreview.
+
+Semua jalur email juga tunduk hold/cutoff Bagian 9; tidak ada pengecualian auth/manual/verifikasi terhadap transport guard. Untuk reset baru sesudah restore, gunakan created_at token pada password_reset_tokens existing sebagai waktu request >outbound_resume_at, selain kecocokan token terbaru/expiry. Job lama tidak cukup hanya diberi waktu enqueue baru. Selama hold, reset memberi respons generik tanpa membuat token/job; permintaan email transaksi ditolak sementara tanpa membuat pending verifikasi/log/job.
+
+## 7. Scheduler, demo, dan purge
+
+| Pekerjaan | Jadwal |
+|---|---|
+| Pengingat | Harian 08.00 WIB; satu nomor/tx/putaran, scan IDs lalu validasi ulang di lock |
+| Recovery log/job/lease | Tiap menit |
+| Purge demo | Tiap menit; expiry tepat tujuh hari, sehat selesai≤5 menit; recovery setelah cron pulih |
+| Worker | queue:work database --timeout=120 --tries=0; restart otomatis |
+
+Correctness scheduler overlap berasal dari lock+unique, bukan mutex scheduler saja. Root hilang dianggap selesai. Demo fixture PRD 9.4 memakai domain services/snapshot dan timestamp fixture terurut, tanpa outbound. Sesi demo menyimpan owner/admin/tenant yang dibuat server; switch tidak menerima ID bebas; reserved demo accounts/Cabang Utama tidak dapat dinonaktifkan atau dipindah. Guard expiry setiap request.
+
+Purge memvalidasi is_demo+expiry ulang di root lock, mencabut sesi termasuk sesi switched, reset tokens, jobs/failed jobs yang metadata JSON top-level business_id yang ditulis server sesuai, cache keys tenant. Child-before-parent: notification/status/payment/loyalty/item/audit → transaksi → promo_branches → promos → loyalty_settings → services → master_services → customers → users → branches → business_settings → business. Tidak disable FK checks. Domain delete atomik; infra cleanup idempoten. Normal tenant tanpa hard-delete endpoint; demo selalu suppressed sehingga tidak ada send race saat purge.
+
+## 8. Reporting, public security, PWA
+
+Report snapshot baca konsisten per request (read-only REPEATABLE READ connection/transaction), tanpa cache agregat lintas request. Payment join hanya transaksi terscope; item/kg aggregate terpisah agar multiple payment tidak melipat subtotal. Filter/CSV PRD 7.10. Export sinkron streaming dari snapshot sama, bukan download publik; UTF8 BOM/RFC4180/formula sanitization.
+
+Semua receipt variants dinormalisasi trim+uppercase dan shared limiter sebelum lookup. Limiter database dengan lock bucket check+increment atomik; fixed minute/hour/day WIB, IP dari trusted proxies eksplisit, bucket keys HMAC. Batas PRD 9.1 ditambah login5/menit/email+IP dan30/menit/IP; reset3/jam/email dan10/jam/IP; demo3/hari/IP; manual email memakai cooldown rolling10menit/tx dari log dan20/hari/user, diperiksa di business lock setelah deduplikasi key; batas IP lain tetap fixed window. Replay key yang sudah sah tidak memakan cooldown email lagi, tetapi tetap masuk limiter IP umum. Valid/invalid code sama-sama dihitung. Seluruh POST termasuk publik/demo CSRF, cookie HttpOnly/Secure/SameSite=Lax. SQL bound/Blade escaped, batas panjang; log tidak merekam receipt/signature/recipient penuh.
+
+Cetak internal route panel berisi identitas lengkap; cetak publik masked melalui DTO berbeda, bukan menyembunyikan lewat CSS. Semua dynamic HTML/Inertia/CSV/status/print/auth/API `Cache-Control:no-store`, public `no-referrer`/`noindex`. Service worker allowlist hanya aset hashed+offline page, dynamic network-only; offline tidak menyimpan/replay form. Cache build lama dibuang saat aktivasi; cek update saat launch, reload pada navigasi aman. Jika form belum tersimpan tampilkan pemberitahuan sebelum reload agar input tidak hilang. Logout/role switch/pageshow tidak boleh menampilkan tenant lama dari cache/bfcache, revalidate sebelum menampilkan data.
+
+## 9. Deployment, observabilitas, pengujian
+
+Runtime timezone WIB pada PHP dan DB session (+07:00). Environment: APP_URL/APP_KEY/DB, QUEUE_CONNECTION=database, SESSION_DRIVER=database, CACHE_STORE=database, SMTP global, APP_TIMEZONE=Asia/Jakarta. Queue domain koneksi yang sama. CI Pint/ESLint/TypeScript→unit/feature→MySQL 8.4 integration proses/koneksi paralel nyata→Vite→image→deploy; restart workers/SW build version. Jangan menguji concurrency dengan SQLite atau satu enclosing test transaction.
+
+Backup DB terenkripsi harian lokasi terpisah ≥7 hari, APP_KEY backup aman terpisah, restore drill RPO≤24h/RTO≤4h. **Database consistency tidak menjamin external side-effect deduplication:** accepted SMTP/WA setelah titik backup yang hilang dalam window RPO tidak diketahui database hasil restore. Tidak adanya log bukan bukti belum terkirim. Demo dalam backup hilang pada akhir retensi, tidak tersedia aplikasi.
+
+Prosedur restore-safe outbound hold (PRD 9.2.1):
+
+1. Hentikan/fence semua instance dan worker lama sebelum restore; jangan biarkan dua database aktif mengirim. Tetapkan `OUTBOUND_RESTORE_HOLD=true` pada konfigurasi deployment **di luar backup DB**, distribusikan ke web/CLI/scheduler/worker dan bangun ulang config cache/restart proses sebelum koneksi outbound boleh dipakai. Jika konfigurasi restore tidak valid, tetap hold. Panggilan yang sudah keluar sebelum penghentian tidak dapat dibatalkan.
+2. Restore dan verifikasi konsistensi DB. Transport pusat menolak setiap panggilan SMTP/WA selama hold, termasuk otomatis/reminder, recovered/pending/retry, email manual/verifikasi/auth. Guard juga berada sebelum reservasi dan sebelum marker; tidak menambah attempt/slot/cursor atau menulis berhasil ketika kiriman diblokir. Operasi status/payment yang aman tetap commit tanpa membuat backlog outbound baru; permintaan email eksplisit memberi pesan sementara tidak tersedia (reset akun tetap respons generik tanpa enqueue/token baru). Worker non-outbound boleh hidup. Log nonterminal yang ditemui selama hold diterminalkan `perlu_pemeriksaan` dengan reason_code=`restore_hold`, token/start/next_attempt_at dicabut, snapshot/attempt/bucket yang ada dipertahankan; tidak menebak outcome provider.
+3. Operator mencatat titik backup/recovery dan memeriksa periode hilang dengan bukti yang tersedia serta owner berwenang; tidak menambah hak panel developer. Terminalkan seluruh log nonterminal asal backup/hold seperti langkah2 dan cabut token finalisasi unknown yang tersisa. Buang pekerjaan outbound lama, termasuk failed auth jobs, dan invalidasi token reset/pending verifikasi email lama; minta request baru sesudah re-enable. Recovery tidak merekonstruksi job terminal. Backup biasa tidak dapat membuktikan seluruh send yang hilang; rekonsiliasi tidak diberi label exactly-once.
+4. Setelah rekonsiliasi, lakukan cutover singkat dengan producers/scheduler/worker outbound berhenti dan drain transaksi penulis agar tidak melintasi batas konfigurasi. Tetapkan `outbound_resume_at` WIB pada konfigurasi deployment, pertahankan lintas restart/deploy berikutnya, dan set hold=false pada seluruh proses secara seragam sebelum melanjutkan layanan. Batas memakai timestamp server dengan presisi kolom DATETIME; hanya waktu **> outbound_resume_at** eligible, waktu sama ditolak konservatif. Instalasi tanpa restore memakai cutoff null; konfigurasi restore tidak boleh kehilangan cutoff saat restart. Hold boleh diaktifkan lagi pada restore berikutnya dengan prosedur yang sama.
+5. Pada reservasi, preflight, retry/recovery dan transport, log outbound harus `created_at > outbound_resume_at`; ready **dan reminder otomatis** juga mensyaratkan `transactions.waktu_siap_diambil > outbound_resume_at`. Ini mencegah scanner menciptakan log baru untuk ready/pengingat historis, termasuk transaksi yang menjadi siap selama hold; tidak ada catch-up atau reset cursor. Email manual/verifikasi/auth hanya dari request baru setelah cutoff dan tetap tunduk state/token/expiry; auth job lama sudah dibuang dan token lama tidak sah. Log sebelum/sama cutoff yang terlewat cleanup masuk review tanpa provider call; unknown token lama tidak dapat finalize. Event baru sah berjalan normal, bukan replay otomatis window yang tak diketahui. Tidak perlu kolom/tabel/enum/index baru untuk konfigurasi hold/cutoff; gunakan metadata log/waktu transaksi existing.
+
+Log sanitized, developer hanya metadata aman; failed_jobs tidak mengungkap operasi individual. Alert bila cron heartbeat>5 menit, job due tertua>5 menit, DB/backup gagal. Notification log owner/admin scoped cabang, uncertain terlihat tanpa retry buta. Seluruh uji NFR/AC wajib saat implementasi; audit dokumentasi tidak mengklaim runtime lulus.
+
+Rujukan teknis: [Laravel queue dan transaksi](https://laravel.com/docs/12.x/queues#jobs-and-database-transactions), [encrypted casts dan TEXT](https://laravel.com/docs/12.x/eloquent-mutators#encrypted-casting), [MySQL locking reads](https://dev.mysql.com/doc/refman/8.4/en/innodb-locking-reads.html). Kontrak proyek di atas menetapkan konfigurasi yang lebih spesifik daripada default framework.

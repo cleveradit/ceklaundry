@@ -25,12 +25,6 @@ Setiap item backlog mengikuti format berikut:
 
 ---
 
-## Pulihkan PRD sumber
+## Status sumber kebutuhan
 
-**Status:** `BLOCKED` (file `prd.md` yang dirujuk keempat spesifikasi belum tersedia)
-
-**Ringkasan:** Sediakan PRD asli atau keputusan produk penggantinya supaya konflik dan rujukan FR yang belum lengkap dapat diverifikasi. Jangan menyusun isi PRD seolah-olah berasal dari sumber yang tidak ada.
-
-**Pertanyaan terbuka (matangkan saat planning):**
-1. Di mana PRD asli disimpan?
-2. Jika tidak ada, siapa yang menetapkan keputusan bisnis yang belum tercakup oleh user stories?
+Blocker PRD tidak tersedia telah diselesaikan: [prd.md](initiate-file/prd.md) ada dan kelima spesifikasi telah diaudit. Tidak ada blocker produk material tersisa dari [audit final](audits/final-system-audit.md). Kebutuhan awal tetap dikerjakan melalui ticket implementasi, bukan diduplikasi ke backlog.

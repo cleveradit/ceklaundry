@@ -31,7 +31,7 @@ Versi library yang tidak disebut di [spesifikasi arsitektur](initiate-file/archi
 
 **Rule 2 — Keterlacakan:** Setiap ticket implementasi mengacu ke ID `US-…` dari [user-stories.md](initiate-file/user-stories.md) dan ID NFR yang relevan. Sertakan kasus batas, kegagalan, serta isolasi tenant/cabang bila menyentuh data operasional.
 
-**Rule 3 — Sumber kebutuhan yang hilang:** Keempat spesifikasi di `docs/initiate-file/` merujuk `prd.md`, tetapi file itu belum tersedia. Jangan mengarang isinya atau menganggap konflik kebutuhan sudah terselesaikan. Catat pertanyaan yang membutuhkan PRD dalam ticket atau backlog dan minta sumber/keputusan saat diperlukan.
+**Rule 3 — Sumber kebutuhan:** Kelima spesifikasi tersedia di `docs/initiate-file/`. Hierarki: `prd.md` → `user-stories.md` → `architecture.md` → `database-schema.md` → `nfr.md`. Gunakan matriks traceability di akhir user stories dan [hasil audit final](audits/final-system-audit.md); jangan menghidupkan kembali keputusan lama yang sudah dikoreksi. Audit menyatakan kesiapan spesifikasi, bukan keberhasilan implementasi.
 
 **Rule 4 — Keamanan & lokalisasi:** Jangan simpan kredensial di repo atau log. Gunakan bahasa Indonesia untuk UI/pesan, rupiah bulat, nomor HP `62…`, dan zona waktu Asia/Jakarta sesuai NFR.
 

@@ -20,6 +20,6 @@ CekLaundry dirancang sebagai aplikasi pengelolaan laundry multi-bisnis: operasio
 - [Current Session](planning/current-session.md) — status pekerjaan terakhir.
 - [Decision Log](decision-log.md) — keputusan dengan konsekuensi yang tidak langsung terlihat.
 
-## Kesenjangan sumber
+## Spesifikasi dan audit
 
-Spesifikasi di `docs/initiate-file/` menyatakan `prd.md` sebagai dokumen induk, tetapi file itu belum ada dalam repository. Gunakan spesifikasi yang tersedia untuk langkah yang jelas; tandai ketergantungan terhadap PRD saat keputusan belum bisa diturunkan darinya.
+[PRD sumber produk](initiate-file/prd.md) tersedia bersama keempat dokumen turunannya. [Final System Audit](audits/final-system-audit.md) mencatat keputusan, skenario adversarial, traceability, dan validasi dokumentasi. Aplikasi dan pengujian runtime belum dibuat.
