@@ -18,7 +18,7 @@ jobs:
       - name: PHP format
         run: docker compose exec -T app vendor/bin/pint --test
       - name: Unit, feature and real MySQL integration
-        run: docker compose exec -T app php artisan test
+        run: docker compose exec -T app php artisan test --fail-on-warning
       - name: Frontend tooling
         run: |
           docker build --target frontend -t ceklaundry-frontend -f docker/php/Dockerfile .
