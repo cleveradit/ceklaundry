@@ -175,12 +175,13 @@ FR: FR-A15, FR-A16; aturan 7.6 · M2
 
 Sebagai owner, saya ingin transaksi terkunci sejak diproses dan kesalahan dipulihkan lewat pembatalan berjejak, agar tidak ada manipulasi data.
 
-1. **Given** transaksi `DITERIMA` tanpa pembayaran dan tanpa penukaran, **When** admin mengedit item/berat/jumlah/promo, **Then** diperbolehkan dan total serta status bayar dihitung ulang.
+1. **Given** transaksi `DITERIMA` tanpa pembayaran dan tanpa `loyalty_histories`, **When** admin mengedit item/berat/jumlah/promo, **Then** diperbolehkan dan total serta status bayar dihitung ulang.
 2. **Given** transaksi `DITERIMA` sudah dibayar Rp80.000 dari total Rp100.000, **When** admin/owner mencoba mengubah item sehingga total Rp60.000, **Then** perubahan ditolak dan tidak terjadi overpay.
 3. **Given** transaksi `DITERIMA` sudah menukar stempel, **When** admin/owner mencoba mengubah item, berat, jumlah, promo, atau penukaran, **Then** perubahan ditolak.
-4. **Given** transaksi `DITERIMA` sudah dibayar atau menukar stempel, **When** catatan kondisi/estimasi selesai diubah, **Then** perubahan berhasil tanpa mengubah angka keuangan.
+4. **Given** transaksi `DITERIMA` sudah dibayar atau mempunyai riwayat stempel, **When** catatan kondisi/estimasi selesai diubah, **Then** perubahan berhasil tanpa mengubah angka keuangan.
 5. **Given** transaksi `DIPROSES` atau setelahnya, **When** admin **atau owner** mencoba mengedit field operasional, **Then** ditolak — tidak ada fitur buka-kunci; hanya form email FR-C04 sebelum `SIAP_DIAMBIL` yang boleh memperbarui tujuan notifikasi.
-6. **Given** salah timbang ketahuan saat `DIPROSES`, **When** admin membatalkan (dengan alasan) lalu membuat transaksi baru yang benar, **Then** transaksi lama keluar dari pendapatan, pembayarannya dikecualikan dari laporan, dan transaksi baru berjalan normal; kompensasi stempel saat program M4 tersedia diuji di US-402.
+6. **Given** salah timbang ketahuan saat `DIPROSES`, **When** admin membatalkan (dengan alasan) lalu membuat transaksi baru yang benar, **Then** transaksi lama keluar dari pendapatan, pembayarannya dikecualikan dari laporan, pelaku/alasan tercatat di `audit_logs`, dan transaksi baru berjalan normal; kompensasi stempel saat program M4 tersedia diuji di US-402.
+7. **Given** transaksi `DITERIMA` bertotal Rp0 sudah `LUNAS` dan memperoleh +1 stempel tanpa payment, **When** admin/owner mengubah item atau promo, **Then** edit harga ditolak karena sudah ada `loyalty_histories` meski tidak ada payment/penukaran.
 
 ### US-209 — Resi, QR, dan cetak thermal
 FR: FR-A08, FR-R01, FR-R02, FR-R03, FR-R04 · M2
@@ -267,11 +268,16 @@ FR: FR-C04 · M3
 
 Sebagai pelanggan, saya ingin memasukkan email saya di halaman status, agar dapat kabar saat cucian selesai.
 
-1. **Given** transaksi belum `SIAP_DIAMBIL` pada bisnis aktif/tenggang, **When** email valid dikirim lewat form, **Then** `transactions.notification_email` dan `customers.email` berubah atomik; US-301 menggunakan snapshot transaksi tersebut.
+1. **Given** transaksi belum `SIAP_DIAMBIL` pada bisnis aktif/tenggang, **When** email valid dikirim lewat form, **Then** tautan verifikasi sekali pakai berlaku 24 jam dikirim ke email baru; `transactions.notification_email` dan `customers.email` belum berubah.
 2. **Given** format email tidak valid, **When** dikirim, **Then** ditolak dengan pesan validasi.
 3. **Given** email customer berubah kemudian melalui panel, **When** transaksi lama diberi notifikasi, **Then** tujuan tetap `notification_email` transaksi lama.
 4. **Given** bisnis `BACA_SAJA`/`NONAKTIF`, **When** pelanggan membuka status atau mengirim POST langsung, **Then** halaman status tetap tersedia, form email tidak tersedia, dan POST ditolak server.
-5. **Given** transaksi `DIPROSES` tetapi belum `SIAP_DIAMBIL` pada tenant aktif, **When** pelanggan mengisi email, **Then** hanya tujuan notifikasi transaksi dan email customer berubah; item, total, pembayaran, status, dan catatan tetap terkunci.
+5. **Given** transaksi `DIPROSES` tetapi belum `SIAP_DIAMBIL` pada tenant aktif, **When** tautan verifikasi dibuka via GET, **Then** hanya halaman konfirmasi tampil; **When** tombol konfirmasi POST ditekan dan valid, **Then** hanya tujuan notifikasi transaksi dan email customer berubah atomik; field operasional tetap terkunci.
+6. **Given** tautan terbaru dibuka sebelum kedaluwarsa dan sebelum transaksi siap diambil, **When** konfirmasi POST sah, **Then** email transaksi dan customer berubah atomik; tautan yang dipakai ulang, digantikan permintaan baru, kedaluwarsa, atau dikonfirmasi saat tenant baca-saja/nonaktif ditolak tanpa perubahan.
+7. **Given** status menjadi `SIAP_DIAMBIL` sebelum tautan diverifikasi, **When** job notifikasi berjalan, **Then** tujuan tetap snapshot email lama; konfirmasi terlambat ditolak.
+8. **Given** satu kode resi telah meminta verifikasi 3 kali dalam satu jam atau satu IP 10 kali dalam sehari, **When** permintaan berikutnya dikirim, **Then** ditolak 429 tanpa mengubah email aktif.
+9. **Given** transaksi `DIBATALKAN`, `SIAP_DIAMBIL`, atau `SUDAH_DIAMBIL`, **When** form/tautan verifikasi dicoba, **Then** tidak ada perubahan email transaksi maupun customer.
+10. **Given** transaksi customer sumber memiliki verifikasi email pending, **When** source digabung ke target, **Then** pending dibatalkan dan tautannya tidak dapat mengubah email target setelah merge.
 
 ### US-304 — Ingatkan pelanggan secara manual
 FR: FR-A17 · M3
@@ -305,6 +311,7 @@ Sebagai owner, saya ingin WA otomatis yang biayanya terkendali, agar pelanggan t
 2. **Given** saklar peristiwa pengingat mati, **When** pengingat jatuh tempo, **Then** hanya email terkirim.
 3. **Given** batas bulanan 100 dan sudah 100 WA `berhasil` bulan ini, **When** peristiwa ke-101 terjadi, **Then** WA tidak dikirim, email tetap terkirim, log `dilewati_batas` tercatat.
 4. **Given** bulan berganti, **When** peristiwa terjadi, **Then** penghitung mulai dari nol.
+5. **Given** batas 100 dan sudah 99 WA berhasil, **When** dua kanal WA baru mereservasi slot pada bisnis yang sama secara bersamaan, **Then** hanya satu mendapat slot; yang lain `dilewati_batas`, emailnya tetap berjalan, dan hitungan slot `tertunda`/`diproses`/`berhasil` tidak melampaui 100.
 
 ### US-308 — Log notifikasi & keandalan
 FR: FR-N05, FR-N06 · M3
@@ -316,6 +323,8 @@ Sebagai admin, saya ingin melihat riwayat notifikasi per transaksi dan yakin keg
 3. **Given** email berhasil dan WA gagal untuk peristiwa sama, **When** WA dicoba ulang, **Then** email tidak terkirim ulang; setiap kanal memakai baris/logical key terpisah.
 4. **Given** hasil pengiriman ke penyedia tidak diketahui setelah timeout, **When** job diulang, **Then** idempotency key yang sama dipakai jika didukung penyedia; tanpa kepastian/idempotensi penyedia, status tetap perlu pemeriksaan dan job tidak mengirim buta sehingga duplikasi dihindari.
 5. **Given** admin membuka `wa.me` untuk resi atau pengingat, **When** log dicatat, **Then** kanal `whatsapp_manual`, tipe `resi`/`pengingat`, status `dibuka_manual`, dan tidak masuk hitungan WA API berhasil.
+6. **Given** proses mati setelah log `tertunda` dibuat, **When** transaksi DB belum commit, **Then** log dan job queue sama-sama batal; bila sudah commit, keduanya ada dan job dapat diproses.
+7. **Given** worker mati sesudah mengklaim log `diproses` tetapi sebelum pemanggilan penyedia, **When** lease kedaluwarsa, **Then** claim dapat diambil worker baru tepat sekali. Bila pemanggilan penyedia sudah dimulai dan hasilnya tak pasti, log masuk `perlu_pemeriksaan` atau diulang hanya dengan idempotency key yang didukung penyedia.
 
 ---
 
@@ -365,6 +374,7 @@ FR: FR-C07 · M4
 Sebagai pelanggan, saya ingin melihat jumlah stempel saya saat cek status, agar tahu jarak ke hadiah.
 
 1. **Given** program stempel aktif, **When** `/t/{kode}` dibuka, **Then** tampil "Stempel Anda: 7/10"; **Given** program nonaktif, **Then** bagian ini tidak tampil.
+2. **Given** pembatalan transaksi pemberi stempel setelah stempel itu terpakai menyebabkan saldo −1 dan target 10, **When** halaman status dibuka, **Then** tampil `Stempel Anda: −1/10` beserta penjelasan bahwa satu stempel perlu diperoleh kembali; angka tidak dibulatkan menjadi nol.
 
 ### US-406 — Kelola promo
 FR: FR-P01, FR-O08 · M4
@@ -447,11 +457,12 @@ Sebagai prospek, saya ingin berpindah antara pandangan owner dan admin tanpa log
 
 1. **Given** sesi demo, **When** halaman mana pun dibuka, **Then** banner "MODE DEMO" tampil dengan tombol "Lihat sebagai Admin"/"Kembali sebagai Owner".
 2. **Given** bisnis non-demo, **When** endpoint ganti peran dipanggil, **Then** ditolak (fitur khusus demo).
+3. **Given** demo memiliki dua cabang, **When** prospek memilih "Lihat sebagai Admin", **Then** sistem memakai satu admin demo yang di-seed pada cabang pertama dan hanya menampilkan data cabang itu; kembali sebagai Owner memulihkan akses semua cabang demo.
 
 ### US-603 — Notifikasi ditekan di demo
 FR: FR-M04 · M6
 
-1. **Given** transaksi demo menjadi `SIAP_DIAMBIL`, **When** alur notifikasi berjalan, **Then** tidak ada email/WA nyata terkirim dan log berstatus `ditekan_demo` tercatat sehingga alurnya tetap terlihat.
+1. **Given** transaksi demo menjadi `SIAP_DIAMBIL` dengan email serta WA otomatis eligible, **When** alur notifikasi berjalan, **Then** tidak ada email/WA nyata terkirim; dua log `ditekan_demo` terpisah berisi kanal dan tujuan masing-masing. Kanal yang tidak eligible tidak dibuatkan log.
 
 ### US-604 — Pembersihan & pembatasan demo
 FR: FR-M05, FR-M06 · M6

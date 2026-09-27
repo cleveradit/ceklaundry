@@ -136,7 +136,10 @@ Constraint: **UNIQUE (`business_id`, `no_hp`)** (FR-A13). Indeks: (`business_id`
 | `branch_id` | FK → branches | |
 | `customer_id` | FK → customers | |
 | `created_by` | FK → users | Pembuat (admin/owner) |
-| `notification_email` | VARCHAR(150), nullable | Snapshot tujuan email transaksi; disalin dari customer saat dibuat, diperbarui bersama customer hanya oleh FR-C04 |
+| `notification_email` | VARCHAR(150), nullable | Email terverifikasi yang berlaku untuk transaksi; disalin dari customer saat dibuat, diperbarui bersama customer setelah verifikasi FR-C04 |
+| `pending_notification_email` | VARCHAR(150), nullable | Calon email dari form publik; belum dipakai untuk notifikasi dan belum disalin ke customer |
+| `email_verification_version` | INT UNSIGNED, default 0 | Dinaikkan setiap permintaan FR-C04; tautan bertanda tangan mengikat versi terbaru |
+| `email_verification_expires_at` | DATETIME, nullable | 24 jam setelah permintaan; pending/tautan lama tidak berlaku setelah lewat waktu |
 | `status` | ENUM('DITERIMA','DIPROSES','SIAP_DIAMBIL','SUDAH_DIAMBIL','DIBATALKAN'), default 'DITERIMA' | Bagian 6 `prd.md` |
 | `waktu_masuk` | DATETIME | |
 | `estimasi_selesai` | DATETIME | Otomatis, dapat dikoreksi (7.3) |
@@ -243,19 +246,24 @@ Indeks: (`business_id`, `customer_id`), (`transaction_id`, `jenis`). FK komposit
 | `business_id` | FK → businesses | Denormalisasi tenant, sama dengan transaksi |
 | `transaction_id` | FK → transactions | |
 | `kanal` | ENUM('email','whatsapp','whatsapp_manual') | `whatsapp` = API otomatis, `whatsapp_manual` = pembukaan `wa.me` |
-| `tipe` | ENUM('siap_diambil','pengingat','resi') | `resi` untuk link manual FR-A09 |
+| `tipe` | ENUM('siap_diambil','pengingat','resi','verifikasi_email') | `resi` untuk link manual FR-A09; `verifikasi_email` untuk FR-C04 |
 | `reminder_number` | TINYINT UNSIGNED, nullable | 0 untuk siap-diambil otomatis, 1..K untuk pengingat otomatis; null untuk manual |
-| `notification_key` | VARCHAR(150), nullable, UNIQUE | Key deterministik otomatis dari transaction ID, tipe, kanal, reminder_number; null untuk setiap aksi manual |
+| `notification_key` | VARCHAR(150), nullable, UNIQUE | Key otomatis dari transaksi/tipe/kanal/nomor pengingat; verifikasi email memakai transaksi + versi verifikasi; null untuk aksi manual `wa.me`/email ulang |
 | `tujuan` | VARCHAR(150) | Alamat email / nomor WA |
 | `status` | ENUM('tertunda','diproses','berhasil','gagal','dilewati_batas','ditekan_demo','dibuka_manual','perlu_pemeriksaan') | `diproses` = worker sudah mengklaim key; `dibuka_manual` tidak berarti terkirim; `perlu_pemeriksaan` untuk hasil penyedia tidak pasti |
-| `attempt_count` | TINYINT UNSIGNED, default 0 | Jumlah percobaan otomatis pada key yang sama, maksimal 3 |
+| `attempt_count` | TINYINT UNSIGNED, default 0 | Jumlah panggilan penyedia yang mulai pada key sama, maksimal 3; claim yang mati sebelum panggilan tidak dihitung |
+| `processing_token` | CHAR(36), nullable | Token claim worker; diperbarui atomik saat stale claim aman diambil alih |
+| `processing_started_at` | DATETIME, nullable | Awal lease 5 menit status `diproses` |
+| `delivery_started_at` | DATETIME, nullable | Diisi dengan compare-and-swap token tepat sebelum panggilan SMTP/WA; stale sesudah ini tidak di-retry buta |
+| `wa_quota_month` | DATE, nullable | Hari pertama bulan WIB yang slot WA otomatisnya dipesan; null untuk email/manual |
+| `sent_at` | DATETIME, nullable | Waktu penyedia menerima pengiriman sukses; dasar penghitung WA terkirim bulan berjalan |
 | `created_at`, `updated_at` | DATETIME | Satu baris per key otomatis; status/attempt pada baris sama diperbarui saat retry |
 
-Indeks: UNIQUE (`notification_key`) (MySQL membolehkan banyak null untuk manual); (`business_id`, `kanal`, `status`, `created_at`) — penghitung WA otomatis yang berhasil; (`business_id`, `transaction_id`). FK komposit transaksi + business. Reservasi key/nomor pengingat atomik. Worker mengklaim baris dari `tertunda` secara atomik menjadi `diproses`; worker kedua yang melihat `diproses`/status terminal tidak mengirim. Kegagalan yang pasti dapat mengantre ulang key sama hingga 3 percobaan; timeout dengan hasil tidak pasti masuk `perlu_pemeriksaan`, tanpa retry kirim buta. `notification_logs` adalah sumber kebenaran pengiriman; tidak ada `notified_ready_at`.
+Indeks: UNIQUE (`notification_key`) (MySQL membolehkan banyak null untuk manual); (`business_id`, `kanal`, `wa_quota_month`, `status`) untuk slot WA; (`business_id`, `kanal`, `status`, `sent_at`) untuk penghitung terkirim; (`status`, `processing_started_at`) untuk pemulihan lease; (`business_id`, `transaction_id`). FK komposit transaksi + business. Reservasi log dan insert job database queue dalam transaksi MySQL yang sama. Reservasi WA mengunci business dan menghitung slot status `tertunda`/`diproses`/`berhasil`/`perlu_pemeriksaan` untuk bulan WIB tersebut; `gagal` final melepas slot. Worker mengklaim dengan token; stale sebelum `delivery_started_at` boleh direclaim dan job key sama diantre ulang atomik, stale sesudahnya perlu idempotensi penyedia atau `perlu_pemeriksaan`. `notification_logs` adalah sumber kebenaran pengiriman; tidak ada `notified_ready_at`.
 
 ### 2.17 `audit_logs`
 
-Untuk aksi berisiko yang wajib tercatat (penggabungan pelanggan FR-A14, sinkronisasi master FR-O05, perubahan masa aktif FR-D03, reset password).
+Untuk aksi berisiko yang wajib tercatat (penggabungan pelanggan FR-A14, **pembatalan transaksi FR-A15**, sinkronisasi master FR-O05, perubahan masa aktif FR-D03, reset password). `CancellationService` menulis pelaku dan alasan pembatalan ke `audit_logs` dalam transaksi DB yang sama dengan perubahan status dan kompensasi stempel.
 
 | Kolom | Tipe | Keterangan |
 |---|---|---|
@@ -296,7 +304,7 @@ FK komposit memakai perilaku hapus yang sama dengan FK sederhana relasinya. FK `
 **Invarian service/application layer.**
 
 1. `payments` tambah-saja, jumlah >0, kumulatif ≤ `total_akhir`; `PaymentService` mengunci transaksi `FOR UPDATE`, menghitung ulang sisa, memasukkan payment, menurunkan status, memproses stempel, lalu commit. Total Rp0 langsung `LUNAS` tanpa payment.
-2. Transisi status hanya maju sesuai peta; `SUDAH_DIAMBIL` mensyaratkan `LUNAS`; `DIBATALKAN` wajib alasan. Edit field harga hanya saat `DITERIMA` tanpa payment/penukaran; edit catatan/estimasi saat `DITERIMA`; sejak `DIPROSES` tidak ada edit operasional. FR-C04 secara khusus dapat mengubah `notification_email` dan `customers.email` sebelum `SIAP_DIAMBIL` pada tenant yang dapat menulis.
+2. Transisi status hanya maju sesuai peta; `SUDAH_DIAMBIL` mensyaratkan `LUNAS`; `DIBATALKAN` wajib alasan/audit. Edit field harga hanya saat `DITERIMA` tanpa payment **dan tanpa entry `loyalty_histories` apa pun pada transaksi**; edit catatan/estimasi saat `DITERIMA`; sejak `DIPROSES` tidak ada edit operasional. FR-C04 lebih dulu mengisi pending; hanya POST konfirmasi email sah pada status `DITERIMA`/`DIPROSES` yang dapat mengubah `notification_email` dan `customers.email` pada tenant yang dapat menulis. Transisi ke siap/batal dan merge customer sumber menghapus pending serta menaikkan versi agar tautan lama tidak berlaku.
 3. `loyalty_histories` tambah-saja dengan delta aktual bertanda; saldo = `SUM(jumlah)` dan `customers.stamp_count` diperbarui atomik. Penukaran memakai lock customer dan menolak saldo tak cukup. Pembatalan menambah entry kompensasi sekali; perubahan N tidak mengubah ledger lama.
 4. `branches.is_active` tidak boleh dimatikan bila masih ada transaksi aktif. Penggabungan customer mempertahankan identitas target dan menghitung ulang saldo dari ledger gabungan.
-5. Notifikasi otomatis memakai `notification_key` unik per transaksi/tipe/kanal/nomor; `reminder_count` dan `last_reminder_at` hanya cache jadwal. Log manual `wa.me` berstatus `dibuka_manual`, bukan `berhasil`. Retry kanal tidak menggandakan kiriman yang sudah sukses.
+5. Notifikasi otomatis memakai `notification_key` unik per transaksi/tipe/kanal/nomor; verifikasi email memakai versi permintaan. `reminder_count` dan `last_reminder_at` hanya cache jadwal. Log manual `wa.me` berstatus `dibuka_manual`, bukan `berhasil`. Reservasi log+job atomik, lease worker dapat dipulihkan secara aman, dan reservasi slot WA di bawah lock bisnis menjaga batas bulanan saat request paralel.

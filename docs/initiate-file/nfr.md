@@ -26,6 +26,7 @@
 | SEC-06 | **[Uji]** Data pelanggan pada halaman publik selalu tersamar (FR-C06); respons `/t/{kode}` tidak memuat email, no. HP utuh, atau ID internal. |
 | SEC-07 | Aksi berisiko (gabung pelanggan, sinkronisasi master, perubahan masa aktif, reset password, pembatalan transaksi) tercatat di `audit_logs` beserta pelakunya. |
 | SEC-08 | **[Uji]** Mode baca-saja menolak seluruh tulis bisnis tenant di server dengan 423, termasuk POST email publik FR-C04; GET status publik tetap tersedia. Logout, ganti password awal, dan alur lupa/reset password tetap diizinkan sebagai operasi keamanan akun. Bisnis `NONAKTIF` juga menolak POST email publik walau GET status tersedia. |
+| SEC-09 | **[Uji]** Kode resi saja tidak boleh mengubah `customers.email` atau email notifikasi aktif. FR-C04 memakai tautan bertanda tangan sekali pakai 24 jam dan versi terbaru; GET hanya menampilkan konfirmasi, POST sah pada `DITERIMA`/`DIPROSES` yang mengubah data. Permintaan dibatasi 3 kali/jam per kode resi dan 10 kali/hari per IP. Tautan lama, kedaluwarsa, terpakai, atau dikonfirmasi setelah status siap/batal, merge sumber, atau tenant tidak dapat menulis ditolak. Verifikasi membuktikan kontrol email baru, bukan identitas pemilik customer. |
 
 ## 3. Isolasi Multi-Tenant (ISO) — paling kritis
 
@@ -50,7 +51,10 @@
 | AND-06 | **[Uji]** Dua pembayaran paralel pada sisa sama memakai lock transaksi: hanya pembayaran yang muat pada sisa berhasil, tak ada overpay, status bayar tetap benar; edit harga `DITERIMA` bersamaan dengan pembayaran juga tidak merusak total. |
 | AND-07 | **[Uji]** Dua penukaran paralel memakai lock customer: saldo dicek setelah lock; hanya penukaran yang cukup saldo berhasil dan penukaran tidak membuat saldo negatif. Pembatalan mengembalikan jumlah stempel aktual tanpa memakai N terkini. |
 | AND-08 | **[Uji]** Snapshot item (nama/satuan/harga/subtotal final), promo (nama/tipe/nilai/potongan), dan email transaksi tetap stabil setelah master/customer berubah. Promo minimum dihitung atas `subtotal - potongan_stempel`; nominal dibatasi basis dan total ≥ 0. |
-| AND-09 | **[Uji]** Edit harga hanya untuk `DITERIMA` tanpa payment/penukaran; catatan kondisi/estimasi boleh berubah pada `DITERIMA`; sejak `DIPROSES` semua edit operasional ditolak. Pengecualian FR-C04 hanya mengubah email notifikasi sebelum `SIAP_DIAMBIL` pada tenant yang dapat menulis. Pembatalan dan merge tidak menghapus entry ledger dan menjaga delta historis. |
+| AND-09 | **[Uji]** Edit harga hanya untuk `DITERIMA` tanpa payment **dan tanpa loyalty history apa pun**; transaksi Rp0 `LUNAS` yang memperoleh stempel tetap terkunci. Catatan/estimasi boleh berubah pada `DITERIMA`; sejak `DIPROSES` edit operasional ditolak. FR-C04 hanya mengubah email aktif setelah verifikasi sah sebelum siap diambil. Pembatalan dan merge menjaga delta historis. |
+| AND-10 | **[Uji]** Reservasi log notifikasi dan insert job database queue atomik pada koneksi/transaksi yang sama; crash sebelum commit tidak meninggalkan log/job tunggal. Claim worker memakai token dan lease 5 menit; stale sebelum pemanggilan penyedia dapat direclaim tepat sekali, sedangkan stale setelah pemanggilan dimulai menjadi `perlu_pemeriksaan` kecuali penyedia mendukung idempotency key. |
+| AND-11 | **[Uji]** Dua reservasi WA paralel pada 99/100 slot hanya mengizinkan satu; hitungan slot mencakup `tertunda`/`diproses`/`berhasil`/`perlu_pemeriksaan` di bulan WIB yang sama. Job yang melintasi pergantian bulan memesan ulang slot sebelum kirim. Penghitung owner hanya menghitung `berhasil` menurut `sent_at`. |
+| AND-12 | **[Uji]** Mode demo membuat satu log `ditekan_demo` per kanal yang eligible dengan `kanal` dan `tujuan` terisi, tanpa pengiriman nyata; pergantian ke admin demo selalu memakai admin cabang pertama dan tidak membuka cabang kedua. Pembatalan menulis pelaku/alasan ke `audit_logs` dalam transaksi DB yang sama. |
 
 ## 5. Usabilitas & Aksesibilitas (UX)
 
@@ -61,6 +65,7 @@
 | UX-03 | Seluruh alur admin (transaksi baru, update status, pembayaran, cetak) dapat dikerjakan penuh dari layar HP tanpa scroll horizontal. |
 | UX-04 | Setiap aksi tulis memberi umpan balik jelas (berhasil/gagal) dalam bahasa Indonesia; pesan error tidak menampilkan detail teknis (stack trace, nama kolom). |
 | UX-05 | Halaman publik dapat dipakai tanpa JavaScript untuk fungsi inti pengecekan status (form submit biasa) — JS hanya peningkatan. |
+| UX-06 | **[Uji]** Jika ledger stempel negatif akibat pembatalan perolehan yang sudah dipakai, halaman status menampilkan nilai bertanda sebenarnya (mis. `−1/10`) dengan penjelasan bahwa stempel perlu diperoleh kembali; jangan menyamarkan sebagai nol. |
 
 ## 6. Kompatibilitas (KOM)
 
@@ -93,7 +98,7 @@
 | ID | Kebutuhan |
 |---|---|
 | OBS-01 | Log aplikasi terstruktur (per hari) untuk error & peristiwa penting; `failed_jobs` dapat dipantau developer. |
-| OBS-02 | Seluruh upaya notifikasi terekam di `notification_logs` dan terlihat di detail transaksi (FR-N05); penghitung WA bulanan owner hanya dari kanal `whatsapp` API berstatus `berhasil`. Pembukaan `wa.me` memakai `whatsapp_manual`/`dibuka_manual` dan tidak dihitung terkirim. |
+| OBS-02 | Seluruh upaya notifikasi terekam di `notification_logs` dan terlihat di detail transaksi (FR-N05); penghitung WA bulanan owner hanya dari kanal `whatsapp` API berstatus `berhasil` dengan `sent_at` pada bulan WIB berjalan. Pembukaan `wa.me` memakai `whatsapp_manual`/`dibuka_manual` dan tidak dihitung terkirim. |
 | OBS-03 | Kesalahan server memberi halaman error ramah kepada pengguna; detail teknis hanya masuk log. |
 
 ## 10. Data, Retensi & Kapasitas (DAT)
