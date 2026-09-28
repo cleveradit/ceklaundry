@@ -30,7 +30,7 @@ Setiap rentang AC mencakup seluruh nomor di rentang tersebut. Nama tes berada di
 | US-207 AC1–2 | M2JourneyTest, TransactionTransitionMatrixTest, browser/m2.cjs | Lulus pickup ditolak sebelum LUNAS, lalu timestamp diambil terisi. |
 | US-208 AC1–5 | TransactionLifecycleTest, TransactionCreateTest, TransactionTransitionMatrixTest | Lulus kunci finansial/nonfinansial dan terminal; pembaruan email transaksi FR-C04 menunggu M3. |
 | US-208 AC6–10 | TransactionLifecycleTest, CustomerMergeTest, TransactionTransitionMatrixTest | Batal beralasan, payment historis dan kompensasi ledger fixture lulus; laporan M5 serta program loyalti M4 perlu uji E2E. |
-| US-209 AC1–4 | ReceiptLookupTest, ReceiptPrintTest, browser/m2.cjs, PDF QA | Lulus DTO cetak, QR yang didekode, lebar58mm dan masking. Perangkat printer fisik belum diuji. |
+| US-209 AC1–4 | ReceiptLookupTest, ReceiptPrintTest, browser/m2.cjs, PDF QA | Lulus DTO cetak, QR yang didekode, lebar58mm dan masking. Uji printer fisik dilewati atas instruksi pengguna; tidak ada klaim hasil perangkat. |
 | US-210 AC1 | ManualReceiptLinkTest, browser/m2.cjs | Lulus tautan `wa.me` berisi kode, total/sisa, estimasi dan status; pembukaan tidak membuktikan pesan terkirim. |
 | US-210 AC2 | ManualReceiptLinkTest, ReceiptPrintTest | Baca-saja tanpa write lulus; log `dibuka_manual` M3 dan `ditekan_demo` M6 tertunda. |
 | US-211 AC1–3 | OperationsDashboardTest, browser/m2.cjs | Lulus agregat cabang, kg aktual, antrean, terlambat, daftar semua status dan tampilan mobile. |
@@ -52,4 +52,4 @@ M3 wajib menambahkan notifikasi otomatis, verifikasi email, limiter publik yang 
 
 Suite backend penuh lulus **75 tes / 671 assertions** tanpa warning pada PHP8.4/MySQL8.4, termasuk proses concurrency yang memakai koneksi MySQL terpisah. Pint lulus untuk 152 file; ESLint, TypeScript, Vite build dan quality-gate-probe lulus. Validator spesifikasi lulus (72 FR tertelusur, tanpa error) dan `git diff --check` bersih. Perjalanan browser M1 serta M2 lulus di Chrome154.
 
-[GitHub Actions run 36462815134](https://github.com/cleveradit/ceklaundry/actions/runs/36462815134) lulus pada commit `60be0df`: build, migrasi, Pint, backend/MySQL, frontend, kontrak dokumentasi, browser M1/M2 dan upload screenshot/PDF. Cetak thermal fisik tetap menunggu perangkat operator; belum ada deploy produksi.
+[GitHub Actions run 36463821819](https://github.com/cleveradit/ceklaundry/actions/runs/36463821819) lulus pada commit `1385fc9`: build, migrasi, Pint, backend/MySQL, frontend, kontrak dokumentasi, browser M1/M2 dan upload screenshot/PDF. Pada 29 September 2026 pengguna memutuskan untuk melewati uji printer thermal fisik. Keputusan ini menutup gate TICKET-020 tanpa mengubah fakta bahwa keluaran perangkat belum terverifikasi; belum ada deploy produksi.

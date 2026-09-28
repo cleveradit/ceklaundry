@@ -2,7 +2,7 @@
 
 **Ticket:** `TICKET-016`
 **Status:** `DONE`
-**Hasil:** [Audit M2](../audits/m2-verification.md) memuat bukti dan batas verifikasi.
+**Hasil:** [Audit M2](../../audits/m2-verification.md) memuat bukti dan batas verifikasi.
 **Target Audience:** AI Developer Agents
 **Depends On:** `TICKET-012`, `TICKET-015`
 **Tahap:** M2 — identitas bersama
@@ -11,7 +11,7 @@
 
 | Item | Approved Value |
 |---|---|
-| Sumber | [PRD 5.B/7.9/9.2](../initiate-file/prd.md), [US-214](../initiate-file/user-stories.md), [arsitektur 4/5](../initiate-file/architecture.md) |
+| Sumber | [PRD 5.B/7.9/9.2](../../initiate-file/prd.md), [US-214](../../initiate-file/user-stories.md), [arsitektur 4/5](../../initiate-file/architecture.md) |
 | Keterlacakan | US-214 AC1–5/9; AND-01/15/23, ISO-01/02/04, SEC-07 |
 | Hak admin | Merge hanya jika seluruh transaksi source dan target, termasuk historis/batal, ada di cabangnya; customer tanpa transaksi boleh. Owner lintas cabang bisnis sendiri. |
 | Mutasi | Identitas target tetap; pindah semua FK transaksi/ledger, hitung cache saldo dari ledger, audit snapshot; source dihapus terakhir. |
@@ -38,11 +38,11 @@ Duplikat customer dapat digabung tanpa kehilangan riwayat, payment atau snapshot
 
 | Case | Input | Expected Result | Status |
 |---|---|---|---|
-| Merge owner | Dua customer, aktif/historis, saldo termasuk negatif | Identitas target tetap, FK pindah, cache=SUM ledger, audit aman | Lihat [audit M2](../audits/m2-verification.md) |
-| Hak admin | Salah satu transaksi historis cabang lain | 403 tanpa rincian; tidak ada mutasi | Lihat [audit M2](../audits/m2-verification.md) |
-| Invalid | Source=target, tenant lain, source hilang | Ditolak tanpa orphan/bocoran | Lihat [audit M2](../audits/m2-verification.md) |
-| Race | Merge A→B vs B→A, create/payment/cancel | Salah satu urutan sah, tanpa orphan/double delta | Lihat [audit M2](../audits/m2-verification.md) |
-| Fault | Gagal sesudah pemindahan FK sebelum delete/audit | Seluruh unit rollback; nomor source tetap terpakai | Lihat [audit M2](../audits/m2-verification.md) |
+| Merge owner | Dua customer, aktif/historis, saldo termasuk negatif | Identitas target tetap, FK pindah, cache=SUM ledger, audit aman | Lihat [audit M2](../../audits/m2-verification.md) |
+| Hak admin | Salah satu transaksi historis cabang lain | 403 tanpa rincian; tidak ada mutasi | Lihat [audit M2](../../audits/m2-verification.md) |
+| Invalid | Source=target, tenant lain, source hilang | Ditolak tanpa orphan/bocoran | Lihat [audit M2](../../audits/m2-verification.md) |
+| Race | Merge A→B vs B→A, create/payment/cancel | Salah satu urutan sah, tanpa orphan/double delta | Lihat [audit M2](../../audits/m2-verification.md) |
+| Fault | Gagal sesudah pemindahan FK sebelum delete/audit | Seluruh unit rollback; nomor source tetap terpakai | Lihat [audit M2](../../audits/m2-verification.md) |
 
 ## 6. Verification Commands
 

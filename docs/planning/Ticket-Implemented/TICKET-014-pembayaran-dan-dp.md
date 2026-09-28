@@ -2,7 +2,7 @@
 
 **Ticket:** `TICKET-014`
 **Status:** `DONE`
-**Hasil:** [Audit M2](../audits/m2-verification.md) memuat bukti dan batas verifikasi.
+**Hasil:** [Audit M2](../../audits/m2-verification.md) memuat bukti dan batas verifikasi.
 **Target Audience:** AI Developer Agents
 **Depends On:** `TICKET-013`
 **Tahap:** M2 — pembayaran
@@ -11,7 +11,7 @@
 
 | Item | Approved Value |
 |---|---|
-| Sumber | [PRD 6.1/7.4](../initiate-file/prd.md), [US-206/207](../initiate-file/user-stories.md), [arsitektur 4.1/4.2](../initiate-file/architecture.md) |
+| Sumber | [PRD 6.1/7.4](../../initiate-file/prd.md), [US-206/207](../../initiate-file/user-stories.md), [arsitektur 4.1/4.2](../../initiate-file/architecture.md) |
 | Keterlacakan | US-206 AC1–15, US-207 AC1/2 (guard diselesaikan TICKET-015); AND-01/02/06/13/17/18, ISO-02/06 |
 | DP | Partial pertama memakai setting saat payment; setelah DP berjalan, cicilan/pelunasan tetap sah walau saklar mati. Pembayaran penuh tetap boleh. |
 | Permanen | Payment tambah-saja, waktu/pencatat server, tanpa edit/delete/backdate dan tanpa baris Rp0. |
@@ -40,13 +40,13 @@ Pembayaran awal, DP, cicilan dan pelunasan tercatat persis sekali serta tidak me
 
 | Case | Input | Expected Result | Status |
 |---|---|---|---|
-| DP dan lunas | Rp74.500; Rp30.000 lalu Rp44.500 | DP/sisa Rp44.500 lalu LUNAS/sisa0; dua row permanen | Lihat [audit M2](../audits/m2-verification.md) |
-| Pembayaran awal | Create Rp74.500 dengan DP awal Rp30.000; DP mati sebelum commit | Saat on payment+transaksi satu commit; saat off partial awal menggagalkan seluruh create | Lihat [audit M2](../audits/m2-verification.md) |
-| Total nol | Transaksi total Rp0 dari fixture/fitur potongan mendatang | LUNAS tanpa row pembayaran Rp0 | Lihat [audit M2](../audits/m2-verification.md) |
-| Toggle | Partial pertama off; DP on lalu off, cicilan Rp20.000 | Pertama ditolak; DP berjalan tetap boleh cicil/lunas | Lihat [audit M2](../audits/m2-verification.md) |
-| Batas | Rp0/negatif/overpay/overflow/terminal/backdate | Ditolak tanpa row atau perubahan status | Lihat [audit M2](../audits/m2-verification.md) |
-| Retry | Key/hash sama respons hilang; hash berbeda | Satu row; replay sama termasuk setelah DP off; beda409 | Lihat [audit M2](../audits/m2-verification.md) |
-| Paralel | Dua payment sisa sama; toggle off vs partial awal | Hanya urutan sah; SUM≤total, status konsisten | Lihat [audit M2](../audits/m2-verification.md) |
+| DP dan lunas | Rp74.500; Rp30.000 lalu Rp44.500 | DP/sisa Rp44.500 lalu LUNAS/sisa0; dua row permanen | Lihat [audit M2](../../audits/m2-verification.md) |
+| Pembayaran awal | Create Rp74.500 dengan DP awal Rp30.000; DP mati sebelum commit | Saat on payment+transaksi satu commit; saat off partial awal menggagalkan seluruh create | Lihat [audit M2](../../audits/m2-verification.md) |
+| Total nol | Transaksi total Rp0 dari fixture/fitur potongan mendatang | LUNAS tanpa row pembayaran Rp0 | Lihat [audit M2](../../audits/m2-verification.md) |
+| Toggle | Partial pertama off; DP on lalu off, cicilan Rp20.000 | Pertama ditolak; DP berjalan tetap boleh cicil/lunas | Lihat [audit M2](../../audits/m2-verification.md) |
+| Batas | Rp0/negatif/overpay/overflow/terminal/backdate | Ditolak tanpa row atau perubahan status | Lihat [audit M2](../../audits/m2-verification.md) |
+| Retry | Key/hash sama respons hilang; hash berbeda | Satu row; replay sama termasuk setelah DP off; beda409 | Lihat [audit M2](../../audits/m2-verification.md) |
+| Paralel | Dua payment sisa sama; toggle off vs partial awal | Hanya urutan sah; SUM≤total, status konsisten | Lihat [audit M2](../../audits/m2-verification.md) |
 
 ## 6. Verification Commands
 

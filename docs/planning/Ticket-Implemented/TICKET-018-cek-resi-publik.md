@@ -2,7 +2,7 @@
 
 **Ticket:** `TICKET-018`
 **Status:** `DONE`
-**Hasil:** [Audit M2](../audits/m2-verification.md) memuat bukti dan batas verifikasi.
+**Hasil:** [Audit M2](../../audits/m2-verification.md) memuat bukti dan batas verifikasi.
 **Target Audience:** AI Developer Agents
 **Depends On:** `TICKET-015`
 **Tahap:** M2 — pelanggan tanpa login
@@ -11,7 +11,7 @@
 
 | Item | Approved Value |
 |---|---|
-| Sumber | [PRD 4.1/5.A/9.1/9.3](../initiate-file/prd.md), [US-201/202](../initiate-file/user-stories.md), [arsitektur 2/8](../initiate-file/architecture.md) |
+| Sumber | [PRD 4.1/5.A/9.1/9.3](../../initiate-file/prd.md), [US-201/202](../../initiate-file/user-stories.md), [arsitektur 2/8](../../initiate-file/architecture.md) |
 | Keterlacakan | US-201 AC1–4, US-202 AC1–5; SEC-02/04/06/08, ISO-05, UX-05, LOK-01–04 |
 | Capability | Kode resi trim+uppercase, tepat 6 karakter; semua jalur resolver berbagi 30/menit/IP sebelum lookup. |
 | Privasi | DTO whitelist; nama maksimal 3 karakter pertama+`***` (nama pendek 1 karakter), nomor maksimal 4 awal+`***`+3 akhir; tanpa email/ID/actor/log. |
@@ -39,11 +39,11 @@ Pelanggan dapat mengecek progres, item, total dan sisa tagihan melalui halaman d
 
 | Case | Input | Expected Result | Status |
 |---|---|---|---|
-| Lookup | ` k7f3xa ` via form/URL | Normalisasi, redirect/tampil `/t/K7F3XA`, timeline & sisa benar | Lihat [audit M2](../audits/m2-verification.md) |
-| Tak ditemukan | Kode salah/malformed | Pesan Indonesia sama, tanpa keberadaan/email bocor | Lihat [audit M2](../audits/m2-verification.md) |
-| Privasi | Inspeksi HTML, JSON, data attributes, view source | Hanya masked identity; tak ada email/ID/actor/log/full phone | Lihat [audit M2](../audits/m2-verification.md) |
-| Limiter | 31 request campur form/direct/print, valid/invalid, dua proses | Request ke-31 429 ramah; jalur sama berbagi counter | Lihat [audit M2](../audits/m2-verification.md) |
-| Lifecycle | Baca-saja/nonaktif, JS mati | Status tetap tersedia dan form inti berfungsi | Lihat [audit M2](../audits/m2-verification.md) |
+| Lookup | ` k7f3xa ` via form/URL | Normalisasi, redirect/tampil `/t/K7F3XA`, timeline & sisa benar | Lihat [audit M2](../../audits/m2-verification.md) |
+| Tak ditemukan | Kode salah/malformed | Pesan Indonesia sama, tanpa keberadaan/email bocor | Lihat [audit M2](../../audits/m2-verification.md) |
+| Privasi | Inspeksi HTML, JSON, data attributes, view source | Hanya masked identity; tak ada email/ID/actor/log/full phone | Lihat [audit M2](../../audits/m2-verification.md) |
+| Limiter | 31 request campur form/direct/print, valid/invalid, dua proses | Request ke-31 429 ramah; jalur sama berbagi counter | Lihat [audit M2](../../audits/m2-verification.md) |
+| Lifecycle | Baca-saja/nonaktif, JS mati | Status tetap tersedia dan form inti berfungsi | Lihat [audit M2](../../audits/m2-verification.md) |
 
 ## 6. Verification Commands
 

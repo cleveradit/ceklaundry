@@ -2,7 +2,7 @@
 
 **Ticket:** `TICKET-015`
 **Status:** `DONE`
-**Hasil:** [Audit M2](../audits/m2-verification.md) memuat bukti dan batas verifikasi.
+**Hasil:** [Audit M2](../../audits/m2-verification.md) memuat bukti dan batas verifikasi.
 **Target Audience:** AI Developer Agents
 **Depends On:** `TICKET-014`
 **Tahap:** M2 — lifecycle transaksi
@@ -11,7 +11,7 @@
 
 | Item | Approved Value |
 |---|---|
-| Sumber | [PRD 6/6.1/7.3/7.6](../initiate-file/prd.md), [US-204/205/207/208](../initiate-file/user-stories.md), [arsitektur 4/5](../initiate-file/architecture.md) |
+| Sumber | [PRD 6/6.1/7.3/7.6](../../initiate-file/prd.md), [US-204/205/207/208](../../initiate-file/user-stories.md), [arsitektur 4/5](../../initiate-file/architecture.md) |
 | Keterlacakan | US-204 AC2/3, US-205 AC1–5, US-207 AC1/2, US-208 AC1–10; AND-01/08/09/13/14/18/23, SEC-07, ISO-02 |
 | Status | Tiga edge maju, tiga edge batal dari state aktif; same-state retry no-op, dua terminal final. Pickup mensyaratkan LUNAS. |
 | Kunci | Edit harga hanya DITERIMA, belum LUNAS, tanpa payment/ledger; edit nonfinansial hanya DITERIMA; tidak ada buka-kunci. |
@@ -39,11 +39,11 @@ Riwayat status, perubahan yang masih sah, dan pembatalan berjalan atomik serta t
 
 | Case | Input | Expected Result | Status |
 |---|---|---|---|
-| State | Semua 25 pasangan, versi benar | Hanya 3 maju+3 batal; sama no-op; lainnya ditolak | Lihat [audit M2](../audits/m2-verification.md) |
-| Pickup | SIAP_DIAMBIL DP lalu LUNAS | DP ditolak dengan sisa; setelah lunas berhasil, waktu diambil terisi | Lihat [audit M2](../audits/m2-verification.md) |
-| Edit | DITERIMA belum bayar vs ada payment/ledger vs total0 | Hanya pertama boleh reprice; lainnya terkunci | Lihat [audit M2](../audits/m2-verification.md) |
-| Nonfinansial | Catatan/estimasi saat DITERIMA lalu DIPROSES | Pertama sah tanpa reprice; kedua ditolak | Lihat [audit M2](../audits/m2-verification.md) |
-| Batal/race | Alasan kosong, dua cancel, payment vs cancel, fault audit | Alasan wajib; satu audit/kompensasi; serial/rollback, payment tak dihapus | Lihat [audit M2](../audits/m2-verification.md) |
+| State | Semua 25 pasangan, versi benar | Hanya 3 maju+3 batal; sama no-op; lainnya ditolak | Lihat [audit M2](../../audits/m2-verification.md) |
+| Pickup | SIAP_DIAMBIL DP lalu LUNAS | DP ditolak dengan sisa; setelah lunas berhasil, waktu diambil terisi | Lihat [audit M2](../../audits/m2-verification.md) |
+| Edit | DITERIMA belum bayar vs ada payment/ledger vs total0 | Hanya pertama boleh reprice; lainnya terkunci | Lihat [audit M2](../../audits/m2-verification.md) |
+| Nonfinansial | Catatan/estimasi saat DITERIMA lalu DIPROSES | Pertama sah tanpa reprice; kedua ditolak | Lihat [audit M2](../../audits/m2-verification.md) |
+| Batal/race | Alasan kosong, dua cancel, payment vs cancel, fault audit | Alasan wajib; satu audit/kompensasi; serial/rollback, payment tak dihapus | Lihat [audit M2](../../audits/m2-verification.md) |
 
 ## 6. Verification Commands
 

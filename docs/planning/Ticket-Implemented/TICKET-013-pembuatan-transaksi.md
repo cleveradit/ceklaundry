@@ -2,7 +2,7 @@
 
 **Ticket:** `TICKET-013`
 **Status:** `DONE`
-**Hasil:** [Audit M2](../audits/m2-verification.md) memuat bukti dan batas verifikasi.
+**Hasil:** [Audit M2](../../audits/m2-verification.md) memuat bukti dan batas verifikasi.
 **Target Audience:** AI Developer Agents
 **Depends On:** `TICKET-011`, `TICKET-012`
 **Tahap:** M2 — transaksi masuk
@@ -11,7 +11,7 @@
 
 | Item | Approved Value |
 |---|---|
-| Sumber | [PRD 4.2/6.1/7.3/7.7–7.9](../initiate-file/prd.md), [US-203/204/215](../initiate-file/user-stories.md), [arsitektur 4/5](../initiate-file/architecture.md) |
+| Sumber | [PRD 4.2/6.1/7.3/7.7–7.9](../../initiate-file/prd.md), [US-203/204/215](../../initiate-file/user-stories.md), [arsitektur 4/5](../../initiate-file/architecture.md) |
 | Keterlacakan | US-203 AC1–10, US-204 AC1/3, US-215 AC1/2; AND-01/08/18/19/22, ISO-01/02/06 |
 | Identitas | Resi CSPRNG alfabet `ABCDEFGHJKMNPQRSTUVWXYZ23456789`, 6 karakter, UNIQUE global; UUID+hash create tetap tersimpan. |
 | Pembayaran awal | TICKET-014 menambahkan pembayaran awal dan mengulang seluruh save atomik; sampai itu selesai, create tanpa pembayaran adalah bagian yang dapat diuji, belum alur M2 lengkap. |
@@ -39,11 +39,11 @@ Admin atau owner cabang pilihan dapat menyimpan satu transaksi beserta item dan 
 
 | Case | Input | Expected Result | Status |
 |---|---|---|---|
-| Campuran | Customer lama, 3,5 kg + 2 item | Total Rp74.500, dua snapshot item, history DITERIMA, resi unik | Lihat [audit M2](../audits/m2-verification.md) |
-| Retry | UUID/hash sama dua kali/paralel; hash berbeda | Satu transaksi; replay sama; beda409 | Lihat [audit M2](../audits/m2-verification.md) |
-| Quote usang | Harga/cabang berubah setelah preview | 409, tidak ada transaksi parsial | Lihat [audit M2](../audits/m2-verification.md) |
-| Inline gagal | Nomor customer duplikat/fault sesudah item | Seluruh create rollback; pilih customer existing | Lihat [audit M2](../audits/m2-verification.md) |
-| Keamanan | Admin pindah cabang, customer/service luar tenant, branch mati | 403/404 atau validasi sesuai kontrak, tanpa data baru | Lihat [audit M2](../audits/m2-verification.md) |
+| Campuran | Customer lama, 3,5 kg + 2 item | Total Rp74.500, dua snapshot item, history DITERIMA, resi unik | Lihat [audit M2](../../audits/m2-verification.md) |
+| Retry | UUID/hash sama dua kali/paralel; hash berbeda | Satu transaksi; replay sama; beda409 | Lihat [audit M2](../../audits/m2-verification.md) |
+| Quote usang | Harga/cabang berubah setelah preview | 409, tidak ada transaksi parsial | Lihat [audit M2](../../audits/m2-verification.md) |
+| Inline gagal | Nomor customer duplikat/fault sesudah item | Seluruh create rollback; pilih customer existing | Lihat [audit M2](../../audits/m2-verification.md) |
+| Keamanan | Admin pindah cabang, customer/service luar tenant, branch mati | 403/404 atau validasi sesuai kontrak, tanpa data baru | Lihat [audit M2](../../audits/m2-verification.md) |
 
 ## 6. Verification Commands
 

@@ -2,7 +2,7 @@
 
 **Ticket:** `TICKET-019`
 **Status:** `DONE`
-**Hasil:** [Audit M2](../audits/m2-verification.md) memuat bukti dan batas verifikasi.
+**Hasil:** [Audit M2](../../audits/m2-verification.md) memuat bukti dan batas verifikasi.
 **Target Audience:** AI Developer Agents
 **Depends On:** `TICKET-018`, `TICKET-017`
 **Tahap:** M2 — serah resi
@@ -11,7 +11,7 @@
 
 | Item | Approved Value |
 |---|---|
-| Sumber | [PRD 5.B/8/9.1/9.2](../initiate-file/prd.md), [US-209/210](../initiate-file/user-stories.md), [arsitektur 8](../initiate-file/architecture.md) |
+| Sumber | [PRD 5.B/8/9.1/9.2](../../initiate-file/prd.md), [US-209/210](../../initiate-file/user-stories.md), [arsitektur 8](../../initiate-file/architecture.md) |
 | Keterlacakan | US-209 AC1–4, US-210 AC1/2 (bagian M2); SEC-06/08, AND-08/25, KOM-02, UX-03, LOK-01–04 |
 | Cetak | Browser print 58 mm, lebar efektif ±48 mm, QR SVG lokal berisi URL `/t/{kode}`; tanpa driver printer. |
 | WA manual | `wa.me` dari nomor canonical customer dan teks ringkas; pembukaan M2 tidak diklaim berhasil terkirim/API. Log `dibuka_manual` baru M3; baca-saja tanpa tulis log. |
@@ -39,11 +39,11 @@ Admin/owner dapat memberi struk terbaca dan membuka pesan WhatsApp manual berisi
 
 | Case | Input | Expected Result | Status |
 |---|---|---|---|
-| Thermal | Resi Rp74.500, DP Rp30.000, kondisi, QR | Rincian dan sisa Rp44.500 terbaca pada 58 mm; QR menuju status tepat | Lihat [audit M2](../audits/m2-verification.md) |
-| Privasi | Cetak publik vs panel, view source | Publik masked, internal penuh hanya setelah policy | Lihat [audit M2](../audits/m2-verification.md) |
-| WA | Customer `62812…`, status siap/batal | URL wa.me valid, pesan ringkas akurat, bukan klaim terkirim | Lihat [audit M2](../audits/m2-verification.md) |
-| Read-only | Panel yang boleh dibaca, klik link WA | Link terbuka tanpa business write; tanpa log M2 | Lihat [audit M2](../audits/m2-verification.md) |
-| Isolasi | Admin lain/developer mencoba cetak internal | 404/403, tak ada detail/QR bocor | Lihat [audit M2](../audits/m2-verification.md) |
+| Thermal | Resi Rp74.500, DP Rp30.000, kondisi, QR | Rincian dan sisa Rp44.500 terbaca pada 58 mm; QR menuju status tepat | Lihat [audit M2](../../audits/m2-verification.md) |
+| Privasi | Cetak publik vs panel, view source | Publik masked, internal penuh hanya setelah policy | Lihat [audit M2](../../audits/m2-verification.md) |
+| WA | Customer `62812…`, status siap/batal | URL wa.me valid, pesan ringkas akurat, bukan klaim terkirim | Lihat [audit M2](../../audits/m2-verification.md) |
+| Read-only | Panel yang boleh dibaca, klik link WA | Link terbuka tanpa business write; tanpa log M2 | Lihat [audit M2](../../audits/m2-verification.md) |
+| Isolasi | Admin lain/developer mencoba cetak internal | 404/403, tak ada detail/QR bocor | Lihat [audit M2](../../audits/m2-verification.md) |
 
 ## 6. Verification Commands
 
