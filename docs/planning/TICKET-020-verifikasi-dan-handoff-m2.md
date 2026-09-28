@@ -2,7 +2,7 @@
 
 **Ticket:** `TICKET-020`
 **Status:** `READY`
-**Hasil sementara:** [Audit M2](../audits/m2-verification.md) mencatat 75 tes/671 assertions, gate kualitas lokal, browser M1/M2, PDF 58 mm dan QR yang didekode. Printer thermal fisik dan run CI remote masih memerlukan bukti sebelum DONE/arsip.
+**Hasil sementara:** [Audit M2](../audits/m2-verification.md) mencatat 75 tes/671 assertions, gate kualitas lokal, browser M1/M2, PDF 58 mm dan QR yang didekode. [CI remote](https://github.com/cleveradit/ceklaundry/actions/runs/36462815134) lulus; printer thermal fisik masih memerlukan bukti sebelum DONE/arsip.
 **Target Audience:** AI Developer Agents
 **Depends On:** `TICKET-011`–`TICKET-019`
 **Tahap:** M2 — kriteria selesai
@@ -43,7 +43,7 @@ Membuktikan alur pelanggan baru sampai cucian lunas dan diambil berjalan di brow
 | Retry/race | Double click create/payment; dua pembayaran, edit vs bayar/batal | Tanpa duplikat/overpay/partial commit | Lulus inti; batas writer lanjutan di audit |
 | Isolasi | Dua bisnis, multi-cabang, owner/admin/developer, ID dimanipulasi | 404/403/423 sesuai kontrak, tanpa kebocoran | Lulus lokal |
 | Publik | JS mati, kode salah, rate limit, inspect HTML/back | Fungsi inti bekerja, 429 dan masking/header benar | Lulus lokal |
-| Cetak/HP | Printer 58 mm, scan QR, viewport/perangkat HP | Struk terbaca, QR valid, operasi admin tanpa scroll horizontal | PDF 58 mm/QR/browser lulus; printer/perangkat fisik tertunda |
+| Cetak/HP | Printer 58 mm, scan QR, viewport/perangkat HP | Struk terbaca, QR valid, operasi admin tanpa scroll horizontal | PDF 58 mm/QR/viewport HP lulus; printer fisik tertunda |
 | Bukti lanjutan | AC WA/loyalti/laporan/demo belum tersedia | Ditandai belum teruji E2E beserta pemilik M3–M6 | Dicatat di audit M2 |
 
 ## 6. Verification Commands
@@ -69,5 +69,5 @@ Browser QA mengikuti [development](../development.md) pada DB uji setelah suite 
 ## 8. Completion Checklist
 
 - [ ] Seluruh tiket M2 diotorisasi, diimplementasikan dan diverifikasi.
-- [ ] Bukti AC, CI, browser, concurrency dan cetak tersedia; batas lintas milestone jujur.
+- [ ] Bukti AC, CI, browser, concurrency dan cetak tersedia; bukti cetak printer fisik masih tertunda.
 - [ ] Dokumentasi fitur, sesi, indeks dan arsip diperbarui sesuai hasil aktual.

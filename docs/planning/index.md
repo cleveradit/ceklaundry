@@ -11,7 +11,7 @@ Urutkan ticket aktif menurut dependensi. Kebutuhan awal ada di [user-stories.md]
 
 ## Execution Order
 
-TICKET-001–010 (persiapan dan M1) selesai di [arsip](Ticket-Implemented/index.md); bukti aktual ada di [audit M1](../audits/m1-verification.md). TICKET-011–019 diimplementasikan dan diverifikasi secara lokal pada [audit M2](../audits/m2-verification.md). TICKET-020 menunggu bukti printer thermal fisik dan run CI remote; kode, gate lokal, browser, serta handoff M2 sudah tersedia. Tiket M2 belum diarsipkan sampai seluruh TICKET-011–020 DONE.
+TICKET-001–010 (persiapan dan M1) selesai di [arsip](Ticket-Implemented/index.md); bukti aktual ada di [audit M1](../audits/m1-verification.md). TICKET-011–019 diimplementasikan dan diverifikasi secara lokal serta pada [CI remote](https://github.com/cleveradit/ceklaundry/actions/runs/36462815134), dengan rincian di [audit M2](../audits/m2-verification.md). TICKET-020 menunggu bukti printer thermal fisik; kode, gate lokal/remote, browser, serta handoff M2 sudah tersedia. Tiket M2 belum diarsipkan sampai seluruh TICKET-011–020 DONE.
 
 | Urutan | Tiket | Status | Dependensi |
 |---|---|---|---|

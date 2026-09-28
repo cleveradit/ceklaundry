@@ -50,4 +50,6 @@ M3 wajib menambahkan notifikasi otomatis, verifikasi email, limiter publik yang 
 
 ## Penutupan gate
 
-Suite backend penuh lulus **75 tes / 671 assertions** tanpa warning pada PHP8.4/MySQL8.4, termasuk proses concurrency yang memakai koneksi MySQL terpisah. Pint lulus untuk 152 file; ESLint, TypeScript, Vite build dan quality-gate-probe lulus. Validator spesifikasi lulus (72 FR tertelusur, tanpa error) dan `git diff --check` bersih. Perjalanan browser M1 serta M2 lulus di Chrome154. Hasil remote GitHub Actions dan cetak thermal fisik dicatat terpisah setelah tersedia; belum ada deploy produksi.
+Suite backend penuh lulus **75 tes / 671 assertions** tanpa warning pada PHP8.4/MySQL8.4, termasuk proses concurrency yang memakai koneksi MySQL terpisah. Pint lulus untuk 152 file; ESLint, TypeScript, Vite build dan quality-gate-probe lulus. Validator spesifikasi lulus (72 FR tertelusur, tanpa error) dan `git diff --check` bersih. Perjalanan browser M1 serta M2 lulus di Chrome154.
+
+[GitHub Actions run 36462815134](https://github.com/cleveradit/ceklaundry/actions/runs/36462815134) lulus pada commit `60be0df`: build, migrasi, Pint, backend/MySQL, frontend, kontrak dokumentasi, browser M1/M2 dan upload screenshot/PDF. Cetak thermal fisik tetap menunggu perangkat operator; belum ada deploy produksi.
