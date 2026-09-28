@@ -1,4 +1,4 @@
-name: Quality and M1 integration
+name: Quality and M2 integration
 on: [push, pull_request, workflow_dispatch]
 permissions:
   contents: read
@@ -43,12 +43,19 @@ jobs:
           mkdir -p test-results
           docker compose -f compose.yaml -f compose.qa.yaml cp qa:/app/storage/app/private/browser-fixture.json test-results/browser-fixture.json
           npm run test:browser
-      - name: Browser screenshots
+      - name: M2 browser journey on isolated database
+        run: |
+          docker compose -f compose.yaml -f compose.qa.yaml exec -T qa php tests/Support/m2-browser-seed.php
+          docker compose -f compose.yaml -f compose.qa.yaml cp qa:/app/storage/app/private/m2-browser-fixture.json test-results/m2-browser-fixture.json
+          npm run test:browser:m2
+      - name: Browser screenshots and print preview
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: m1-browser-screenshots
-          path: test-results/*.png
+          name: browser-screenshots
+          path: |
+            test-results/*.png
+            test-results/m2-thermal-receipt.pdf
       - name: Shut down isolated CI containers
         if: always()
         run: docker compose -f compose.yaml -f compose.qa.yaml down -v

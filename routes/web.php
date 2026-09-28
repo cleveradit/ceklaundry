@@ -1,14 +1,23 @@
 <?php
 
+use App\Http\Controllers\App\CustomerController;
+use App\Http\Controllers\App\CustomerMergeController;
+use App\Http\Controllers\App\DashboardController;
+use App\Http\Controllers\App\PaymentController;
+use App\Http\Controllers\App\QuoteController;
+use App\Http\Controllers\App\ReceiptPrintController;
+use App\Http\Controllers\App\TransactionController;
+use App\Http\Controllers\App\TransactionStatusController;
 use App\Http\Controllers\Developer\BusinessController;
 use App\Http\Controllers\Owner\AdminController;
 use App\Http\Controllers\Owner\BranchController;
 use App\Http\Controllers\Owner\BranchServiceController;
 use App\Http\Controllers\Owner\MasterServiceController;
 use App\Http\Controllers\Owner\MasterSyncController;
+use App\Http\Controllers\Owner\PaymentSettingController;
+use App\Http\Controllers\Public\ReceiptController;
 use App\Models\Branch;
 use App\Models\MasterService;
-use App\Models\Service;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -16,6 +25,9 @@ use Inertia\Inertia;
 Route::get('/', function () {
     return response()->view('public.home')->header('Cache-Control', 'no-store')->header('Referrer-Policy', 'no-referrer')->header('X-Robots-Tag', 'noindex, nofollow');
 });
+Route::get('/check', [ReceiptController::class, 'search']);
+Route::get('/t/{kodeResi}', [ReceiptController::class, 'show']);
+Route::get('/t/{kodeResi}/print', [ReceiptController::class, 'print']);
 
 require __DIR__.'/auth.php';
 
@@ -40,13 +52,25 @@ Route::middleware(['auth', 'tenant', 'business.access', 'password.changed'])->gr
         Route::get('/owner/sync', [MasterSyncController::class, 'index']);
         Route::post('/owner/sync/preview', [MasterSyncController::class, 'preview']);
         Route::post('/owner/sync', [MasterSyncController::class, 'apply']);
+        Route::get('/owner/settings/payment', [PaymentSettingController::class, 'index']);
+        Route::put('/owner/settings/payment', [PaymentSettingController::class, 'update']);
     });
-    Route::get('/app', function () {
-        $user = auth()->user();
-        if ($user->role === 'owner') {
-            return redirect('/owner');
-        }
-
-        return Inertia::render('AdminHome', ['branch' => Branch::query()->findOrFail($user->branch_id)->only(['nama', 'alamat', 'telepon']), 'services' => Service::query()->where('is_active', true)->orderBy('nama')->get(['id', 'nama', 'harga', 'satuan', 'durasi_jam'])]);
-    })->middleware('role:admin,owner');
+    Route::middleware('role:admin,owner')->group(function () {
+        Route::get('/app', [DashboardController::class, 'index']);
+        Route::get('/app/customers', [CustomerController::class, 'index']);
+        Route::get('/app/customers/lookup', [CustomerController::class, 'lookup']);
+        Route::post('/app/customers', [CustomerController::class, 'store']);
+        Route::put('/app/customers/{id}', [CustomerController::class, 'update'])->whereNumber('id');
+        Route::post('/app/customers/merge', [CustomerMergeController::class, 'store']);
+        Route::post('/app/quote', [QuoteController::class, 'store']);
+        Route::get('/app/transactions', [TransactionController::class, 'index']);
+        Route::get('/app/transactions/create', [TransactionController::class, 'create']);
+        Route::post('/app/transactions', [TransactionController::class, 'store']);
+        Route::get('/app/transactions/{id}/edit', [TransactionController::class, 'edit'])->whereNumber('id');
+        Route::get('/app/transactions/{id}', [TransactionController::class, 'show'])->whereNumber('id');
+        Route::put('/app/transactions/{id}', [TransactionController::class, 'update'])->whereNumber('id');
+        Route::post('/app/transactions/{id}/payments', [PaymentController::class, 'store'])->whereNumber('id');
+        Route::post('/app/transactions/{id}/status', [TransactionStatusController::class, 'store'])->whereNumber('id');
+        Route::get('/app/transactions/{id}/print', [ReceiptPrintController::class, 'show'])->whereNumber('id');
+    });
 });

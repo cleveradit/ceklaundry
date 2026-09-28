@@ -5,6 +5,6 @@ import tailwindcss from '@tailwindcss/vite';
 import path from 'node:path';
 
 export default defineConfig({
-  plugins: [laravel({ input: ['resources/js/app.tsx', 'resources/css/public.css'], refresh: true }), react(), tailwindcss()],
+  plugins: [laravel({ input: ['resources/js/app.tsx', 'resources/css/public.css', 'resources/css/receipt.css'], refresh: true }), react(), tailwindcss()],
   resolve: { alias: { '@': path.resolve(__dirname, 'resources/js') } },
 });

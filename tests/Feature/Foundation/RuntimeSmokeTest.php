@@ -10,7 +10,7 @@ class RuntimeSmokeTest extends TestCase
     public function test_public_page_is_blade_without_panel_bundle(): void
     {
         $this->withoutVite()->get('/')
-            ->assertOk()->assertSee('CekLaundry')->assertSee('Pengecekan resi segera hadir')
+            ->assertOk()->assertSee('CekLaundry')->assertSee('Cek cucian Anda.')
             ->assertDontSee('data-page')->assertDontSee('app.tsx')
             ->assertHeader('Referrer-Policy', 'no-referrer');
     }

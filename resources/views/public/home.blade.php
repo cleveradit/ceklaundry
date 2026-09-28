@@ -5,12 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex,nofollow">
     <meta name="referrer" content="no-referrer">
-    <title>CekLaundry — Kelola laundry dengan tenang</title>
+    <title>CekLaundry — Cek status cucian</title>
     @vite('resources/css/public.css')
 </head>
 <body>
-    <header><a class="brand" href="/">CekLaundry<span>LAUNDRY LEBIH TERATUR</span></a><a href="/login">Masuk ke panel →</a></header>
-    <main><span class="eyebrow">DARI MASUK HINGGA SIAP DIAMBIL</span><h1>Urus cucian.<br>Dengan lebih tenang.</h1><p>Satu tempat untuk mengelola bisnis, cabang, tim, dan layanan laundry Anda.</p><a class="button" href="/login">Masuk ke panel</a><aside><strong>Pengecekan resi segera hadir</strong><p>Saat ini CekLaundry sedang menyiapkan fondasi layanan. Hubungi cabang laundry Anda untuk mengetahui status cucian.</p></aside></main>
-    <footer>CekLaundry · Dibuat untuk keseharian usaha laundry</footer>
+    <header><a class="brand" href="/">CekLaundry<span>CEK CUCIAN ANDA</span></a><a href="/login">Masuk ke panel →</a></header>
+    <main class="public-hero">
+        <span class="eyebrow">STATUS CUCIAN TANPA LOGIN</span>
+        <h1>Cek cucian Anda.</h1>
+        <p>Masukkan enam karakter kode resi pada struk untuk melihat progres dan sisa tagihan.</p>
+        <form class="lookup-form" action="/check" method="get">
+            <label for="kode_resi">Kode resi</label>
+            <div><input id="kode_resi" name="kode_resi" required minlength="6" maxlength="6" pattern="[A-Za-z2-9]{6}" autocomplete="off" placeholder="Contoh K7F3XA" aria-describedby="kode-bantuan"><button type="submit">Cek Status</button></div>
+            <small id="kode-bantuan">Kode terdiri dari 6 karakter pada resi.</small>
+        </form>
+        <button class="demo-note" type="button" disabled aria-disabled="true">Coba Demo · belum tersedia</button>
+    </main>
+    <footer>CekLaundry · Hubungi cabang laundry bila Anda kehilangan resi.</footer>
 </body>
 </html>

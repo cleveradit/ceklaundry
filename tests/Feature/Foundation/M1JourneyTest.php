@@ -31,7 +31,7 @@ class M1JourneyTest extends FoundationTestCase
         $this->get('/owner/branches/'.$otherBranch->id.'/services')->assertNotFound();
         $admin = User::where('email', 'admin-journey@example.test')->firstOrFail();
         $this->actingAs($admin)->post('/password/change', ['current_password' => $password, 'password' => $new, 'password_confirmation' => $new])->assertSessionHasNoErrors();
-        $this->get('/app')->assertOk()->assertSee('Cuci Lipat');
+        $this->get('/app/transactions/create')->assertOk()->assertSee('Cuci Lipat');
         $this->get('/owner/branches')->assertForbidden();
     }
 }

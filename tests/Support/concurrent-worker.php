@@ -4,7 +4,11 @@ use App\Models\User;
 use App\Services\AuthRateLimiter;
 use App\Services\BranchService;
 use App\Services\BusinessTransaction;
+use App\Services\CustomerMergeService;
 use App\Services\MasterSyncService;
+use App\Services\PaymentService;
+use App\Services\TransactionService;
+use App\Services\TransactionStateMachine;
 use Carbon\Carbon;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Support\Facades\DB;
@@ -31,6 +35,19 @@ try {
         app(BranchService::class)->save($actor, ['nama' => 'Utama', 'alamat' => 'Jalan Uji', 'telepon' => '081234567890', 'is_active' => false], $args['branch']);
     } elseif ($args['operation'] === 'sync') {
         app(MasterSyncService::class)->apply($actor, $args['branches'], $args['fingerprint']);
+    } elseif ($args['operation'] === 'payment') {
+        app(PaymentService::class)->store($actor, $args['transaction'], ['request_key' => $args['key'], 'jumlah' => $args['amount'], 'metode' => 'tunai']);
+    } elseif ($args['operation'] === 'dp-off') {
+        app(BusinessTransaction::class)->run($actor, $actor->business_id, function ($business, User $fresh) {
+            abort_unless($fresh->role === 'owner', 403);
+            DB::table('business_settings')->where('business_id', $business->id)->update(['dp_enabled' => false, 'updated_at' => now()]);
+        });
+    } elseif ($args['operation'] === 'status') {
+        app(TransactionStateMachine::class)->move($actor, $args['transaction'], $args['target'], $args['version']);
+    } elseif ($args['operation'] === 'create') {
+        app(TransactionService::class)->create($actor, $args['data']);
+    } elseif ($args['operation'] === 'merge') {
+        app(CustomerMergeService::class)->merge($actor, $args['source'], $args['target']);
     } else {
         app(BusinessTransaction::class)->run($actor, $actor->business_id, function ($business, $fresh) use ($args) {
             abort_unless($fresh->branch_id === $args['branch'], 404);

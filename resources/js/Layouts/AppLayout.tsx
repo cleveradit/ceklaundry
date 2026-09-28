@@ -1,6 +1,6 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { type ReactNode, useEffect } from 'react';
-import { LayoutDashboard, Store, Users, Layers, RefreshCw, LogOut, KeyRound, Droplets, ArrowUpRight } from 'lucide-react';
+import { LayoutDashboard, Store, Users, Layers, RefreshCw, LogOut, KeyRound, Droplets, ArrowUpRight, ClipboardList } from 'lucide-react';
 import type { Shared } from '@/types';
 import BusinessLifecycleBanner from '@/Components/BusinessLifecycleBanner';
 
@@ -9,8 +9,8 @@ export default function AppLayout({ title, subtitle, children, action }: { title
   const role = props.auth?.role;
   const links = role === 'developer' ? [{ href: '/dev', label: 'Bisnis laundry', icon: Store }] : role === 'owner' ? [
     { href: '/owner', label: 'Ringkasan', icon: LayoutDashboard }, { href: '/owner/branches', label: 'Cabang', icon: Store },
-    { href: '/owner/admins', label: 'Tim admin', icon: Users }, { href: '/owner/masters', label: 'Layanan master', icon: Layers }, { href: '/owner/sync', label: 'Sebarkan layanan', icon: RefreshCw },
-  ] : [{ href: '/app', label: 'Cabang saya', icon: Store }];
+    { href: '/owner/admins', label: 'Tim admin', icon: Users }, { href: '/owner/masters', label: 'Layanan master', icon: Layers }, { href: '/owner/sync', label: 'Sebarkan layanan', icon: RefreshCw }, { href: '/app', label: 'Operasional', icon: ClipboardList },
+  ] : [{ href: '/app', label: 'Ringkasan cabang', icon: Store }, { href: '/app/transactions', label: 'Transaksi', icon: ClipboardList }, { href: '/app/customers', label: 'Pelanggan', icon: Users }];
   useEffect(() => {
     const restore = (event: PageTransitionEvent) => { if (event.persisted) { document.body.style.visibility = 'hidden'; window.location.reload(); } };
     window.addEventListener('pageshow', restore);

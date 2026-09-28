@@ -17,7 +17,7 @@ docker compose exec -T app php artisan migrate --force
 docker compose exec app php artisan app:bootstrap-developer
 ```
 
-Buka `http://localhost:8088/login`. Command terakhir meminta nama, email dan password tersembunyi (minimal12 karakter, maksimal72 byte UTF-8); tidak ada akun/password bawaan. Developer wajib mengganti password saat masuk, lalu dapat membuat bisnis/owner. Owner membuat cabang, admin, master, dan menyalin master lewat pratinjau. Database development tidak diisi fixture QA.
+Buka `http://localhost:8088/login`. Command terakhir meminta nama, email dan password tersembunyi (minimal12 karakter, maksimal72 byte UTF-8); tidak ada akun/password bawaan. Developer wajib mengganti password saat masuk, lalu dapat membuat bisnis/owner. Owner membuat cabang, admin, master, dan menyalin master lewat pratinjau. Setelah itu operator dapat membuat pelanggan/transaksi, mencatat pembayaran, mengubah status dan mencetak resi; owner mengatur DP di `/owner/settings/payment`. Database development tidak diisi fixture QA.
 
 `bin/setup-env` menghasilkan APP_KEY dan dua password database acak, izin0600, tidak mencetak rahasia, dan menolak menimpa `.env` existing. Bila port sudah digunakan, ubah `APP_PORT` serta `APP_URL` pada `.env`; jangan hentikan layanan lain. `.env.example` tidak mengandung rahasia. Jangan mencetak `docker compose config` tanpa `--quiet`.
 
@@ -70,10 +70,13 @@ docker compose -f compose.yaml -f compose.qa.yaml cp qa:/app/storage/app/private
 npm ci
 npx playwright install --with-deps chromium
 npm run test:browser
+docker compose -f compose.yaml -f compose.qa.yaml exec -T qa php tests/Support/m2-browser-seed.php
+docker compose -f compose.yaml -f compose.qa.yaml cp qa:/app/storage/app/private/m2-browser-fixture.json test-results/m2-browser-fixture.json
+npm run test:browser:m2
 docker compose -f compose.yaml -f compose.qa.yaml stop qa
 ```
 
-Node22 lokal diperlukan hanya untuk browser runner ini; CI memasangnya otomatis. Alternatif Windows memakai Node bundel dan Chrome terpasang, `CHROME_PATH` menunjuk executable dan `BROWSER_FIXTURE` menunjuk file fixture. URL default QA `http://127.0.0.1:8089`; bisa diganti lewat BROWSER_URL. Jangan jalankan QA pada DB development. Fixture menghasilkan kredensial sementara hanya dalam file privat/ignored; screenshot di `test-results/` tidak berisi password. CI hanya mengunggah PNG, tidak file credential. Hapus file fixture privat setelah QA. Ulangi migrasi kosong database uji melalui container QA bila diperlukan, bukan volume development.
+Node22 lokal diperlukan hanya untuk browser runner ini; CI memasangnya otomatis. Alternatif Windows memakai Node bundel dan Chrome terpasang, `CHROME_PATH` menunjuk executable, `BROWSER_FIXTURE` dan `M2_BROWSER_FIXTURE` menunjuk file fixture masing-masing. URL default QA `http://127.0.0.1:8089`; bisa diganti lewat BROWSER_URL. M2 seed menjalankan `migrate:fresh` lagi dan harus dilakukan setelah runner M1, bukan saat backend suite masih berjalan. Jangan jalankan QA pada DB development. Fixture menghasilkan kredensial sementara hanya dalam file privat/ignored; screenshot di `test-results/` tidak berisi password. CI hanya mengunggah PNG, tidak file credential. Hapus file fixture privat setelah QA. Ulangi migrasi kosong database uji melalui container QA bila diperlukan, bukan volume development.
 
 ## Pemulihan outbound autentikasi
 

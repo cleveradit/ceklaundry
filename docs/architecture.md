@@ -1,6 +1,6 @@
 # Architecture Map — CekLaundry
 
-**Status:** fondasi M1 diimplementasikan; lihat [verifikasi M1](audits/m1-verification.md). Spesifikasi keseluruhan tetap [arsitektur sumber](initiate-file/architecture.md). Operasional M2–M6 masih rancangan.
+**Status:** fondasi M1 dan operasional inti M2 diimplementasikan; lihat [verifikasi M1](audits/m1-verification.md) dan [verifikasi M2](audits/m2-verification.md). Spesifikasi keseluruhan tetap [arsitektur sumber](initiate-file/architecture.md). M3–M6 masih rancangan.
 
 Monolit Laravel12, PHP8.4 dan MySQL8.4/InnoDB. Panel Inertia/React/TypeScript strict memakai Vite tanpa SSR; halaman depan Blade dengan CSS terpisah tidak mengunduh React.
 
@@ -13,6 +13,12 @@ Monolit Laravel12, PHP8.4 dan MySQL8.4/InnoDB. Panel Inertia/React/TypeScript st
 | `TenantProvisioner`, `DeveloperBusinessSummary`, `LifecycleService` | Provision atomik, DTO agregat developer, kalender WIB dan invalidasi pending |
 | `BranchService`, `AccountService`, `ServiceCatalogService` | Cabang/admin/master/lokal dan guard invariannya |
 | `MasterSyncService` | Snapshot/fingerprint server, preview tanpa long transaction, apply semua cabang + audit atomik |
+| `PricingService`, `EstimationService`, `TransactionService` | Hitung harga integer di server; snapshot item, create idempoten, edit dengan version dan batas finansial |
+| `CustomerService`, `CustomerMergeService` | Identitas pelanggan bersama per bisnis; merge di bawah root lock, repoint transaksi dan ledger |
+| `PaymentService`, `TransactionStateMachine`, `CancellationService` | Ledger pembayaran append-only, DP, status satu langkah, batal dan kompensasi ledger |
+| `OperationsDashboardService`, controller App | Ringkasan cabang, pencarian, transaksi, pelanggan dan pengaturan DP owner |
+| `PublicReceiptService`, `ReceiptRateLimiter`, `ReceiptPrintService` | DTO publik tersamar, limiter bersama 30/IP/menit, resi thermal dan QR SVG lokal |
+| `ManualReceiptLinkService` | Tautan wa.me manual; tidak melakukan pengiriman server atau menulis log M2 |
 | `SendPasswordReset`, `OutboundGuard` | Job terenkripsi, token+queue satu transaksi, SMTP global sekali, hold/cutoff |
 | `resources/js/Pages/Management.tsx`, `Owner/Sync.tsx` | Form reusable per resource, daftar, konfirmasi dan pratinjau |
 | `NoStore`, konfigurasi Inertia | No-store/no-referrer, history terenkripsi, clear history setelah logout |
@@ -24,4 +30,6 @@ Developer tidak mempunyai bypass policy operasional. Bisnis root dan User tidak 
 
 Business write: autentikasi → identitas terkini → root lock → cek ulang akun/cabang/lifecycle → validasi domain → write child/audit → commit. HTTP lintas tenant404, salah peran403, business-write baca-saja423, preview stale409.
 
-Belum diimplementasikan: TransactionService/PricingService/payment, status/resi, notifikasi pelanggan/WA, loyalti/promo operasional, laporan, provisioning demo, PWA. Tabel pendukung hanya memungkinkan pengujian fondasi/guard M1; bukan bukti alur operasional tersedia.
+Alur M2 memakai BusinessTransaction dan root lock yang sama dengan M1. Semua mutasi harga, pelanggan, transaksi, pembayaran dan status memeriksa aktor/cabang terbaru lalu menulis secara atomik. Pembacaan publik mencari kode resi global, membatasi per IP sebelum lookup, dan menyusun DTO tersamar terpisah dari cetak panel.
+
+Belum diimplementasikan: notifikasi pelanggan otomatis dan pencatatan WA manual M3, loyalti/promo aktif M4, laporan M5, provisioning demo dan PWA M6.

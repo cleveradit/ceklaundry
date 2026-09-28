@@ -36,7 +36,7 @@ const ownerEmail='owner-'+Date.now()+'@example.test', adminEmail='admin-'+Date.n
   await page.setViewportSize({width:390,height:844});await go('/owner/branches');await page.screenshot({path:path.join(output,'branches-mobile.png'),fullPage:true});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   await page.getByRole('link',{name:'Layanan',exact:true}).click();await expect(page.getByText('Cuci Lipat',{exact:true})).toBeVisible();
   await logout();await page.goBack();await page.waitForTimeout(400);await expect(page.getByText('Cuci Lipat',{exact:true})).toHaveCount(0);
-  await login(adminEmail,password);await change(password,password+'a');await expect(page).toHaveURL(/\/app$/);await expect(page.getByText('Cuci Lipat',{exact:true})).toBeVisible();
+  await login(adminEmail,password);await change(password,password+'a');await expect(page).toHaveURL(/\/app$/);await expect(page.getByRole('heading',{name:'Operasional cabang'})).toBeVisible();
   await page.screenshot({path:path.join(output,'admin-mobile.png'),fullPage:true});await go('/owner/branches');await expect(page.getByText('Anda tidak memiliki akses',{exact:false}).first()).toBeVisible();
   expect(errors).toEqual([]);console.log('PASS: developer → owner → admin; forced passwords, CRUD, two-tab stale sync, mobile, logout history, role isolation; '+await browser.version());
  } catch(error){await page.screenshot({path:path.join(output,'failure.png'),fullPage:true});throw error;} finally {await browser.close();}

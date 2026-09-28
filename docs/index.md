@@ -1,6 +1,6 @@
 # CekLaundry — Documentation Hub
 
-CekLaundry dirancang sebagai aplikasi pengelolaan laundry multi-bisnis: operasional cabang, status cucian publik, pembayaran, notifikasi, promo/loyalti, laporan, demo, dan PWA. **Status saat ini: persiapan dan fondasi M1 diimplementasikan; M2–M6 belum tersedia.**
+CekLaundry dirancang sebagai aplikasi pengelolaan laundry multi-bisnis: operasional cabang, status cucian publik, pembayaran, notifikasi, promo/loyalti, laporan, demo, dan PWA. **Status saat ini: fondasi M1 dan operasional inti M2 diimplementasikan; M3–M6 belum tersedia.**
 
 **Stack rancangan:** PHP 8.4 · Laravel 12 · MySQL 8.4 · Inertia/React/TypeScript · Blade · Docker Compose.
 
@@ -24,4 +24,4 @@ CekLaundry dirancang sebagai aplikasi pengelolaan laundry multi-bisnis: operasio
 
 ## Spesifikasi dan audit
 
-[PRD sumber produk](initiate-file/prd.md) tersedia bersama keempat dokumen turunannya. [Final System Audit](audits/final-system-audit.md) mencatat keputusan, skenario adversarial, traceability, dan validasi dokumentasi. Bukti runtime dan batas consumer masa depan ada di [verifikasi M1](audits/m1-verification.md).
+[PRD sumber produk](initiate-file/prd.md) tersedia bersama keempat dokumen turunannya. [Final System Audit](audits/final-system-audit.md) mencatat keputusan, skenario adversarial, traceability, dan validasi dokumentasi. Bukti runtime dan batas consumer masa depan ada di [verifikasi M1](audits/m1-verification.md) dan [verifikasi M2](audits/m2-verification.md).

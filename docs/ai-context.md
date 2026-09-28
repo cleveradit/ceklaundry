@@ -2,9 +2,9 @@
 
 Baca dokumen ini sebelum merencanakan atau mengubah proyek. Urutan orientasi: [index.md](index.md) → [architecture.md](architecture.md) → [data-model.md](data-model.md) → [user-stories.md](initiate-file/user-stories.md) dan [nfr.md](initiate-file/nfr.md).
 
-**Tahap proyek:** persiapan dan fondasi M1 diimplementasikan. Bukti aktual dan batas fixture/integrasi masa depan ada di [audit M1](audits/m1-verification.md). M2–M6 belum tersedia; jangan menyebut seluruh produk selesai.
+**Tahap proyek:** fondasi M1 dan operasional inti M2 diimplementasikan. Bukti aktual, hasil uji, dan batas integrasi berikutnya ada di [audit M1](audits/m1-verification.md) serta [audit M2](audits/m2-verification.md). M3–M6 belum tersedia; jangan menyebut seluruh produk selesai.
 
-## 1. Tech Stack (runtime M1)
+## 1. Tech Stack (runtime M1–M2)
 
 | Lapisan | Pilihan dalam rancangan |
 |---|---|
