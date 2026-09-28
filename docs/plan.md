@@ -78,9 +78,9 @@ Tahap 0, 7, dan 8 adalah pengelompokan pekerjaan persiapan dan rilis, bukan mile
 
 ### Kriteria selesai
 
-- [ ] Ticket pertama memiliki lingkup, dependensi, dan kriteria penerimaan yang jelas.
-- [ ] Jalur menjalankan runtime dan build frontend telah dipilih sesuai target proyek.
-- [ ] Tidak ada keputusan teknis yang menghalangi pekerjaan pertama.
+- [x] Ticket pertama memiliki lingkup, dependensi, dan kriteria penerimaan yang jelas.
+- [x] Jalur menjalankan runtime dan build frontend telah dipilih sesuai target proyek.
+- [x] Tidak ada keputusan teknis yang menghalangi pekerjaan pertama.
 
 ## 5. M1 — Fondasi dan tenant
 
@@ -104,13 +104,15 @@ Tahap 0, 7, dan 8 adalah pengelompokan pekerjaan persiapan dan rilis, bukan mile
 
 ### Kriteria selesai
 
-- [ ] Setup dari checkout dan database kosong dapat diulang dengan petunjuk yang tersedia.
-- [ ] Developer dapat membuat bisnis beserta owner; owner dapat mengelola cabang, admin, dan layanan.
-- [ ] Owner hanya melihat bisnisnya; admin dibatasi cabangnya; manipulasi ID tidak membuka data pihak lain.
-- [ ] Developer tidak mendapatkan akses ke data operasional individual melalui hak administratifnya.
-- [ ] Pergantian password, penonaktifan akun/cabang, dan lifecycle bisnis menegakkan akses sesuai spesifikasi.
-- [ ] Sinkronisasi layanan bersifat atomik dan sesuai pratinjau.
-- [ ] Pengujian fondasi dan pemeriksaan kualitas lulus di CI.
+- [x] Setup dari checkout dan database kosong dapat diulang dengan petunjuk yang tersedia.
+- [x] Developer dapat membuat bisnis beserta owner; owner dapat mengelola cabang, admin, dan layanan.
+- [x] Owner hanya melihat bisnisnya; admin dibatasi cabangnya; manipulasi ID tidak membuka data pihak lain.
+- [x] Developer tidak mendapatkan akses ke data operasional individual melalui hak administratifnya.
+- [x] Pergantian password, penonaktifan akun/cabang, dan lifecycle bisnis menegakkan akses sesuai spesifikasi.
+- [x] Sinkronisasi layanan bersifat atomik dan sesuai pratinjau.
+- [x] Pengujian fondasi dan pemeriksaan kualitas lulus di CI.
+
+Bukti penyelesaian M1: [audit verifikasi M1](audits/m1-verification.md), termasuk hasil CI dan uji browser. Integrasi dengan fitur M2–M6 yang belum tersedia tetap mengikuti batas verifikasi dalam audit tersebut.
 
 **Yang diperiksa sendiri:** buat dua bisnis dengan beberapa cabang dan akun. Coba berpindah peran serta membuka resource bisnis/cabang lain. Pastikan aplikasi benar-benar membatasi akses di server.
 
