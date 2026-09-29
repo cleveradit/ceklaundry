@@ -25,6 +25,16 @@
         </section>
         <section class="public-card"><h2>Waktu & kondisi</h2><p>Masuk: {{ \Carbon\Carbon::parse($receipt['waktu_masuk'])->timezone('Asia/Jakarta')->translatedFormat('j F Y H.i') }} WIB</p><p>Estimasi selesai: {{ \Carbon\Carbon::parse($receipt['estimasi_selesai'])->timezone('Asia/Jakarta')->translatedFormat('j F Y H.i') }} WIB</p>@if($receipt['catatan_kondisi'])<p>Catatan kondisi: {{ $receipt['catatan_kondisi'] }}</p>@endif</section>
         <section class="public-card"><h2>{{ $receipt['cabang']['nama'] }}</h2><p>{{ $receipt['cabang']['alamat'] }}</p><p><a href="tel:{{ $receipt['cabang']['telepon'] }}">Hubungi {{ $receipt['cabang']['telepon'] }}</a></p></section>
+        @if($receipt['email_form_enabled'] && in_array($receipt['status'], ['DITERIMA', 'DIPROSES']))
+        <section class="public-card"><h2>Notifikasi email</h2><p>Tambahkan alamat email khusus untuk resi ini. Alamat baru berlaku setelah Anda mengonfirmasinya.</p>
+            @if(session('success'))<p role="status">{{ session('success') }}</p>@endif
+            @if($errors->any())<p role="alert">Permintaan belum dapat diproses. Periksa alamat email.</p>@endif
+            <form method="post" action="/t/{{ $receipt['kode_resi'] }}/email">@csrf
+                <label for="notification-email">Alamat email</label><input id="notification-email" name="email" type="email" required maxlength="150" autocomplete="email">
+                <button class="button" type="submit">Kirim tautan konfirmasi</button>
+            </form>
+        </section>
+        @endif
         <a class="button" href="/t/{{ $receipt['kode_resi'] }}/print">Lihat resi cetak</a>
     </main>
     <footer>CekLaundry · Informasi ini dapat diakses siapa pun yang memegang kode resi.</footer>

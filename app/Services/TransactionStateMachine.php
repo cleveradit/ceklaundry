@@ -34,6 +34,12 @@ class TransactionStateMachine
             $changes = ['status' => $target, 'version' => $tx->version + 1, 'updated_at' => $at];
             if ($target === 'SIAP_DIAMBIL') {
                 $changes['waktu_siap_diambil'] = $at;
+                DB::table('notification_logs')->where('business_id', $business->id)->where('transaction_id', $id)
+                    ->where('tipe', 'verifikasi_email')->whereIn('status', ['tertunda', 'diproses'])->whereNull('delivery_started_at')
+                    ->update(['status' => 'dilewati_kondisi', 'reason_code' => 'transaksi_siap', 'processing_token' => null,
+                        'processing_started_at' => null, 'next_attempt_at' => null, 'updated_at' => $at]);
+                $changes['pending_notification_email'] = null;
+                $changes['email_verification_expires_at'] = null;
             }
             if ($target === 'SUDAH_DIAMBIL') {
                 $changes['waktu_diambil'] = $at;
@@ -41,6 +47,11 @@ class TransactionStateMachine
             }
             DB::table('transactions')->where('id', $id)->update($changes);
             DB::table('status_histories')->insert(['business_id' => $business->id, 'transaction_id' => $id, 'status' => $target, 'user_id' => $fresh->id, 'created_at' => $at]);
+            if ($target === 'SIAP_DIAMBIL') {
+                $ready = DB::table('transactions')->where('id', $id)->first();
+                app(NotificationDispatcher::class)->reserve($business, $ready, 'siap_diambil', 'email');
+                app(NotificationDispatcher::class)->reserve($business, $ready, 'siap_diambil', 'whatsapp');
+            }
         });
     }
 }

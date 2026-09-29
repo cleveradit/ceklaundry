@@ -1,4 +1,4 @@
-name: Quality and M2 integration
+name: Quality and M3 integration
 on: [push, pull_request, workflow_dispatch]
 permissions:
   contents: read
@@ -48,6 +48,8 @@ jobs:
           docker compose -f compose.yaml -f compose.qa.yaml exec -T qa php tests/Support/m2-browser-seed.php
           docker compose -f compose.yaml -f compose.qa.yaml cp qa:/app/storage/app/private/m2-browser-fixture.json test-results/m2-browser-fixture.json
           npm run test:browser:m2
+      - name: M3 browser journey on isolated database
+        run: npm run test:browser:m3
       - name: Browser screenshots and print preview
         if: always()
         uses: actions/upload-artifact@v4

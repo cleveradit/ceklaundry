@@ -12,7 +12,9 @@ Lima layanan Compose berjalan pada http://localhost:8088. Migrasi M2 sudah diter
 
 ## Handoff
 
-Untuk milestone berikutnya, M3 menambah notifikasi dan verifikasi email, M4 promo/loyalti, M5 laporan, serta M6 demo/PWA; uji ulang integrasi yang ditandai tertunda dalam audit M2. [Pengembangan lokal](../development.md) berisi perintah build, QA, dan perawatan runtime.
+Pengguna telah menyetujui implementasi seluruh [TICKET-021–029](index.md), dan statusnya `READY`. Pekerjaan M3 sedang berjalan: konfigurasi developer/owner, mesin log/job, email publik/ready, scheduler, recipient WA, adapter/kuota, pengingat manual dan UI log telah ditambahkan. Pengujian MySQL QA dan contract provider sedang dilakukan. Jangan menandai tiket `DONE` atau M3 `Live` sebelum matriks AC, race/fault/restore, browser, dan CI diverifikasi; lanjutkan dari hasil audit M3. Uji ulang integrasi M2 yang ditandai tertunda di audit M2 menjadi bagian TICKET-029.
+
+M4 promo/loyalti, M5 laporan, dan M6 demo/PWA masih menunggu tiket. [Pengembangan lokal](../development.md) berisi perintah build, QA, dan perawatan runtime.
 
 ## Riwayat M1
 

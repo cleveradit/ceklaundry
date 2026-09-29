@@ -3,19 +3,23 @@
 use App\Http\Controllers\App\CustomerController;
 use App\Http\Controllers\App\CustomerMergeController;
 use App\Http\Controllers\App\DashboardController;
+use App\Http\Controllers\App\ManualNotificationController;
 use App\Http\Controllers\App\PaymentController;
 use App\Http\Controllers\App\QuoteController;
 use App\Http\Controllers\App\ReceiptPrintController;
 use App\Http\Controllers\App\TransactionController;
 use App\Http\Controllers\App\TransactionStatusController;
 use App\Http\Controllers\Developer\BusinessController;
+use App\Http\Controllers\Developer\NotificationConfigController;
 use App\Http\Controllers\Owner\AdminController;
 use App\Http\Controllers\Owner\BranchController;
 use App\Http\Controllers\Owner\BranchServiceController;
 use App\Http\Controllers\Owner\MasterServiceController;
 use App\Http\Controllers\Owner\MasterSyncController;
+use App\Http\Controllers\Owner\NotificationSettingController;
 use App\Http\Controllers\Owner\PaymentSettingController;
 use App\Http\Controllers\Public\ReceiptController;
+use App\Http\Controllers\Public\ReceiptEmailController;
 use App\Models\Branch;
 use App\Models\MasterService;
 use App\Models\User;
@@ -28,6 +32,9 @@ Route::get('/', function () {
 Route::get('/check', [ReceiptController::class, 'search']);
 Route::get('/t/{kodeResi}', [ReceiptController::class, 'show']);
 Route::get('/t/{kodeResi}/print', [ReceiptController::class, 'print']);
+Route::post('/t/{kodeResi}/email', [ReceiptEmailController::class, 'request']);
+Route::get('/t/{kodeResi}/email/confirm', [ReceiptEmailController::class, 'show'])->name('receipt.email.confirm');
+Route::post('/t/{kodeResi}/email/confirm', [ReceiptEmailController::class, 'confirm']);
 
 require __DIR__.'/auth.php';
 
@@ -37,6 +44,8 @@ Route::middleware(['auth', 'tenant', 'business.access', 'password.changed'])->gr
         Route::post('/dev/businesses', [BusinessController::class, 'store']);
         Route::put('/dev/businesses/{id}', [BusinessController::class, 'update'])->whereNumber('id');
         Route::post('/dev/businesses/{id}/reset-owner', [BusinessController::class, 'resetOwner'])->whereNumber('id');
+        Route::get('/dev/businesses/{id}/notifications', [NotificationConfigController::class, 'edit'])->whereNumber('id');
+        Route::put('/dev/businesses/{id}/notifications', [NotificationConfigController::class, 'update'])->whereNumber('id');
     });
     Route::middleware('role:owner')->group(function () {
         Route::get('/owner', fn () => Inertia::render('Dashboard', ['branchCount' => Branch::query()->count(), 'serviceCount' => MasterService::query()->count(), 'adminCount' => User::query()->where('business_id', auth()->user()->business_id)->where('role', 'admin')->count()]));
@@ -54,6 +63,8 @@ Route::middleware(['auth', 'tenant', 'business.access', 'password.changed'])->gr
         Route::post('/owner/sync', [MasterSyncController::class, 'apply']);
         Route::get('/owner/settings/payment', [PaymentSettingController::class, 'index']);
         Route::put('/owner/settings/payment', [PaymentSettingController::class, 'update']);
+        Route::get('/owner/settings/notifications', [NotificationSettingController::class, 'index']);
+        Route::put('/owner/settings/notifications', [NotificationSettingController::class, 'update']);
     });
     Route::middleware('role:admin,owner')->group(function () {
         Route::get('/app', [DashboardController::class, 'index']);
@@ -72,5 +83,7 @@ Route::middleware(['auth', 'tenant', 'business.access', 'password.changed'])->gr
         Route::post('/app/transactions/{id}/payments', [PaymentController::class, 'store'])->whereNumber('id');
         Route::post('/app/transactions/{id}/status', [TransactionStatusController::class, 'store'])->whereNumber('id');
         Route::get('/app/transactions/{id}/print', [ReceiptPrintController::class, 'show'])->whereNumber('id');
+        Route::post('/app/transactions/{id}/notifications/email', [ManualNotificationController::class, 'email'])->whereNumber('id');
+        Route::post('/app/transactions/{id}/notifications/whatsapp', [ManualNotificationController::class, 'whatsapp'])->whereNumber('id');
     });
 });

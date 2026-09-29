@@ -8,7 +8,8 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint resources/js vite.config.ts eslint.config.js",
     "test:browser": "node tests/browser/m1.cjs",
-    "test:browser:m2": "node tests/browser/m2.cjs"
+    "test:browser:m2": "node tests/browser/m2.cjs",
+    "test:browser:m3": "node tests/browser/m3.cjs"
   },
   "dependencies": {
     "@inertiajs/react": "^2.0.0",

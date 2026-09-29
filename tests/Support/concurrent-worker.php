@@ -1,14 +1,20 @@
 <?php
 
+use App\Jobs\SendNotification;
 use App\Models\User;
 use App\Services\AuthRateLimiter;
 use App\Services\BranchService;
 use App\Services\BusinessTransaction;
 use App\Services\CustomerMergeService;
+use App\Services\ManualNotificationService;
 use App\Services\MasterSyncService;
+use App\Services\NotificationTransport;
 use App\Services\PaymentService;
+use App\Services\ReminderScheduler;
+use App\Services\TransactionEmailVerificationService;
 use App\Services\TransactionService;
 use App\Services\TransactionStateMachine;
+use App\Tenancy\TenantContext;
 use Carbon\Carbon;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Support\Facades\DB;
@@ -44,6 +50,28 @@ try {
         });
     } elseif ($args['operation'] === 'status') {
         app(TransactionStateMachine::class)->move($actor, $args['transaction'], $args['target'], $args['version']);
+    } elseif ($args['operation'] === 'reminder') {
+        app(ReminderScheduler::class)->run();
+    } elseif ($args['operation'] === 'send-notification') {
+        config()->set('mail.default', 'array');
+        app(TenantContext::class)->run($args['business'], fn () => (new SendNotification($args['business'], $args['log']))->handle(app(NotificationTransport::class)));
+    } elseif ($args['operation'] === 'send-notification-capture') {
+        $transport = new class($args['capture']) extends NotificationTransport
+        {
+            public function __construct(private string $path) {}
+
+            public function send(array $envelope): array
+            {
+                file_put_contents($this->path, $envelope['recipient']);
+
+                return ['outcome' => 'accepted', 'code' => null];
+            }
+        };
+        app(TenantContext::class)->run($args['business'], fn () => (new SendNotification($args['business'], $args['log']))->handle($transport));
+    } elseif ($args['operation'] === 'email-confirm') {
+        app(TransactionEmailVerificationService::class)->confirm($args['code'], $args['version']);
+    } elseif ($args['operation'] === 'manual-email') {
+        app(ManualNotificationService::class)->email($actor, $args['transaction'], ['request_key' => $args['key']]);
     } elseif ($args['operation'] === 'create') {
         app(TransactionService::class)->create($actor, $args['data']);
     } elseif ($args['operation'] === 'merge') {

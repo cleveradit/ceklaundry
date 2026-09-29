@@ -36,6 +36,10 @@ class CustomerService
             }
             if ($customer) {
                 DB::table('customers')->where('id', $id)->update([...$valid, 'updated_at' => now()]);
+                if ($customer->no_hp !== $valid['no_hp']) {
+                    $ids = DB::table('transactions')->where('business_id', $business->id)->where('customer_id', $id)->orderBy('id')->pluck('id')->all();
+                    app(WaRecipientReconciler::class)->reconcile($business, $ids, $valid['no_hp']);
+                }
 
                 return $id;
             }

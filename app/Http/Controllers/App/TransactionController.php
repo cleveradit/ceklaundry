@@ -89,10 +89,12 @@ class TransactionController extends Controller
         $payments = DB::table('payments')->where('business_id', $actor->business_id)->where('transaction_id', $id)->orderBy('id')->get(['id', 'jumlah', 'metode', 'waktu']);
         $history = DB::table('status_histories')->where('business_id', $actor->business_id)->where('transaction_id', $id)->orderBy('created_at')->get(['status', 'created_at']);
         $paid = (int) $payments->sum('jumlah');
+        $notifications = DB::table('notification_logs')->where('business_id', $actor->business_id)->where('transaction_id', $id)
+            ->orderByDesc('id')->limit(100)->get(['kanal', 'tipe', 'tujuan', 'status', 'reason_code', 'attempt_count', 'created_at', 'sent_at']);
 
         return Inertia::render('App/TransactionDetail', ['transaction' => $tx, 'customer' => $customer,
             'items' => $items, 'payments' => $payments, 'history' => $history,
-            'paid' => $paid, 'manualLink' => $links->link($tx, $customer->no_hp, $paid)]);
+            'paid' => $paid, 'manualLink' => $links->link($tx, $customer->no_hp, $paid), 'notifications' => $notifications]);
     }
 
     public function update(Request $request, int $id, TransactionService $service)

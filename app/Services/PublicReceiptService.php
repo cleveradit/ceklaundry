@@ -43,6 +43,7 @@ class PublicReceiptService
             'potongan_promo' => (int) $tx->potongan_promo, 'total_akhir' => (int) $tx->total_akhir,
             'terbayar' => $paid, 'sisa' => max(0, (int) $tx->total_akhir - $paid),
             'demo' => (bool) $business->is_demo,
+            'email_form_enabled' => app(LifecycleService::class)->writable($business) && app(OutboundGuard::class)->allows($business, now()),
         ];
     }
 }

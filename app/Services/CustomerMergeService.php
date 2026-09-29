@@ -27,10 +27,15 @@ class CustomerMergeService
             $ids = $txs->where('customer_id', $sourceId)->pluck('id')->all();
             if ($ids) {
                 DB::table('notification_logs')->where('business_id', $business->id)->whereIn('transaction_id', $ids)->orderBy('id')->lockForUpdate()->get();
+                DB::table('notification_logs')->where('business_id', $business->id)->whereIn('transaction_id', $ids)
+                    ->where('tipe', 'verifikasi_email')->whereIn('status', ['tertunda', 'diproses'])->whereNull('delivery_started_at')
+                    ->update(['status' => 'dilewati_kondisi', 'reason_code' => 'pelanggan_digabung', 'processing_token' => null,
+                        'processing_started_at' => null, 'next_attempt_at' => null, 'updated_at' => now()]);
                 DB::table('transactions')->whereIn('id', $ids)->update([
                     'customer_id' => $targetId, 'pending_notification_email' => null,
                     'email_verification_expires_at' => null, 'version' => DB::raw('version + 1'), 'updated_at' => now(),
                 ]);
+                app(WaRecipientReconciler::class)->reconcile($business, $ids, $target->no_hp);
                 DB::table('loyalty_histories')->where('business_id', $business->id)->where('customer_id', $sourceId)->update(['customer_id' => $targetId]);
             }
             $balance = (int) DB::table('loyalty_histories')->where('business_id', $business->id)->where('customer_id', $targetId)->sum('jumlah');

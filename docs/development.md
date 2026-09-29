@@ -17,7 +17,7 @@ docker compose exec -T app php artisan migrate --force
 docker compose exec app php artisan app:bootstrap-developer
 ```
 
-Buka `http://localhost:8088/login`. Command terakhir meminta nama, email dan password tersembunyi (minimal12 karakter, maksimal72 byte UTF-8); tidak ada akun/password bawaan. Developer wajib mengganti password saat masuk, lalu dapat membuat bisnis/owner. Owner membuat cabang, admin, master, dan menyalin master lewat pratinjau. Setelah itu operator dapat membuat pelanggan/transaksi, mencatat pembayaran, mengubah status dan mencetak resi; owner mengatur DP di `/owner/settings/payment`. Database development tidak diisi fixture QA.
+Buka `http://localhost:8088/login`. Command terakhir meminta nama, email dan password tersembunyi (minimal12 karakter, maksimal72 byte UTF-8); tidak ada akun/password bawaan. Developer wajib mengganti password saat masuk, lalu dapat membuat bisnis/owner. Owner membuat cabang, admin, master, dan menyalin master lewat pratinjau. Setelah itu operator dapat membuat pelanggan/transaksi, mencatat pembayaran, mengubah status dan mencetak resi; owner mengatur DP di `/owner/settings/payment` serta notifikasi di `/owner/settings/notifications`. Developer mengatur transport per bisnis di `/dev/businesses/{id}/notifications`. Database development tidak diisi fixture QA.
 
 `bin/setup-env` menghasilkan APP_KEY dan dua password database acak, izin0600, tidak mencetak rahasia, dan menolak menimpa `.env` existing. Bila port sudah digunakan, ubah `APP_PORT` serta `APP_URL` pada `.env`; jangan hentikan layanan lain. `.env.example` tidak mengandung rahasia. Jangan mencetak `docker compose config` tanpa `--quiet`.
 
@@ -73,16 +73,21 @@ npm run test:browser
 docker compose -f compose.yaml -f compose.qa.yaml exec -T qa php tests/Support/m2-browser-seed.php
 docker compose -f compose.yaml -f compose.qa.yaml cp qa:/app/storage/app/private/m2-browser-fixture.json test-results/m2-browser-fixture.json
 npm run test:browser:m2
+npm run test:browser:m3
 docker compose -f compose.yaml -f compose.qa.yaml stop qa
 ```
 
-Node22 lokal diperlukan hanya untuk browser runner ini; CI memasangnya otomatis. Alternatif Windows memakai Node bundel dan Chrome terpasang, `CHROME_PATH` menunjuk executable, `BROWSER_FIXTURE` dan `M2_BROWSER_FIXTURE` menunjuk file fixture masing-masing. URL default QA `http://127.0.0.1:8089`; bisa diganti lewat BROWSER_URL. M2 seed menjalankan `migrate:fresh` lagi dan harus dilakukan setelah runner M1, bukan saat backend suite masih berjalan. Jangan jalankan QA pada DB development. Fixture menghasilkan kredensial sementara hanya dalam file privat/ignored; screenshot di `test-results/` tidak berisi password. CI hanya mengunggah PNG, tidak file credential. Hapus file fixture privat setelah QA. Ulangi migrasi kosong database uji melalui container QA bila diperlukan, bukan volume development.
+Node22 lokal diperlukan hanya untuk browser runner ini; CI memasangnya otomatis. Alternatif Windows memakai Node bundel dan Chrome terpasang, `CHROME_PATH` menunjuk executable, `BROWSER_FIXTURE` dan `M2_BROWSER_FIXTURE` menunjuk file fixture masing-masing. M3 memakai fixture M2 dan dijalankan sesudah M2 tanpa seed ulang. URL default QA `http://127.0.0.1:8089`; bisa diganti lewat BROWSER_URL. M2 seed menjalankan `migrate:fresh` lagi dan harus dilakukan setelah runner M1, bukan saat backend suite masih berjalan. Jangan jalankan QA pada DB development. Fixture menghasilkan kredensial sementara hanya dalam file privat/ignored; screenshot di `test-results/` tidak berisi password. CI hanya mengunggah PNG, tidak file credential. Hapus file fixture privat setelah QA. Ulangi migrasi kosong database uji melalui container QA bila diperlukan, bukan volume development.
 
-## Pemulihan outbound autentikasi
+## Pemulihan seluruh outbound
 
-Sebelum memulihkan data: hentikan producer/web dan worker, aktifkan `OUTBOUND_RESTORE_HOLD=true` pada semua instance dan muat ulang konfigurasi. Selama hold, request reset tetap generik dan tidak membuat token/job; job lama tidak mengirim. Dengan hold aktif, jalankan `php artisan app:reconcile-auth-restore`: token serta job/failed-job auth dibuang atomik, job jenis lain dipertahankan.
+Sebelum memulihkan data: hentikan/fence seluruh producer/web, worker, dan scheduler lama. Aktifkan `OUTBOUND_RESTORE_HOLD=true` pada konfigurasi deployment **di luar backup database** di semua instance; muat ulang config cache dan restart proses. Pastikan proses lama tidak dapat lagi menghubungi transport. Selama hold, reset akun tetap memberi respons generik tanpa token/job, request verifikasi email ditolak sementara, sedangkan perubahan status/pembayaran tetap dapat commit tanpa antrean outbound baru.
 
-Tetapkan `OUTBOUND_RESUME_AT` waktu WIB format `YYYY-MM-DD HH:MM:SS` yang sama di semua instance. Setelah rekonsiliasi, buka hold dan jalankan ulang instance. Hanya request token setelah cutoff yang boleh mengirim; waktu sama/sebelumnya atau konfigurasi cutoff tidak valid ditolak. Pengguna meminta tautan baru. Jangan retry manual job auth gagal/ambigu: hanya satu percobaan SMTP diizinkan. Rekonsiliasi transport operasional penuh menjadi pekerjaan M3/M6.
+Setelah restore database dan pemeriksaan konsistensi, jalankan `php artisan app:reconcile-notification-restore` serta `php artisan app:reconcile-auth-restore` dengan hold aktif. Perintah pertama menandai semua log transaksi nonterminal sebagai `perlu_pemeriksaan/restore_hold`, mencabut token claim, membuang job notifikasi transaksi, dan menggugurkan email verifikasi pending; perintah kedua membuang token dan job reset lama. Slot WA yang mungkin sudah diotorisasi tetap dihitung. Kedua perintah tidak membuktikan apakah pesan yang hilang dari backup telah diterima provider.
+
+Operator perlu merekonsiliasi interval antara titik backup dan restore dengan bukti yang tersedia bersama owner berwenang. Jangan melakukan `queue:retry` atas hasil `perlu_pemeriksaan` atau job keamanan akun yang ambigu. Catat risiko pengiriman eksternal di interval yang tidak dapat dibuktikan.
+
+Saat cutover, hentikan producer/scheduler/worker dan drain penulis agar tidak ada transaksi melintasi pergantian konfigurasi. Tetapkan `OUTBOUND_RESUME_AT` waktu WIB format `YYYY-MM-DD HH:MM:SS` yang sama pada semua instance dan pertahankan nilainya lintas restart/deploy; baru kemudian buka hold secara seragam. Hanya log/request bertimestamp **lebih besar** dari cutoff yang boleh mengirim. Ready/pengingat otomatis juga memerlukan `waktu_siap_diambil` sesudah cutoff, sehingga transaksi historis tidak di-catch-up. Pengguna meminta tautan reset atau verifikasi baru. Uji dry run dengan transport fake sebelum produksi; prosedur ini tidak memberi jaminan exactly-once terhadap efek penyedia yang hilang dari backup.
 
 ## Probe runtime non-destruktif
 

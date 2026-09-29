@@ -24,7 +24,7 @@ class OutboundGuard
                 return false;
             }
 
-            return CarbonImmutable::parse($requestedAt, 'Asia/Jakarta')->greaterThan($parsed);
+            return CarbonImmutable::parse($requestedAt, 'Asia/Jakarta')->startOfSecond()->greaterThan($parsed);
         } catch (Throwable) {
             return false;
         }
