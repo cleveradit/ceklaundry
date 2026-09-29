@@ -97,6 +97,9 @@ const output = path.resolve('test-results'); fs.mkdirSync(output, { recursive: t
     expect(await publicPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await publicPage.goto(base + '/t/ZZZZZZ');
     await expect(publicPage.getByText('Resi tidak ditemukan', { exact: false }).first()).toBeVisible();
+    await expect(publicPage.getByLabel('Coba kode resi lain')).toBeVisible();
+    await expect(publicPage.getByRole('button', { name: 'Cek Status' })).toBeVisible();
+    await publicPage.screenshot({ path: path.join(output, 'm2-public-not-found-mobile.png'), fullPage: true });
     await publicContext.close();
     await page.setViewportSize({ width: 1440, height: 1000 });
     await go('/app');

@@ -25,6 +25,8 @@ class ReceiptLookupTest extends FoundationTestCase
         $this->get('/t/'.$code)->assertOk()->assertSee('Ran***')->assertDontSee('Rani Rahasia')->assertDontSee('rani@example.test')->assertDontSee('6281398765432')->assertHeader('Referrer-Policy', 'no-referrer');
         $this->get('/t/'.$code.'/print')->assertOk()->assertSee('Ran***')->assertDontSee('Rani Rahasia')->assertDontSee('rani@example.test');
         $this->actingAs($owner)->get('/app/transactions/'.$id.'/print')->assertOk()->assertSee('Rani Rahasia');
-        $this->get('/t/XXXXXX')->assertStatus(404)->assertSee('Kode resi tidak ditemukan');
+        $this->get('/t/XXXXXX')->assertStatus(404)->assertSee('Kode resi tidak ditemukan')
+            ->assertSee('action="/check"', false)->assertSee('Cek Status');
+        $this->get('/check?kode_resi=XXXXXX')->assertStatus(404)->assertSee('Coba kode resi lain');
     }
 }
