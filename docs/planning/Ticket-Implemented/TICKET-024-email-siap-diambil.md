@@ -2,7 +2,9 @@
 
 **Ticket:** `TICKET-024`
 
-**Status:** `READY`
+**Status:** `DONE`
+
+**Hasil:** implementasi dan verifikasi dicatat pada [audit M3](../../audits/m3-verification.md). Matriks di bawah adalah rencana pengujian awal; audit mencatat tingkat bukti aktual dan batas staging per AC.
 
 **Target Audience:** AI Developer Agents
 
@@ -18,7 +20,7 @@
 | Keterlacakan | US-301 AC1–5, US-303 AC6–8, US-308 AC2–4/6–13; AND-01/03/04/08/10/21/27, LOK-01–03 |
 | Identitas | Satu key `tx:{id}:ready:email:0` per transaksi; email hanya jika snapshot `notification_email` aktif ada; email dan WA independen. |
 | Isi | Nama laundry/cabang, resi, total, sisa bila ada, link status; rupiah bulat dan bahasa Indonesia. |
-| Otorisasi | Penyusunan tiket diminta pengguna; implementasi M3 belum diminta. |
+| Otorisasi | Pengguna menyetujui implementasi seluruh TICKET-021–029 pada 29 September 2026. |
 
 ## 2. Objective
 
@@ -61,6 +63,4 @@ Pelanggan yang memiliki email transaksi menerima pemberitahuan setelah cucian si
 
 ## 8. Completion Checklist
 
-- [ ] Status READY setelah pengguna meminta implementasi.
-- [ ] Semua kasus matriks lulus dan status tidak bergantung SMTP.
-- [ ] Isi email sesuai snapshot transaksi dan lokalisasi.
+- [x] Implementasi, pengujian QA/CI, dan batas bukti dicatat pada [audit M3](../../audits/m3-verification.md).

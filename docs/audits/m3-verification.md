@@ -4,7 +4,8 @@ Status: implementasi M3 dan verifikasi lokal selesai pada 29 September 2026. Buk
 
 ## Lingkungan dan bukti
 
-- MySQL 8.4 QA `ceklaundry_test`, terpisah dari database development: `php artisan test --fail-on-warning` lulus **105 tes/846 assertion** pada image akhir perjalanan browser. Setelah itu satu uji merge WA ditambahkan dan lulus terarah (**1 tes/6 assertion**) pada image terbaru. Termasuk proses MySQL terpisah untuk worker, verifikasi email versus ready, scheduler, kuota, penerima WA, dan manual email.
+- MySQL 8.4 QA `ceklaundry_test`, terpisah dari database development: `php artisan test --fail-on-warning` lulus **105 tes/846 assertion** pada image akhir perjalanan browser. Uji merge WA dan isolasi worker dua bisnis kemudian lulus terarah (masing-masing 6 dan 4 assertion). Termasuk proses MySQL terpisah untuk worker, verifikasi email versus ready, scheduler, kuota, penerima WA, dan manual email.
+- [CI PR pada commit `12a2762`](https://github.com/cleveradit/ceklaundry/actions/runs/36575415416) lulus seluruh gate: **106 tes/852 assertion** termasuk merge WA, Pint, frontend, dokumentasi, browser M1–M3 pada Chromium 153. Uji isolasi worker dua bisnis adalah tambahan setelah run ini dan menunggu gate commit handoff.
 - PHP Pint 181 file lulus. ESLint, TypeScript, Vite build dan quality-gate probe lulus. Validator spesifikasi final dan `git diff --check` lulus.
 - Browser Chrome 154 pada QA terpisah: perjalanan M1, M2 dan M3 lulus berurutan pada image final. M3 mencakup pengaturan owner, form email publik tanpa JavaScript, reservasi ready, dan email manual. Artefak tangkapan layar di `test-results/` diabaikan Git.
 - `WhatsAppProviderTest` menguji respons HTTP fake Fonnte, Wablas, dan WABA, termasuk 200 dengan body error, 5xx ambigu, header, endpoint, dan lima parameter template. Kredensial provider nyata tidak tersedia; penerimaan provider sungguhan belum diuji.
@@ -45,7 +46,7 @@ Kode bukti: **L** = pengujian lokal; **K** = kontrak/mock tanpa provider nyata; 
 | US-304.4 | State/read-only dijaga; preview demo menunggu M6 | M6 |
 | US-305.1 | Cast terenkripsi dan uji respons developer tanpa credential | L |
 | US-305.2 | WA default off, email serta `wa.me` manual tetap | L |
-| US-305.3 | Context worker dibersihkan, transport dibangun per job; pergantian dua SMTP nyata belum diuji | P |
+| US-305.3 | Context worker dibersihkan, transport dibangun per job; isolasi dua bisnis diuji terarah, pergantian dua SMTP nyata belum diuji | P |
 | US-305.4 | Validasi WABA/Wablas, lima parameter template; HTTP fake | K |
 | US-306.1 | Browser halaman owner; hitung berhasil dan slot pending/review terpisah | L |
 | US-306.2 | Validasi N/M/K dan penurunan limit di bawah occupied | L |
@@ -84,7 +85,7 @@ Kode bukti: **L** = pengujian lokal; **K** = kontrak/mock tanpa provider nyata; 
 | US-214 AC6–9: merge dan penerima WA | `NotificationFlowTest` menguji retarget pending dan token attempted dicabut pada merge; race dua proses merge dan worker diwakili tes root lock masing-masing | L |
 | US-215 AC3: batas tenant untuk notifikasi | `TenantIsolationTest`, `NotificationFlowTest`, controller role/scoping; promo/loyalti menunggu M4 | L/M4 |
 
-CI remote harus dicatat sesudah run pada branch implementasi; hasil lokal di atas tidak menggantikannya.
+Hasil CI remote di atas menguji commit `12a2762`; gate pada commit handoff akhir akan dicatat setelah selesai.
 
 ## Handoff
 

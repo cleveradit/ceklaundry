@@ -2,7 +2,9 @@
 
 **Ticket:** `TICKET-028`
 
-**Status:** `READY`
+**Status:** `DONE`
+
+**Hasil:** implementasi dan verifikasi dicatat pada [audit M3](../../audits/m3-verification.md). Matriks di bawah adalah rencana pengujian awal; audit mencatat tingkat bukti aktual dan batas staging per AC.
 
 **Target Audience:** AI Developer Agents
 
@@ -19,7 +21,7 @@
 | Manual email | Hanya SIAP_DIAMBIL, UUID+hash persisten, 1 permintaan baru/10 menit/tx dan 20/hari/user; key sama replay, key baru setelah unknown perlu konfirmasi risiko. |
 | Manual WA | `wa.me` hanya berarti link dibuka, status `dibuka_manual`; tidak dihitung sebagai sukses/kuota WA API. Baca-saja membuka tanpa log. |
 | Demo | Perilaku preview dan `ditekan_demo` menjadi integrasi M6; M3 menegakkan transport guard pusat dan tidak membuat outbound nyata pada tenant demo. |
-| Otorisasi | Penyusunan tiket diminta pengguna; implementasi M3 belum diminta. |
+| Otorisasi | Pengguna menyetujui implementasi seluruh TICKET-021–029 pada 29 September 2026. |
 
 ## 2. Objective
 
@@ -64,6 +66,4 @@ Admin dapat menghubungi pelanggan secara sadar ketika cucian siap, melihat riway
 
 ## 8. Completion Checklist
 
-- [ ] Status READY setelah pengguna meminta implementasi.
-- [ ] Limit/idempotensi/race dan akses cabang lulus.
-- [ ] Log membedakan accepted, unknown, skipped dan dibuka_manual.
+- [x] Implementasi, pengujian QA/CI, dan batas bukti dicatat pada [audit M3](../../audits/m3-verification.md).

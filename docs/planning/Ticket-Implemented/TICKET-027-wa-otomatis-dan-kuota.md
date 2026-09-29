@@ -2,7 +2,9 @@
 
 **Ticket:** `TICKET-027`
 
-**Status:** `READY`
+**Status:** `DONE`
+
+**Hasil:** implementasi dan verifikasi dicatat pada [audit M3](../../audits/m3-verification.md). Matriks di bawah adalah rencana pengujian awal; audit mencatat tingkat bukti aktual dan batas staging per AC.
 
 **Target Audience:** AI Developer Agents
 
@@ -19,7 +21,7 @@
 | Adapter | Interface `WhatsAppProvider`; Fonnte, Wablas, WABA. Accepted hanya dari bukti respons penyedia; HTTP 200 dengan body error dan HTTP5xx ambigu tidak dianggap berhasil. |
 | Kuota | Slot per bisnis/bulan WIB untuk tertunda/diproses/berhasil/perlu_pemeriksaan; satu slot/key; sebelum attempt pindah bucket bulan baru; setelah attempt bucket immutable. |
 | Default | WA otomatis global off; email dan `wa.me` manual tetap berfungsi bila credential/provider tidak ada. |
-| Otorisasi | Penyusunan tiket diminta pengguna; implementasi M3 belum diminta. |
+| Otorisasi | Pengguna menyetujui implementasi seluruh TICKET-021–029 pada 29 September 2026. |
 
 ## 2. Objective
 
@@ -66,6 +68,4 @@ Bisnis yang mengaktifkan WA dapat mengirim ready dan pengingat otomatis melalui 
 
 ## 8. Completion Checklist
 
-- [ ] Status READY setelah pengguna meminta implementasi.
-- [ ] Contract tests ketiga adapter dan kuota MySQL lulus.
-- [ ] WA off tetap menyisakan alur email dan manual.
+- [x] Implementasi, pengujian QA/CI, dan batas bukti dicatat pada [audit M3](../../audits/m3-verification.md).

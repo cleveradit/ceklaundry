@@ -27,6 +27,41 @@ use Tests\FoundationTestCase;
 
 class NotificationFlowTest extends FoundationTestCase
 {
+    public function test_worker_keeps_business_context_and_rejects_cross_tenant_log_id(): void
+    {
+        [$first, $firstOwner] = $this->tenant();
+        [$second, $secondOwner] = $this->tenant();
+        $firstTx = $this->transaction($first, $firstOwner, $this->branch($firstOwner)->id, [
+            'status' => 'SIAP_DIAMBIL', 'waktu_siap_diambil' => now('Asia/Jakarta'),
+            'notification_email' => 'first@example.test',
+        ]);
+        $secondTx = $this->transaction($second, $secondOwner, $this->branch($secondOwner)->id, [
+            'status' => 'SIAP_DIAMBIL', 'waktu_siap_diambil' => now('Asia/Jakarta'),
+            'notification_email' => 'second@example.test',
+        ]);
+        $firstLog = $this->notification($first, $firstTx, ['tujuan' => 'first@example.test']);
+        $secondLog = $this->notification($second, $secondTx, ['tujuan' => 'second@example.test']);
+        $transport = new class extends NotificationTransport
+        {
+            public array $calls = [];
+
+            public function send(array $envelope): array
+            {
+                $this->calls[] = [$envelope['business']->id, $envelope['recipient']];
+
+                return ['outcome' => 'accepted', 'code' => null];
+            }
+        };
+
+        $this->inTenant($second, fn () => (new SendNotification($second->id, $firstLog))->handle($transport));
+        $this->assertSame([], $transport->calls);
+        $this->inTenant($first, fn () => (new SendNotification($first->id, $firstLog))->handle($transport));
+        $this->inTenant($second, fn () => (new SendNotification($second->id, $secondLog))->handle($transport));
+        $this->assertSame([[$first->id, 'first@example.test'], [$second->id, 'second@example.test']], $transport->calls);
+        $this->assertSame('berhasil', DB::table('notification_logs')->find($firstLog)->status);
+        $this->assertSame('berhasil', DB::table('notification_logs')->find($secondLog)->status);
+    }
+
     public function test_ready_reserves_once_and_worker_records_provider_acceptance(): void
     {
         [$business, $owner] = $this->tenant();

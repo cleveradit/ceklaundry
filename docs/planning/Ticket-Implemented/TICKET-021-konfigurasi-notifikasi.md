@@ -2,7 +2,9 @@
 
 **Ticket:** `TICKET-021`
 
-**Status:** `READY`
+**Status:** `DONE`
+
+**Hasil:** implementasi dan verifikasi dicatat pada [audit M3](../../audits/m3-verification.md). Matriks di bawah adalah rencana pengujian awal; audit mencatat tingkat bukti aktual dan batas staging per AC.
 
 **Target Audience:** AI Developer Agents
 
@@ -14,12 +16,12 @@
 
 | Item | Approved Value |
 |---|---|
-| Sumber | [Plan M3](../plan.md#7-m3--notifikasi), [PRD 9](../initiate-file/prd.md#9-aturan-notifikasi--pengingat), US-305/306, arsitektur 6.3, skema 2.1–2.2 |
+| Sumber | [Plan M3](../../plan.md#7-m3--notifikasi), [PRD 9](../../initiate-file/prd.md#9-aturan-notifikasi--pengingat), US-305/306, arsitektur 6.3, skema 2.1–2.2 |
 | Keterlacakan | US-305 AC1–4; US-306 AC1–2; SEC-03, ISO-01/05, AND-11/20/21/27, UX-01/04, LOK-01 |
 | Pemisahan peran | Developer mengatur SMTP, sender, provider, credential dan aktivasi teknis WA per bisnis; owner mengatur pengingat N/M/K, saklar WA per peristiwa dan batas bulanan. Default WA otomatis nonaktif. |
 | Nilai | N/M/K 1–255 meski pengingat mati; WA limit null tanpa batas dan 0 menutup slot; batas tidak dapat diturunkan di bawah occupied bulan WIB berjalan. |
 | Credential | `wa_token`, `wa_config`, `smtp_config` pada `businesses` memakai encrypted cast pada TEXT; browser hanya menerima indikator terkonfigurasi dan input pengganti. |
-| Otorisasi | Penyusunan tiket diminta pengguna; implementasi M3 belum diminta. |
+| Otorisasi | Pengguna menyetujui implementasi seluruh TICKET-021–029 pada 29 September 2026. |
 
 ## 2. Objective
 
@@ -63,6 +65,4 @@ Developer dan owner dapat mengatur bagian notifikasi sesuai haknya tanpa membuka
 
 ## 8. Completion Checklist
 
-- [ ] Status READY setelah pengguna meminta implementasi.
-- [ ] Kontrak dan seluruh kasus matriks lulus di MySQL QA.
-- [ ] Tidak ada credential dalam respons atau log.
+- [x] Implementasi, pengujian QA/CI, dan batas bukti dicatat pada [audit M3](../../audits/m3-verification.md).

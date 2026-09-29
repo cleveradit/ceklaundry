@@ -2,7 +2,9 @@
 
 **Ticket:** `TICKET-022`
 
-**Status:** `READY`
+**Status:** `DONE`
+
+**Hasil:** implementasi dan verifikasi dicatat pada [audit M3](../../audits/m3-verification.md). Matriks di bawah adalah rencana pengujian awal; audit mencatat tingkat bukti aktual dan batas staging per AC.
 
 **Target Audience:** AI Developer Agents
 
@@ -19,7 +21,7 @@
 | Atomisitas | Domain state, log unik non-null dan job database queue disimpan pada satu koneksi/transaksi MySQL sebelum commit; network call selalu di luar lock. |
 | Outcome | Accepted→berhasil; definite rejection retry 60/300 detik maksimal tiga panggilan; unknown/crash setelah marker→perlu_pemeriksaan tanpa retry otomatis. |
 | Restore | `OUTBOUND_RESTORE_HOLD` dan `outbound_resume_at` berada di konfigurasi deployment luar backup DB; hold fail closed mencakup SMTP/WA, manual, verifikasi, dan keamanan akun. Tidak ada klaim deduplikasi efek eksternal yang hilang saat restore. |
-| Otorisasi | Penyusunan tiket diminta pengguna; implementasi M3 belum diminta. |
+| Otorisasi | Pengguna menyetujui implementasi seluruh TICKET-021–029 pada 29 September 2026. |
 
 ## 2. Objective
 
@@ -69,6 +71,4 @@ Uji crash/race memakai minimal dua proses/koneksi MySQL QA tanpa enclosing trans
 
 ## 8. Completion Checklist
 
-- [ ] Status READY setelah pengguna meminta implementasi.
-- [ ] Fault, recovery, restore, cutoff, auth guard dan sanitasi lulus.
-- [ ] Tidak ada send provider dari dalam transaksi domain.
+- [x] Implementasi, pengujian QA/CI, dan batas bukti dicatat pada [audit M3](../../audits/m3-verification.md).

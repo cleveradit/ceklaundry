@@ -6,13 +6,19 @@ Pengguna mengotorisasi implementasi seluruh TICKET-011–020. Operasional inti M
 
 [Audit M2](../audits/m2-verification.md) memetakan AC, uji browser, concurrency, PDF/QR, dan batas integrasi M3–M6. Suite backend lulus 75 tes/671 assertions; [CI remote](https://github.com/cleveradit/ceklaundry/actions/runs/36463821819) lulus seluruh gate pada commit `1385fc9`. Browser M1 dan M2 lulus di Chrome 154 dengan database QA terpisah. QR pada struk didekode kembali ke URL status yang tepat; PDF Chromium satu halaman berukuran 58 × 220 mm dan terbaca setelah dirender. Perangkat printer thermal dan HP fisik belum diuji.
 
+## Hasil M3
+
+Pengguna mengotorisasi seluruh TICKET-021–029. Konfigurasi notifikasi, verifikasi email transaksi publik, email siap/pengingat, WA opsional dengan kuota, pengamanan recipient, pengiriman manual, log/recovery, serta restore hold diimplementasikan pada branch `codex/m3-notifications` ([PR #1](https://github.com/cleveradit/ceklaundry/pull/1)). Lihat [audit M3](../audits/m3-verification.md) untuk setiap AC dan batas bukti. Suite MySQL lokal lulus 105 tes/846 assertion; dua tes tambahan merge WA dan isolasi dua bisnis lulus terarah. [CI remote commit awal](https://github.com/cleveradit/ceklaundry/actions/runs/36575415416) lulus 106 tes/852 assertion beserta Pint, frontend, dokumentasi, dan browser M1–M3. Gate commit handoff akhir masih berjalan.
+
+Adapter WA diverifikasi memakai respons HTTP fake. Tidak ada credential provider nyata, sehingga accepted dari provider dan penerimaan pelanggan belum dibuktikan. Restore hold dan command rekonsiliasi lulus tes serta dry run QA; pemulihan backup fisik dan cutover lintas instance masih perlu staging. Demo suppression/preview menunggu M6.
+
 ## Runtime lokal
 
-Lima layanan Compose berjalan pada http://localhost:8088. Migrasi M2 sudah diterapkan pada database development tanpa menghapus volume. Database uji `ceklaundry_test` terpisah dan destruktif; jangan menjalankan browser seed bersamaan dengan backend suite. Container QA dan file kredensial fixture sementara telah dibersihkan. Akun developer tetap harus dibuat interaktif melalui `docker compose exec app php artisan app:bootstrap-developer`; tidak ada password bawaan.
+Lima layanan Compose berjalan pada http://localhost:8088. Kolom notifikasi sudah ada pada skema M1, sehingga M3 tidak memerlukan migrasi baru atau penghapusan volume development. Database uji `ceklaundry_test` terpisah dan destruktif; jangan menjalankan browser seed bersamaan dengan backend suite. Container QA dihentikan dan file kredensial fixture sementara dibersihkan. Akun developer tetap harus dibuat interaktif melalui `docker compose exec app php artisan app:bootstrap-developer`; tidak ada password bawaan.
 
 ## Handoff
 
-Pengguna telah menyetujui implementasi seluruh [TICKET-021–029](index.md), dan statusnya `READY`. Pekerjaan M3 sedang berjalan: konfigurasi developer/owner, mesin log/job, email publik/ready, scheduler, recipient WA, adapter/kuota, pengingat manual dan UI log telah ditambahkan. Pengujian MySQL QA dan contract provider sedang dilakukan. Jangan menandai tiket `DONE` atau M3 `Live` sebelum matriks AC, race/fault/restore, browser, dan CI diverifikasi; lanjutkan dari hasil audit M3. Uji ulang integrasi M2 yang ditandai tertunda di audit M2 menjadi bagian TICKET-029.
+Seluruh [TICKET-021–029](Ticket-Implemented/index.md) berstatus DONE dan diarsipkan setelah verifikasi lokal serta CI awal. Lanjutkan ke penyusunan tiket M4 dari [plan](../plan.md#8-m4--loyalti-dan-promo), dengan mengingat batas staging M3 dalam audit. Setelah commit handoff akhir, catat URL/hasil CI terbarunya di audit M3 bila berbeda dari run awal.
 
 M4 promo/loyalti, M5 laporan, dan M6 demo/PWA masih menunggu tiket. [Pengembangan lokal](../development.md) berisi perintah build, QA, dan perawatan runtime.
 

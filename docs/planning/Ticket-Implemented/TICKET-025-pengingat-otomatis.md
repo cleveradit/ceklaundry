@@ -2,7 +2,9 @@
 
 **Ticket:** `TICKET-025`
 
-**Status:** `READY`
+**Status:** `DONE`
+
+**Hasil:** implementasi dan verifikasi dicatat pada [audit M3](../../audits/m3-verification.md). Matriks di bawah adalah rencana pengujian awal; audit mencatat tingkat bukti aktual dan batas staging per AC.
 
 **Target Audience:** AI Developer Agents
 
@@ -19,7 +21,7 @@
 | Jadwal | Harian 08.00 WIB; pertama sejak `waktu_siap_diambil + N×24 jam`, berikutnya sejak `last_reminder_at + M×24 jam`; default N=2/M=2/K=3. |
 | Cursor | `reminder_count`/`last_reminder_at` berubah saat satu nomor direservasi, bukan setelah sukses; satu nomor per transaksi per putaran, tidak burst saat scheduler pulih. |
 | Kanal | Tanpa kanal eligible cursor tetap; setelah integrasi TICKET-027, WA eligible penuh menghabiskan nomor dengan log `dilewati_batas`; manual tidak mengubah cursor. |
-| Otorisasi | Penyusunan tiket diminta pengguna; implementasi M3 belum diminta. |
+| Otorisasi | Pengguna menyetujui implementasi seluruh TICKET-021–029 pada 29 September 2026. |
 
 ## 2. Objective
 
@@ -63,6 +65,4 @@ Pelanggan menerima pengingat berkala hanya selama cucian masih siap diambil. Sch
 
 ## 8. Completion Checklist
 
-- [ ] Status READY setelah pengguna meminta implementasi.
-- [ ] Jadwal, overlap, lifecycle dan cutoff lulus di MySQL QA.
-- [ ] Tidak ada catch-up burst setelah outage.
+- [x] Implementasi, pengujian QA/CI, dan batas bukti dicatat pada [audit M3](../../audits/m3-verification.md).

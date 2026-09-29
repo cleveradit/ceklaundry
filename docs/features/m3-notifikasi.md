@@ -1,6 +1,6 @@
 # M3 — Notifikasi
 
-**Status:** diimplementasikan; hasil uji dan batasnya ada di [audit M3](../audits/m3-verification.md). Live berarti tersedia pada runtime lokal/CI, bukan sudah dideploy produksi atau diterima penyedia eksternal.
+**Status:** Live pada runtime lokal/CI; hasil uji dan batasnya ada di [audit M3](../audits/m3-verification.md). Live berarti tersedia pada runtime lokal/CI, bukan sudah dideploy produksi atau diterima penyedia eksternal.
 
 ## Pengaturan
 

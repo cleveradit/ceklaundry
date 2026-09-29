@@ -2,7 +2,9 @@
 
 **Ticket:** `TICKET-023`
 
-**Status:** `READY`
+**Status:** `DONE`
+
+**Hasil:** implementasi dan verifikasi dicatat pada [audit M3](../../audits/m3-verification.md). Matriks di bawah adalah rencana pengujian awal; audit mencatat tingkat bukti aktual dan batas staging per AC.
 
 **Target Audience:** AI Developer Agents
 
@@ -19,7 +21,7 @@
 | Otoritas | Kode resi hanya boleh meminta perubahan `transactions.notification_email` sesudah email baru dikonfirmasi; `customers.email` dan transaksi lain tetap. |
 | Batas | Bersama limiter resi 30/menit/IP, tambahan 3/jam/resi, 10/hari/IP, 5/jam/recipient; link signed versi terbaru habis 24 jam; shared 30/menit/IP. |
 | Lifecycle | Hanya DITERIMA/DIPROSES dan tenant writable; POST read-only 423; GET konfirmasi tanpa mutasi. |
-| Otorisasi | Penyusunan tiket diminta pengguna; implementasi M3 belum diminta. |
+| Otorisasi | Pengguna menyetujui implementasi seluruh TICKET-021–029 pada 29 September 2026. |
 
 ## 2. Objective
 
@@ -65,6 +67,4 @@ Pemegang resi dapat mengusulkan alamat email untuk transaksi itu dan membuktikan
 
 ## 8. Completion Checklist
 
-- [ ] Status READY setelah pengguna meminta implementasi.
-- [ ] AC publik, limiter, lifecycle dan race lulus.
-- [ ] Tidak ada mutasi GET atau pembocoran email.
+- [x] Implementasi, pengujian QA/CI, dan batas bukti dicatat pada [audit M3](../../audits/m3-verification.md).

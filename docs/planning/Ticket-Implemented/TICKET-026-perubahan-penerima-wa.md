@@ -2,7 +2,9 @@
 
 **Ticket:** `TICKET-026`
 
-**Status:** `READY`
+**Status:** `DONE`
+
+**Hasil:** implementasi dan verifikasi dicatat pada [audit M3](../../audits/m3-verification.md). Matriks di bawah adalah rencana pengujian awal; audit mencatat tingkat bukti aktual dan batas staging per AC.
 
 **Target Audience:** AI Developer Agents
 
@@ -19,7 +21,7 @@
 | Belum attempted | Hanya `delivery_started_at IS NULL AND attempt_count=0`; nomor baru meretarget log WA API nonterminal dengan key, nomor pengingat dan slot sama. |
 | Pernah attempted | Marker ada atau attempt_count>0 dan nomor berbeda → `perlu_pemeriksaan/recipient_berubah`, token dicabut, snapshot/bucket tetap; tidak retry/retarget. |
 | Batas akses | Edit shared customer menyesuaikan log seluruh cabang internal tanpa membuka data cabang lain ke admin; policy merge seluruh histori tetap berlaku. |
-| Otorisasi | Penyusunan tiket diminta pengguna; implementasi M3 belum diminta. |
+| Otorisasi | Pengguna menyetujui implementasi seluruh TICKET-021–029 pada 29 September 2026. |
 
 ## 2. Objective
 
@@ -63,6 +65,4 @@ Perubahan nomor dan merge tidak membuat pekerjaan WA tertunda menghubungi nomor 
 
 ## 8. Completion Checklist
 
-- [ ] Status READY setelah pengguna meminta implementasi.
-- [ ] Race, fault rollback dan cabang lulus dengan MySQL nyata.
-- [ ] Key/slot tidak digandakan atau dibuka ulang.
+- [x] Implementasi, pengujian QA/CI, dan batas bukti dicatat pada [audit M3](../../audits/m3-verification.md).

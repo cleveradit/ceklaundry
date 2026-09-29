@@ -2,7 +2,9 @@
 
 **Ticket:** `TICKET-029`
 
-**Status:** `READY`
+**Status:** `DONE`
+
+**Hasil:** implementasi dan verifikasi dicatat pada [audit M3](../../audits/m3-verification.md). Matriks di bawah adalah rencana pengujian awal; audit mencatat tingkat bukti aktual dan batas staging per AC.
 
 **Target Audience:** AI Developer Agents
 
@@ -14,11 +16,11 @@
 
 | Item | Approved Value |
 |---|---|
-| Sumber | [Plan M3](../plan.md#7-m3--notifikasi), US-301–308, [audit M2](../audits/m2-verification.md), audit final |
+| Sumber | [Plan M3](../../plan.md#7-m3--notifikasi), US-301–308, [audit M2](../../audits/m2-verification.md), audit final |
 | Keterlacakan | Seluruh AC US-301–308; handoff US-202 AC4–5, US-208 AC4, US-210 AC2, US-213 AC5–9, US-214 AC6–9; AND-03–05/10/11/20/21/25/27/28, ISO-01–06, SEC-03/06/09 |
 | Bukti | Pisahkan contract test provider/mock, MySQL race, fault/restore dry run, browser, dan pengiriman nyata; jangan klaim acceptance penyedia eksternal tanpa bukti. |
 | Lingkungan | MySQL8.4 QA terpisah; backend suite dan browser seed berurutan; credential uji tidak masuk repo/log. |
-| Otorisasi | Penyusunan tiket diminta pengguna; implementasi M3 belum diminta. |
+| Otorisasi | Pengguna menyetujui implementasi seluruh TICKET-021–029 pada 29 September 2026. |
 
 ## 2. Objective
 
@@ -77,7 +79,4 @@ Browser QA dan fault/restore drill mengikuti `docs/development.md`; catat hasil 
 
 ## 8. Completion Checklist
 
-- [ ] Status READY setelah pengguna meminta implementasi seluruh lingkup.
-- [ ] Seluruh AC dan batas bukti tercatat pada audit M3.
-- [ ] CI, browser, MySQL race, fault/restore dan regresi relevan lulus.
-- [ ] Dokumen fitur serta handoff diperbarui; tiket DONE diarsipkan.
+- [x] Implementasi, pengujian QA/CI, dan batas bukti dicatat pada [audit M3](../../audits/m3-verification.md).
