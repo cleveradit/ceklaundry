@@ -8,7 +8,7 @@ Pengguna mengotorisasi implementasi seluruh TICKET-011–020. Operasional inti M
 
 ## Hasil M3
 
-Pengguna mengotorisasi seluruh TICKET-021–029. Konfigurasi notifikasi, verifikasi email transaksi publik, email siap/pengingat, WA opsional dengan kuota, pengamanan recipient, pengiriman manual, log/recovery, serta restore hold diimplementasikan pada branch `codex/m3-notifications` ([PR #1](https://github.com/cleveradit/ceklaundry/pull/1)). Lihat [audit M3](../audits/m3-verification.md) untuk setiap AC dan batas bukti. Suite MySQL lokal lulus 105 tes/846 assertion; dua tes tambahan merge WA dan isolasi dua bisnis lulus terarah. [CI remote commit awal](https://github.com/cleveradit/ceklaundry/actions/runs/36575415416) lulus 106 tes/852 assertion beserta Pint, frontend, dokumentasi, dan browser M1–M3. Gate commit handoff akhir masih berjalan.
+Pengguna mengotorisasi seluruh TICKET-021–029. Konfigurasi notifikasi, verifikasi email transaksi publik, email siap/pengingat, WA opsional dengan kuota, pengamanan recipient, pengiriman manual, log/recovery, serta restore hold diimplementasikan pada branch `codex/m3-notifications` ([PR #1](https://github.com/cleveradit/ceklaundry/pull/1)). Lihat [audit M3](../audits/m3-verification.md) untuk setiap AC dan batas bukti. Suite MySQL lokal lulus 105 tes/846 assertion; dua tes tambahan merge WA dan isolasi dua bisnis lulus terarah. [CI remote pada commit handoff](https://github.com/cleveradit/ceklaundry/actions/runs/36577057521) lulus 107 tes/856 assertion beserta Pint, frontend, dokumentasi, dan browser M1–M3.
 
 Adapter WA diverifikasi memakai respons HTTP fake. Tidak ada credential provider nyata, sehingga accepted dari provider dan penerimaan pelanggan belum dibuktikan. Restore hold dan command rekonsiliasi lulus tes serta dry run QA; pemulihan backup fisik dan cutover lintas instance masih perlu staging. Demo suppression/preview menunggu M6.
 
@@ -18,7 +18,7 @@ Lima layanan Compose berjalan pada http://localhost:8088. Kolom notifikasi sudah
 
 ## Handoff
 
-Seluruh [TICKET-021–029](Ticket-Implemented/index.md) berstatus DONE dan diarsipkan setelah verifikasi lokal serta CI awal. Lanjutkan ke penyusunan tiket M4 dari [plan](../plan.md#8-m4--loyalti-dan-promo), dengan mengingat batas staging M3 dalam audit. Setelah commit handoff akhir, catat URL/hasil CI terbarunya di audit M3 bila berbeda dari run awal.
+Seluruh [TICKET-021–029](Ticket-Implemented/index.md) berstatus DONE dan diarsipkan setelah verifikasi lokal serta CI. Lanjutkan ke penyusunan tiket M4 dari [plan](../plan.md#8-m4--loyalti-dan-promo), dengan mengingat batas staging M3 dalam audit.
 
 M4 promo/loyalti, M5 laporan, dan M6 demo/PWA masih menunggu tiket. [Pengembangan lokal](../development.md) berisi perintah build, QA, dan perawatan runtime.
 

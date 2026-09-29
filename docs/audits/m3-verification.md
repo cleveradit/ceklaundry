@@ -5,7 +5,7 @@ Status: implementasi M3 dan verifikasi lokal selesai pada 29 September 2026. Buk
 ## Lingkungan dan bukti
 
 - MySQL 8.4 QA `ceklaundry_test`, terpisah dari database development: `php artisan test --fail-on-warning` lulus **105 tes/846 assertion** pada image akhir perjalanan browser. Uji merge WA dan isolasi worker dua bisnis kemudian lulus terarah (masing-masing 6 dan 4 assertion). Termasuk proses MySQL terpisah untuk worker, verifikasi email versus ready, scheduler, kuota, penerima WA, dan manual email.
-- [CI PR pada commit `12a2762`](https://github.com/cleveradit/ceklaundry/actions/runs/36575415416) lulus seluruh gate: **106 tes/852 assertion** termasuk merge WA, Pint, frontend, dokumentasi, browser M1–M3 pada Chromium 153. Uji isolasi worker dua bisnis adalah tambahan setelah run ini dan menunggu gate commit handoff.
+- [CI PR pada commit handoff `4e9fa53`](https://github.com/cleveradit/ceklaundry/actions/runs/36577057521) lulus seluruh gate: **107 tes/856 assertion**, termasuk merge WA dan isolasi worker dua bisnis, Pint, frontend, dokumentasi, serta browser M1–M3 pada Chromium 153.
 - PHP Pint 181 file lulus. ESLint, TypeScript, Vite build dan quality-gate probe lulus. Validator spesifikasi final dan `git diff --check` lulus.
 - Browser Chrome 154 pada QA terpisah: perjalanan M1, M2 dan M3 lulus berurutan pada image final. M3 mencakup pengaturan owner, form email publik tanpa JavaScript, reservasi ready, dan email manual. Artefak tangkapan layar di `test-results/` diabaikan Git.
 - `WhatsAppProviderTest` menguji respons HTTP fake Fonnte, Wablas, dan WABA, termasuk 200 dengan body error, 5xx ambigu, header, endpoint, dan lima parameter template. Kredensial provider nyata tidak tersedia; penerimaan provider sungguhan belum diuji.
@@ -85,7 +85,7 @@ Kode bukti: **L** = pengujian lokal; **K** = kontrak/mock tanpa provider nyata; 
 | US-214 AC6–9: merge dan penerima WA | `NotificationFlowTest` menguji retarget pending dan token attempted dicabut pada merge; race dua proses merge dan worker diwakili tes root lock masing-masing | L |
 | US-215 AC3: batas tenant untuk notifikasi | `TenantIsolationTest`, `NotificationFlowTest`, controller role/scoping; promo/loyalti menunggu M4 | L/M4 |
 
-Hasil CI remote di atas menguji commit `12a2762`; gate pada commit handoff akhir akan dicatat setelah selesai.
+Hasil CI remote di atas menguji seluruh kode M3 dan dokumen handoff pada commit `4e9fa53`. Commit dokumentasi penutup hanya memperbarui tautan bukti CI.
 
 ## Handoff
 
