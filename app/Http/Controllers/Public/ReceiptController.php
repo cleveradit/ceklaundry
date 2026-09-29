@@ -7,14 +7,25 @@ use App\Services\PublicReceiptService;
 use App\Services\ReceiptPrintService;
 use App\Services\ReceiptRateLimiter;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 class ReceiptController extends Controller
 {
     public function search(Request $request, ReceiptRateLimiter $limiter, PublicReceiptService $receipt)
     {
         $limiter->check($request);
-        $code = $receipt->normalize((string) $request->query('kode_resi', ''));
-        $receipt->resolve($code);
+        $input = (string) $request->query('kode_resi', '');
+        try {
+            $code = $receipt->normalize($input);
+            $receipt->resolve($code);
+        } catch (HttpExceptionInterface $exception) {
+            if ($exception->getStatusCode() !== 404) {
+                throw $exception;
+            }
+
+            return redirect('/')->with('receipt_error', 'Kode resi tidak ditemukan, periksa kembali resi Anda')
+                ->withInput(['kode_resi' => mb_substr(trim($input), 0, 6)]);
+        }
 
         return redirect('/t/'.$code);
     }

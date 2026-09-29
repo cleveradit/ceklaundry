@@ -100,7 +100,25 @@ const output = path.resolve('test-results'); fs.mkdirSync(output, { recursive: t
     await expect(publicPage.getByLabel('Coba kode resi lain')).toBeVisible();
     await expect(publicPage.getByRole('button', { name: 'Cek Status' })).toBeVisible();
     await publicPage.screenshot({ path: path.join(output, 'm2-public-not-found-mobile.png'), fullPage: true });
+    await publicPage.goto(base + '/');
+    await publicPage.getByLabel('Kode resi').fill('ZZZZZZ');
+    await publicPage.getByRole('button', { name: 'Cek Status' }).click();
+    await expect(publicPage).toHaveURL(base + '/');
+    await expect(publicPage.getByRole('alert')).toContainText('Kode resi tidak ditemukan, periksa kembali resi Anda');
+    await expect(publicPage.getByLabel('Kode resi')).toHaveValue('ZZZZZZ');
+    await publicPage.screenshot({ path: path.join(output, 'm2-public-inline-error-mobile.png'), fullPage: true });
     await publicContext.close();
+
+    await go('/');
+    const lookupButton = page.locator('.lookup-form button[type="submit"]');
+    await lookupButton.evaluate(element => element.closest('form').dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })));
+    await expect(lookupButton).toHaveAttribute('aria-busy', 'true');
+    await expect(lookupButton.locator('.lookup-spinner')).toBeVisible();
+    await expect(lookupButton).toContainText('Mencari...');
+    await go('/');
+    await page.getByLabel('Kode resi').fill('ZZZZZZ');
+    await page.getByRole('button', { name: 'Cek Status' }).click();
+    await expect(page.getByRole('alert')).toContainText('Kode resi tidak ditemukan, periksa kembali resi Anda');
     await page.setViewportSize({ width: 1440, height: 1000 });
     await go('/app');
     await expect(page.getByText('Berat aktual hari ini')).toBeVisible();
@@ -109,7 +127,7 @@ const output = path.resolve('test-results'); fs.mkdirSync(output, { recursive: t
     expect(errors).toEqual([]);
     console.log('PASS: M2 mobile create Rp74.500, DP Rp30.000, payoff, pickup guard, thermal print, no-JS public lookup; ' + await browser.version());
   } catch (error) {
-    await page.screenshot({ path: path.join(output, 'm2-failure.png'), fullPage: true });
+    try { await page.screenshot({ path: path.join(output, 'm2-failure.png'), fullPage: true, timeout: 5000 }); } catch { /* Preserve the original failure. */ }
     throw error;
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

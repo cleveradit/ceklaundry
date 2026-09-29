@@ -27,6 +27,8 @@ class ReceiptLookupTest extends FoundationTestCase
         $this->actingAs($owner)->get('/app/transactions/'.$id.'/print')->assertOk()->assertSee('Rani Rahasia');
         $this->get('/t/XXXXXX')->assertStatus(404)->assertSee('Kode resi tidak ditemukan')
             ->assertSee('action="/check"', false)->assertSee('Cek Status');
-        $this->get('/check?kode_resi=XXXXXX')->assertStatus(404)->assertSee('Coba kode resi lain');
+        $this->get('/check?kode_resi=XXXXXX')->assertRedirect('/');
+        $this->get('/')->assertOk()->assertSee('Kode resi tidak ditemukan, periksa kembali resi Anda')
+            ->assertSee('value="XXXXXX"', false);
     }
 }
