@@ -1,6 +1,6 @@
 # M4 — Loyalti dan promo
 
-**Status:** Live pada runtime lokal dan QA. Hasil uji serta batas buktinya ada di [audit M4](../audits/m4-verification.md); status ini tidak berarti sudah dideploy produksi.
+**Status:** Live pada runtime lokal/CI. Hasil uji serta batas buktinya ada di [audit M4](../audits/m4-verification.md); status ini tidak berarti sudah dideploy produksi.
 
 ## Pengaturan owner
 

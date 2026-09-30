@@ -1,13 +1,13 @@
 # Verifikasi M4 — Loyalti dan promo
 
-Status: implementasi M4 diuji pada MySQL 8.4 dan Chrome 154 di QA lokal pada 30 September 2026. CI remote belum berjalan karena Git Credential Manager pada host ini belum terautentikasi untuk push ke GitHub. Kode bukti: **L** = tes otomatis lokal; **B** = perjalanan browser lokal; **P** = pemeriksaan kode/tes parsial; **S** = perlu staging/perangkat.
+Status: implementasi M4 diuji pada MySQL 8.4 dan Chrome 154 di QA lokal pada 30 September 2026. [CI GitHub pada commit `9d0e433`](https://github.com/cleveradit/ceklaundry/actions/runs/36725111623) lulus seluruh gate di branch `main`. Kode bukti: **L** = tes otomatis lokal; **B** = perjalanan browser lokal; **P** = pemeriksaan kode/tes parsial; **S** = perlu staging/perangkat.
 
 ## Hasil yang sudah dijalankan
 
 - Suite backend MySQL pada revisi akhir: `php artisan test --fail-on-warning` lulus **114 tes/963 assertion**.
 - `RedemptionConcurrencyTest` memakai dua proses PHP dan dua koneksi MySQL; satu create penukaran berhasil, satu menerima 409, saldo akhir sama dengan SUM ledger. Tes concurrency M2–M3 tetap lulus dalam suite penuh.
 - Browser M1–M4 pada Chrome 154 lulus berurutan pada image akhir. M4 memeriksa pengaturan owner, transaksi hadiah 2 kg dengan minimum 3 kg dan promo 10%, status publik tanpa JavaScript, serta cetak resi. Nominal yang diperiksa: subtotal Rp21.000, hadiah Rp14.000, promo Rp700, total Rp6.300. Fixture berkredensial sudah dihapus dan QA dihentikan.
-- Pint lulus 192 file. Frontend lint dan TypeScript lulus; Vite build lulus saat image aplikasi dibangun. Validator spesifikasi final dan `git diff --check` lulus. CI remote belum dapat dimulai sampai GitHub host ini terautentikasi.
+- Pint lulus 192 file. Frontend lint, TypeScript, Vite build, quality-gate probe, validator spesifikasi final, dan `git diff --check` lulus lokal. [CI run #24](https://github.com/cleveradit/ceklaundry/actions/runs/36725111623) lulus gate MySQL, frontend, dokumentasi, serta browser M1–M4 pada commit kode `9d0e433`.
 
 ## Matriks AC
 
@@ -57,4 +57,4 @@ Status: implementasi M4 diuji pada MySQL 8.4 dan Chrome 154 di QA lokal pada 30 
 
 ## Batas dan handoff
 
-Tes paralel M4 secara langsung membuktikan dua penukaran; interleaving payment/cancel/merge terhadap penukaran belum dijalankan sebagai kombinasi proses khusus. Semua jalur tersebut memakai urutan lock business→customer→transaction yang juga diuji oleh suite concurrency M2/M3, sehingga risiko deadlock/delta ganda pada kombinasi baru masih perlu pengujian tambahan sebelum produksi. Uji printer thermal fisik dilewati sesuai instruksi pengguna pada M2. Provider email/WA nyata, restore backup fisik, dan cutover lintas instance tetap memerlukan staging sesuai audit M3. M5 laporan dan M6 demo/PWA tetap pekerjaan terpisah. TICKET-036 tetap aktif sampai hasil CI remote dicatat atau pengguna memutuskan melewati gate itu.
+Tes paralel M4 secara langsung membuktikan dua penukaran; interleaving payment/cancel/merge terhadap penukaran belum dijalankan sebagai kombinasi proses khusus. Semua jalur tersebut memakai urutan lock business→customer→transaction yang juga diuji oleh suite concurrency M2/M3, sehingga risiko deadlock/delta ganda pada kombinasi baru masih perlu pengujian tambahan sebelum produksi. Uji printer thermal fisik dilewati sesuai instruksi pengguna pada M2. Provider email/WA nyata, restore backup fisik, dan cutover lintas instance tetap memerlukan staging sesuai audit M3. M5 laporan dan M6 demo/PWA tetap pekerjaan terpisah.

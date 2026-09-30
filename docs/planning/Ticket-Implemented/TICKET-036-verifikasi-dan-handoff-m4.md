@@ -1,9 +1,9 @@
 # Implementation Plan: TICKET-036 (Verifikasi terpadu dan handoff M4)
 
 **Ticket:** `TICKET-036`  
-**Status:** `READY`
+**Status:** `DONE`
 
-**Hasil sementara:** Implementasi dan pengujian lokal/QA dicatat pada [audit M4](../audits/m4-verification.md). CI remote menunggu autentikasi GitHub untuk push branch.
+**Hasil:** Implementasi dan pengujian lokal/QA dicatat pada [audit M4](../../audits/m4-verification.md). [CI run #24](https://github.com/cleveradit/ceklaundry/actions/runs/36725111623) lulus pada commit kode M4 di `main`.
 
 **Target Audience:** AI Developer Agents  
 **Depends On:** `TICKET-030`–`TICKET-035`  
@@ -13,7 +13,7 @@
 
 | Item | Approved Value |
 |---|---|
-| Sumber | [Plan M4](../plan.md#8-m4--loyalti-dan-promo), US-401–407, [audit M3](../audits/m3-verification.md) |
+| Sumber | [Plan M4](../../plan.md#8-m4--loyalti-dan-promo), US-401–407, [audit M3](../../audits/m3-verification.md) |
 | Keterlacakan | Seluruh AC US-401–407; AND-02/07/08/09/13/15/16/18/19/22/23, ISO-01–06, DAT-01, UX-03/04/05/06 |
 | Bukti | Pisahkan uji unit/feature, dua koneksi MySQL nyata, browser/QA, struk render, CI remote dan batas staging; jangan menyebut integrasi provider nyata atau deploy sudah terbukti. |
 | Handoff | Audit setiap AC dan kriteria selesai M4; dokumentasi fitur hanya setelah implementasi diverifikasi. M5/M6 tetap pekerjaan terpisah. |
@@ -42,12 +42,12 @@ Membuktikan pengaturan, perolehan, penukaran, promo, pembatalan, merge dan penya
 
 | Case | Input | Expected Result | Status |
 |---|---|---|---|
-| Perjalanan | +1 saat lunas, hadiah 2 kg dengan minimum 3 kg, promo 10%, pembatalan | Harga/ledger/cache/snapshot konsisten di panel, publik, resi | [audit M4](../audits/m4-verification.md) |
-| Race | Dua redemption saldo 10, payment/cancel/merge bersamaan | Satu redemption berhasil, tidak ada double delta atau data lintas tenant | [audit M4](../audits/m4-verification.md) |
-| Pengaturan | N10→N5, off→on, master/promo berubah, transaksi lama | Tidak retroaktif, refund delta asal, snapshot lama tetap | [audit M4](../audits/m4-verification.md) |
-| Batas/gagal | Saldo negatif, promo minimum, total0, quote stale, diskon overflow, cabang asing | Penolakan atomik atau nilai bertanda sesuai kontrak | [audit M4](../audits/m4-verification.md) |
-| Permukaan | HP admin/owner, no-JS publik, struk 58 mm, email/WA fake | Tampilan dan nominal konsisten; hak cabang/privasi terjaga | [audit M4](../audits/m4-verification.md) |
-| Handoff | CI, audit, feature docs, staging gap M3/M4 | Setiap klaim bertaut ke bukti; M5/M6 tidak diklaim selesai | [audit M4](../audits/m4-verification.md) |
+| Perjalanan | +1 saat lunas, hadiah 2 kg dengan minimum 3 kg, promo 10%, pembatalan | Harga/ledger/cache/snapshot konsisten di panel, publik, resi | [audit M4](../../audits/m4-verification.md) |
+| Race | Dua redemption saldo 10, payment/cancel/merge bersamaan | Satu redemption berhasil, tidak ada double delta atau data lintas tenant | [audit M4](../../audits/m4-verification.md) |
+| Pengaturan | N10→N5, off→on, master/promo berubah, transaksi lama | Tidak retroaktif, refund delta asal, snapshot lama tetap | [audit M4](../../audits/m4-verification.md) |
+| Batas/gagal | Saldo negatif, promo minimum, total0, quote stale, diskon overflow, cabang asing | Penolakan atomik atau nilai bertanda sesuai kontrak | [audit M4](../../audits/m4-verification.md) |
+| Permukaan | HP admin/owner, no-JS publik, struk 58 mm, email/WA fake | Tampilan dan nominal konsisten; hak cabang/privasi terjaga | [audit M4](../../audits/m4-verification.md) |
+| Handoff | CI, audit, feature docs, staging gap M3/M4 | Setiap klaim bertaut ke bukti; M5/M6 tidak diklaim selesai | [audit M4](../../audits/m4-verification.md) |
 
 ## 6. Verification Commands
 
@@ -69,5 +69,5 @@ Expected: semua gate lulus; uji browser M4 dan race MySQL dicatat dengan hasil a
 
 ## 8. Completion Checklist
 
-- [x] Implementasi, pengujian lokal/QA, serta batas bukti dicatat pada [audit M4](../audits/m4-verification.md).
-- [ ] CI remote pada revisi akhir lulus atau keputusan eksplisit untuk melewati gate dicatat.
+- [x] Implementasi, pengujian lokal/QA, serta batas bukti dicatat pada [audit M4](../../audits/m4-verification.md).
+- [x] CI remote pada commit kode M4 lulus dan tautan run dicatat.
