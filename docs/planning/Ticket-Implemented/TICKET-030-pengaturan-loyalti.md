@@ -1,7 +1,10 @@
 # Implementation Plan: TICKET-030 (Pengaturan program stempel)
 
 **Ticket:** `TICKET-030`  
-**Status:** `REVIEW`  
+**Status:** `DONE`
+
+**Hasil:** Implementasi dan tingkat bukti aktual dicatat pada [audit M4](../../audits/m4-verification.md). Matriks di bawah adalah rencana penerimaan; audit memisahkan tes langsung dari pemeriksaan parsial.
+
 **Target Audience:** AI Developer Agents  
 **Depends On:** `TICKET-029`  
 **Tahap:** M4 — fondasi loyalti
@@ -10,11 +13,11 @@
 
 | Item | Approved Value |
 |---|---|
-| Sumber | [Plan M4](../plan.md#8-m4--loyalti-dan-promo), [PRD 7.8](../initiate-file/prd.md#78-harga-snapshot-dan-loyalti-yang-deterministik), US-401 AC1–5 |
+| Sumber | [Plan M4](../../plan.md#8-m4--loyalti-dan-promo), [PRD 7.8](../../initiate-file/prd.md#78-harga-snapshot-dan-loyalti-yang-deterministik), US-401 AC1–5 |
 | Keterlacakan | US-401; FR-L01/FR-O09; ISO-01/05/06, AND-08/16/19, UX-01/04, LOK-01 |
 | Konfigurasi | Satu program per bisnis, berlaku lintas cabang. Awalnya nonaktif; N 1–255 selalu valid. Hadiah adalah master service aktif bersatuan kg milik bisnis, berat maksimal >0 saat aktif. Saat nonaktif, hadiah dan berat boleh kosong. |
 | Perubahan | Mematikan program menghentikan penawaran dan perolehan baru; ledger lama tetap. Aktivasi ulang tidak memberi stempel retroaktif. Rename master tidak menebak layanan cabang; master hadiah aktif tidak dapat dinonaktifkan/diubah satuan. |
-| Otorisasi | Pengguna meminta pembuatan tiket M4; implementasi tiket belum diminta. |
+| Otorisasi | Pengguna mengotorisasi implementasi seluruh TICKET-030–036 pada 30 September 2026. |
 
 ## 2. Objective
 
@@ -38,12 +41,12 @@ Owner dapat mengatur syarat hadiah stempel untuk seluruh cabang bisnisnya. Penyi
 
 | Case | Input | Expected Result | Status |
 |---|---|---|---|
-| Aktivasi | Owner A memilih master kg aktif A, N=10, maks=3,0 kg | Konfigurasi berlaku untuk seluruh cabang A, tidak terlihat pada B | `[ ]` |
-| Batas nonaktif | Program mati, master/berat kosong, N=1 atau 255 | Sah; saldo/ledger lama tidak berubah | `[ ]` |
-| Aktivasi gagal | N=0/256, berat=0, master item/nonaktif/tenant B | Ditolak tanpa perubahan parsial | `[ ]` |
-| Master hadiah | Program aktif lalu master diubah ke item/dinonaktifkan | Ditolak; rename tidak memetakan otomatis layanan cabang | `[ ]` |
-| Hak akses | Admin/developer atau owner B mencoba ubah milik A; tenant read-only | Ditolak sesuai policy/lifecycle, resource asing 404 | `[ ]` |
-| Siklus saklar | Program off→on setelah transaksi lama LUNAS | Tidak ada perolehan retroaktif | `[ ]` |
+| Aktivasi | Owner A memilih master kg aktif A, N=10, maks=3,0 kg | Konfigurasi berlaku untuk seluruh cabang A, tidak terlihat pada B | [audit M4](../../audits/m4-verification.md) |
+| Batas nonaktif | Program mati, master/berat kosong, N=1 atau 255 | Sah; saldo/ledger lama tidak berubah | [audit M4](../../audits/m4-verification.md) |
+| Aktivasi gagal | N=0/256, berat=0, master item/nonaktif/tenant B | Ditolak tanpa perubahan parsial | [audit M4](../../audits/m4-verification.md) |
+| Master hadiah | Program aktif lalu master diubah ke item/dinonaktifkan | Ditolak; rename tidak memetakan otomatis layanan cabang | [audit M4](../../audits/m4-verification.md) |
+| Hak akses | Admin/developer atau owner B mencoba ubah milik A; tenant read-only | Ditolak sesuai policy/lifecycle, resource asing 404 | [audit M4](../../audits/m4-verification.md) |
+| Siklus saklar | Program off→on setelah transaksi lama LUNAS | Tidak ada perolehan retroaktif | [audit M4](../../audits/m4-verification.md) |
 
 ## 6. Verification Commands
 
@@ -60,5 +63,4 @@ Expected: seluruh kasus lulus pada MySQL QA; tidak ada perubahan migrasi lama at
 
 ## 8. Completion Checklist
 
-- [ ] Kontrak teknis dan matriks penerimaan lulus.
-- [ ] Hasil uji serta batas bukti dicatat sebelum status `DONE`.
+- [x] Implementasi, pengujian lokal/QA, serta batas bukti dicatat pada [audit M4](../../audits/m4-verification.md).

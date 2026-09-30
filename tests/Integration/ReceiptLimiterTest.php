@@ -11,7 +11,7 @@ class ReceiptLimiterTest extends FoundationTestCase
         $this->withServerVariables(['REMOTE_ADDR' => '192.0.2.155']);
         for ($i = 0; $i < 15; $i++) {
             $this->get('/t/XXXXXX')->assertNotFound();
-            $this->get('/check?kode_resi=XXXXXX')->assertNotFound();
+            $this->get('/check?kode_resi=XXXXXX')->assertRedirect('/');
         }
         $this->get('/t/XXXXXX')->assertStatus(429);
     }

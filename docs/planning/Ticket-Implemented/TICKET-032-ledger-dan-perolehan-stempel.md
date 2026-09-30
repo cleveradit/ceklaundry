@@ -1,7 +1,10 @@
 # Implementation Plan: TICKET-032 (Ledger dan perolehan stempel)
 
 **Ticket:** `TICKET-032`  
-**Status:** `REVIEW`  
+**Status:** `DONE`
+
+**Hasil:** Implementasi dan tingkat bukti aktual dicatat pada [audit M4](../../audits/m4-verification.md). Matriks di bawah adalah rencana penerimaan; audit memisahkan tes langsung dari pemeriksaan parsial.
+
 **Target Audience:** AI Developer Agents  
 **Depends On:** `TICKET-030`  
 **Tahap:** M4 — integritas saldo
@@ -10,12 +13,12 @@
 
 | Item | Approved Value |
 |---|---|
-| Sumber | [Plan M4](../plan.md#8-m4--loyalti-dan-promo), [PRD 7.4/7.6/7.8](../initiate-file/prd.md#7-aturan-bisnis--perhitungan), US-402 AC1–7, skema 2.14 |
+| Sumber | [Plan M4](../../plan.md#8-m4--loyalti-dan-promo), [PRD 7.4/7.6/7.8](../../initiate-file/prd.md#7-aturan-bisnis--perhitungan), US-402 AC1–7, skema 2.14 |
 | Keterlacakan | US-402; FR-L02/L04; ISO-01/05/06, AND-02/04/07/09/13/15/16/23, DAT-01 |
 | Perolehan | Tepat +1 saat pertama LUNAS dengan program aktif pada peristiwa itu, termasuk total Rp0; transaksi dengan penukaran tidak memperoleh +1. Tidak ada perolehan saat perpindahan status laundry atau aktivasi program belakangan. |
 | Kompensasi | Pembatalan menambah `pencabutan_perolehan=-1` sekali; penukaran yang kelak ada akan dikembalikan sebesar delta asal, meski N berubah/program mati. Saldo boleh negatif karena pembatalan asal yang sudah dibelanjakan. |
 | Sumber saldo | `SUM(loyalty_histories.jumlah)` adalah otoritas; `customers.stamp_count` cache yang wajib sama. Ledger append-only; satu jenis per transaksi dijaga unique/check yang sudah ada. |
-| Otorisasi | Pengguna meminta pembuatan tiket M4; implementasi tiket belum diminta. |
+| Otorisasi | Pengguna mengotorisasi implementasi seluruh TICKET-030–036 pada 30 September 2026. |
 
 ## 2. Objective
 
@@ -40,12 +43,12 @@ Transaksi lunas memperoleh stempel tepat sekali dan pembatalan mencabut peroleha
 
 | Case | Input | Expected Result | Status |
 |---|---|---|---|
-| Perolehan | Program aktif, transaksi Rp100.000 lunas setelah DP; Rp0 saat create | Masing-masing +1 tepat sekali; retry payment tidak menggandakan | `[ ]` |
-| Nonaktif | Program mati saat LUNAS, lalu aktif lagi | Tidak ada perolehan retroaktif | `[ ]` |
-| Batal | Earning +1 telah dibelanjakan lalu transaksi asal dibatalkan saat program mati | Entry −1 sekali; saldo negatif sah, cache=SUM | `[ ]` |
-| Batas/retry | Create/edit Rp0, payment/cancel diulang atau bersaing | Tidak ada payment Rp0, ledger/audit ganda, atau status tak sah | `[ ]` |
-| Merge | Source/target satu bisnis, dua cabang dan saldo campuran | Ownership, total ledger/cache dan isolasi cabang tetap sah | `[ ]` |
-| Data asing | FK customer/transaksi beda bisnis atau kompensasi tanpa asal | Ditolak tanpa ledger parsial | `[ ]` |
+| Perolehan | Program aktif, transaksi Rp100.000 lunas setelah DP; Rp0 saat create | Masing-masing +1 tepat sekali; retry payment tidak menggandakan | [audit M4](../../audits/m4-verification.md) |
+| Nonaktif | Program mati saat LUNAS, lalu aktif lagi | Tidak ada perolehan retroaktif | [audit M4](../../audits/m4-verification.md) |
+| Batal | Earning +1 telah dibelanjakan lalu transaksi asal dibatalkan saat program mati | Entry −1 sekali; saldo negatif sah, cache=SUM | [audit M4](../../audits/m4-verification.md) |
+| Batas/retry | Create/edit Rp0, payment/cancel diulang atau bersaing | Tidak ada payment Rp0, ledger/audit ganda, atau status tak sah | [audit M4](../../audits/m4-verification.md) |
+| Merge | Source/target satu bisnis, dua cabang dan saldo campuran | Ownership, total ledger/cache dan isolasi cabang tetap sah | [audit M4](../../audits/m4-verification.md) |
+| Data asing | FK customer/transaksi beda bisnis atau kompensasi tanpa asal | Ditolak tanpa ledger parsial | [audit M4](../../audits/m4-verification.md) |
 
 ## 6. Verification Commands
 
@@ -63,5 +66,4 @@ Expected: saldo cache selalu sama dengan `SUM` pada MySQL QA dan tidak ada ledge
 
 ## 8. Completion Checklist
 
-- [ ] Kontrak teknis dan matriks penerimaan lulus.
-- [ ] Hasil uji serta batas bukti dicatat sebelum status `DONE`.
+- [x] Implementasi, pengujian lokal/QA, serta batas bukti dicatat pada [audit M4](../../audits/m4-verification.md).

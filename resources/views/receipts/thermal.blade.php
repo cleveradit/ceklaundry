@@ -15,11 +15,11 @@
         <p>Masuk {{ $receipt['waktu_masuk'] }} WIB<br>Estimasi {{ $receipt['estimasi_selesai'] }} WIB</p>
         @if($receipt['status'] === 'DIBATALKAN')<p class="cancelled">DIBATALKAN — pengembalian dana di luar aplikasi</p>@endif
         <div class="divider"></div>
-        @foreach($receipt['items'] as $item)<div class="line"><span>{{ $item->nama_layanan_snapshot }}<small>{{ $item->satuan_snapshot === 'kg' ? str_replace('.', ',', $item->berat_kg).' kg' : $item->jumlah_unit.' item' }} × Rp{{ number_format($item->harga_snapshot, 0, ',', '.') }}</small></span><strong>Rp{{ number_format($item->subtotal, 0, ',', '.') }}</strong></div>@endforeach
+        @foreach($receipt['items'] as $item)<div class="line"><span>{{ $item->nama_layanan_snapshot }}{{ $item->is_stamp_reward ? ' · hadiah' : '' }}<small>{{ $item->satuan_snapshot === 'kg' ? str_replace('.', ',', $item->berat_kg).' kg' : $item->jumlah_unit.' item' }} × Rp{{ number_format($item->harga_snapshot, 0, ',', '.') }}</small></span><strong>Rp{{ number_format($item->subtotal, 0, ',', '.') }}</strong></div>@endforeach
         <div class="divider"></div>
         <div class="line"><span>Subtotal</span><strong>Rp{{ number_format($receipt['subtotal'], 0, ',', '.') }}</strong></div>
         @if($receipt['potongan_stempel'] > 0)<div class="line"><span>Stempel</span><strong>−Rp{{ number_format($receipt['potongan_stempel'], 0, ',', '.') }}</strong></div>@endif
-        @if($receipt['potongan_promo'] > 0)<div class="line"><span>Promo</span><strong>−Rp{{ number_format($receipt['potongan_promo'], 0, ',', '.') }}</strong></div>@endif
+        @if($receipt['potongan_promo'] > 0)<div class="line"><span>Promo {{ $receipt['promo_nama_snapshot'] }}</span><strong>−Rp{{ number_format($receipt['potongan_promo'], 0, ',', '.') }}</strong></div>@endif
         <div class="line total"><span>Total akhir</span><strong>Rp{{ number_format($receipt['total_akhir'], 0, ',', '.') }}</strong></div>
         <div class="line"><span>Terbayar</span><strong>Rp{{ number_format($receipt['terbayar'], 0, ',', '.') }}</strong></div>
         <div class="line"><span>Sisa · {{ str_replace('_', ' ', $receipt['status_bayar']) }}</span><strong>Rp{{ number_format($receipt['sisa'], 0, ',', '.') }}</strong></div>

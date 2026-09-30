@@ -45,9 +45,11 @@ class TransactionController extends Controller
         $branchId = $actor->role === 'admin' ? (int) $actor->branch_id : (int) ($request->integer('branch_id') ?: ($branches->first()?->id ?? 0));
         app(OperationalAccess::class)->branch($actor, $branchId);
         $services = DB::table('services')->where('business_id', $actor->business_id)->where('branch_id', $branchId)->where('is_active', true)->orderBy('nama')->get(['id', 'nama', 'satuan', 'harga', 'berat_minimum', 'durasi_jam']);
-        $customers = DB::table('customers')->where('business_id', $actor->business_id)->orderBy('nama')->limit(100)->get(['id', 'nama', 'no_hp']);
+        $customers = DB::table('customers')->where('business_id', $actor->business_id)->orderBy('nama')->limit(100)->get(['id', 'nama', 'no_hp', 'stamp_count']);
 
-        return Inertia::render('App/TransactionCreate', ['branches' => $actor->role === 'owner' ? $branches : [], 'branchId' => $branchId, 'services' => $services, 'customers' => $customers]);
+        return Inertia::render('App/TransactionCreate', ['branches' => $actor->role === 'owner' ? $branches : [], 'branchId' => $branchId,
+            'services' => $services, 'customers' => $customers, 'promos' => $this->availablePromos($actor->business_id, $branchId),
+            'loyalty' => $this->loyalty($actor->business_id)]);
     }
 
     public function store(Request $request, TransactionService $service)
@@ -77,7 +79,10 @@ class TransactionController extends Controller
             ->orderBy('nama')->get(['id', 'nama', 'satuan', 'harga']);
         $items = DB::table('transaction_items')->where('transaction_id', $id)->orderBy('id')->get(['service_id', 'berat_kg', 'jumlah_unit', 'perkiraan_jumlah_baju']);
 
-        return Inertia::render('App/TransactionEdit', ['transaction' => $tx, 'services' => $services, 'items' => $items]);
+        return Inertia::render('App/TransactionEdit', ['transaction' => $tx, 'services' => $services, 'items' => $items,
+            'promos' => $this->availablePromos($request->user()->business_id, $tx->branch_id),
+            'loyalty' => $this->loyalty($request->user()->business_id),
+            'stampBalance' => (int) DB::table('customers')->where('business_id', $request->user()->business_id)->where('id', $tx->customer_id)->value('stamp_count')]);
     }
 
     public function show(Request $request, int $id, OperationalAccess $access, ManualReceiptLinkService $links)
@@ -99,8 +104,39 @@ class TransactionController extends Controller
 
     public function update(Request $request, int $id, TransactionService $service)
     {
-        $service->update($request->user(), $id, $request->all());
+        try {
+            $service->update($request->user(), $id, $request->all());
+        } catch (StaleQuoteException $exception) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $exception->getMessage(), 'quote' => $exception->quote], 409);
+            }
+            throw $exception;
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json(['url' => '/app/transactions/'.$id]);
+        }
 
         return back()->with('success', 'Transaksi diperbarui.');
+    }
+
+    private function loyalty(int $businessId): ?object
+    {
+        return DB::table('loyalty_settings as l')->leftJoin('master_services as m', 'm.id', '=', 'l.master_service_id')
+            ->where('l.business_id', $businessId)->first(['l.is_active', 'l.stempel_dibutuhkan', 'l.berat_maks_gratis', 'm.nama as hadiah']);
+    }
+
+    private function availablePromos(int $businessId, int $branchId): mixed
+    {
+        $today = now('Asia/Jakarta')->toDateString();
+
+        return DB::table('promos')->where('business_id', $businessId)->where('is_active', true)
+            ->whereDate('mulai', '<=', $today)->whereDate('selesai', '>=', $today)
+            ->where(function ($query) use ($branchId) {
+                $query->where('semua_cabang', true)->orWhereExists(function ($sub) use ($branchId) {
+                    $sub->selectRaw('1')->from('promo_branches')->whereColumn('promo_branches.promo_id', 'promos.id')
+                        ->where('branch_id', $branchId);
+                });
+            })->orderBy('nama')->get(['id', 'nama', 'tipe', 'nilai', 'minimal_total']);
     }
 }

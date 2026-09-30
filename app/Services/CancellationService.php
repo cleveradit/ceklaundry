@@ -25,14 +25,7 @@ class CancellationService
                 throw ValidationException::withMessages(['alasan_pembatalan' => 'Alasan pembatalan wajib diisi (maksimal 5.000 karakter).']);
             }
             $at = now('Asia/Jakarta');
-            foreach (['penukaran' => 'pengembalian_penukaran', 'perolehan' => 'pencabutan_perolehan'] as $origin => $compensation) {
-                $row = DB::table('loyalty_histories')->where('transaction_id', $id)->where('jenis', $origin)->first();
-                if ($row && ! DB::table('loyalty_histories')->where('transaction_id', $id)->where('jenis', $compensation)->exists()) {
-                    $delta = -$row->jumlah;
-                    DB::table('loyalty_histories')->insert(['business_id' => $business->id, 'customer_id' => $tx->customer_id, 'transaction_id' => $id, 'jenis' => $compensation, 'jumlah' => $delta, 'created_at' => $at]);
-                    DB::table('customers')->where('id', $tx->customer_id)->increment('stamp_count', $delta);
-                }
-            }
+            app(LoyaltyLedgerService::class)->compensate((int) $business->id, (int) $tx->customer_id, $id);
             app(PendingNotificationInvalidator::class)->forTransaction($business->id, $id);
             DB::table('transactions')->where('id', $id)->update([
                 'status' => 'DIBATALKAN', 'alasan_pembatalan' => $reason,

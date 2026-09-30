@@ -1,6 +1,6 @@
-# Tiket selesai — Persiapan dan M1–M3
+# Tiket selesai — Persiapan, M1–M3, dan fitur M4
 
-Seluruh lingkup TICKET-001–029 diimplementasikan dan diverifikasi sesuai keputusan yang berlaku. Lihat [audit M1](../../audits/m1-verification.md), [audit M2](../../audits/m2-verification.md), dan [audit M3](../../audits/m3-verification.md) untuk bukti dan batas milestone. Uji printer thermal fisik M2 dilewati atas instruksi pengguna; M3 belum mengklaim kiriman provider nyata atau restore backup fisik.
+TICKET-001–035 diimplementasikan dan diverifikasi sesuai keputusan yang berlaku. Handoff TICKET-036 masih menunggu CI remote. Lihat [audit M1](../../audits/m1-verification.md), [audit M2](../../audits/m2-verification.md), [audit M3](../../audits/m3-verification.md), dan [audit M4](../../audits/m4-verification.md) untuk bukti serta batas milestone. Uji printer thermal fisik M2 dilewati atas instruksi pengguna; M3 belum mengklaim kiriman provider nyata atau restore backup fisik.
 
 | Tiket | Status |
 |---|---|
@@ -33,3 +33,9 @@ Seluruh lingkup TICKET-001–029 diimplementasikan dan diverifikasi sesuai keput
 | [TICKET-027](TICKET-027-wa-otomatis-dan-kuota.md) | DONE |
 | [TICKET-028](TICKET-028-kiriman-manual-dan-log.md) | DONE |
 | [TICKET-029](TICKET-029-verifikasi-dan-handoff-m3.md) | DONE |
+| [TICKET-030](TICKET-030-pengaturan-loyalti.md) | DONE |
+| [TICKET-031](TICKET-031-kelola-promo.md) | DONE |
+| [TICKET-032](TICKET-032-ledger-dan-perolehan-stempel.md) | DONE |
+| [TICKET-033](TICKET-033-penukaran-stempel.md) | DONE |
+| [TICKET-034](TICKET-034-promo-pada-transaksi.md) | DONE |
+| [TICKET-035](TICKET-035-tampilan-loyalti-dan-promo.md) | DONE |

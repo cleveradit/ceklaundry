@@ -2,12 +2,13 @@
 
 namespace App\Services;
 
+use App\Support\ServiceName;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class PricingService
 {
-    public function quote(int $businessId, int $branchId, array $items): array
+    public function quote(int $businessId, int $branchId, array $items, ?int $customerId = null, ?int $rewardItemIndex = null, ?int $promoId = null): array
     {
         if (count($items) < 1 || count($items) > 100) {
             throw ValidationException::withMessages(['items' => 'Pilih 1 sampai 100 baris layanan.']);
@@ -66,12 +67,79 @@ class PricingService
                 'is_stamp_reward' => false, 'subtotal' => $subtotal,
             ];
         }
+        $rewardCost = null;
+        $rewardMax = null;
+        $stampDiscount = 0;
+        $balance = null;
+        if ($rewardItemIndex !== null) {
+            if ($customerId === null || ! array_key_exists($rewardItemIndex, $rows)) {
+                throw ValidationException::withMessages(['reward_item_index' => 'Pilih pelanggan lama dan satu baris hadiah yang sah.']);
+            }
+            $customer = DB::table('customers')->where('business_id', $businessId)->where('id', $customerId)->first();
+            abort_unless($customer, 404);
+            $setting = DB::table('loyalty_settings')->where('business_id', $businessId)->where('is_active', true)->first();
+            if (! $setting || ! $setting->master_service_id || ! $setting->berat_maks_gratis) {
+                throw ValidationException::withMessages(['reward_item_index' => 'Program stempel tidak aktif.']);
+            }
+            $master = DB::table('master_services')->where('business_id', $businessId)
+                ->where('id', $setting->master_service_id)->where('is_active', true)->where('satuan', 'kg')->first();
+            $row = $rows[$rewardItemIndex];
+            if (! $master || $row['satuan_snapshot'] !== 'kg' ||
+                mb_strtolower(ServiceName::normalize($master->nama)) !== mb_strtolower(ServiceName::normalize($row['nama_layanan_snapshot']))) {
+                throw ValidationException::withMessages(['reward_item_index' => 'Layanan hadiah belum tersedia di cabang ini.']);
+            }
+            $balance = app(LoyaltyLedgerService::class)->balance($businessId, $customerId);
+            $rewardCost = (int) $setting->stempel_dibutuhkan;
+            if ($balance < $rewardCost) {
+                throw ValidationException::withMessages(['reward_item_index' => 'Stempel pelanggan belum cukup.']);
+            }
+            $rewardMax = $setting->berat_maks_gratis;
+            $weight = $this->tenths((string) $row['berat_kg']);
+            $freeWeight = min($weight, $this->tenths((string) $rewardMax));
+            $stampDiscount = min($row['subtotal'], intdiv($row['harga_snapshot'] * $freeWeight + 5, 10));
+            if ($stampDiscount === 0) {
+                throw ValidationException::withMessages(['reward_item_index' => 'Potongan hadiah harus lebih dari nol.']);
+            }
+            $rows[$rewardItemIndex]['is_stamp_reward'] = true;
+        }
+        $eligibleBase = $total - $stampDiscount;
+        $promo = null;
+        $promoDiscount = 0;
+        if ($promoId !== null) {
+            $promo = DB::table('promos')->where('business_id', $businessId)->where('id', $promoId)
+                ->first();
+            abort_unless($promo, 404);
+            $today = now('Asia/Jakarta')->toDateString();
+            if (! $promo->is_active || $promo->mulai > $today || $promo->selesai < $today ||
+                (! $promo->semua_cabang && ! DB::table('promo_branches')->where('promo_id', $promoId)->where('branch_id', $branchId)->exists()) ||
+                $eligibleBase < (int) ($promo->minimal_total ?? 0)) {
+                throw ValidationException::withMessages(['promo_id' => 'Promo tidak berlaku untuk cabang, tanggal atau nilai transaksi ini.']);
+            }
+            $promoDiscount = $promo->tipe === 'persen'
+                ? min($eligibleBase, intdiv((int) $promo->nilai * $eligibleBase + 50, 100))
+                : min($eligibleBase, (int) $promo->nilai);
+        }
         $dpEnabled = (bool) DB::table('business_settings')->where('business_id', $businessId)->value('dp_enabled');
 
         return [
-            'items' => $rows, 'subtotal' => $total, 'potongan_stempel' => 0, 'potongan_promo' => 0,
-            'total_akhir' => $total, 'dp_enabled' => $dpEnabled,
-            'fingerprint' => hash('sha256', json_encode([$rows, $total, $dpEnabled], JSON_THROW_ON_ERROR)),
+            'items' => $rows, 'subtotal' => $total, 'potongan_stempel' => $stampDiscount,
+            'potongan_promo' => $promoDiscount, 'promo_eligible_base' => $eligibleBase,
+            'total_akhir' => $eligibleBase - $promoDiscount, 'dp_enabled' => $dpEnabled,
+            'reward_item_index' => $rewardItemIndex, 'reward_cost' => $rewardCost,
+            'stamp_reward_max_kg_snapshot' => $rewardMax,
+            'promo_id' => $promo?->id, 'promo_nama_snapshot' => $promo?->nama,
+            'promo_tipe_snapshot' => $promo?->tipe, 'promo_nilai_snapshot' => $promo?->nilai,
+            'fingerprint' => hash('sha256', json_encode([$rows, $total, $stampDiscount, $rewardCost, $rewardMax,
+                $balance, $promo?->id, $promo?->nama, $promo?->tipe, $promo?->nilai,
+                $promo?->minimal_total, $promo?->mulai, $promo?->selesai, $promo?->semua_cabang,
+                $promoDiscount, $dpEnabled], JSON_THROW_ON_ERROR)),
         ];
+    }
+
+    private function tenths(string $value): int
+    {
+        [$whole, $fraction] = array_pad(explode('.', $value, 2), 2, '0');
+
+        return (int) $whole * 10 + (int) $fraction;
     }
 }

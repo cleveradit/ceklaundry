@@ -25,12 +25,16 @@ class PublicReceiptService
         $branch = DB::table('branches')->where('business_id', $tx->business_id)->where('id', $tx->branch_id)->first();
         $customer = DB::table('customers')->where('business_id', $tx->business_id)->where('id', $tx->customer_id)->first();
         $items = DB::table('transaction_items')->where('transaction_id', $tx->id)->orderBy('id')
-            ->get(['nama_layanan_snapshot', 'satuan_snapshot', 'harga_snapshot', 'berat_kg', 'jumlah_unit', 'subtotal']);
+            ->get(['nama_layanan_snapshot', 'satuan_snapshot', 'harga_snapshot', 'berat_kg', 'jumlah_unit', 'subtotal', 'is_stamp_reward']);
         $history = DB::table('status_histories')->where('business_id', $tx->business_id)->where('transaction_id', $tx->id)
             ->orderBy('created_at')->get(['status', 'created_at']);
         $paid = (int) DB::table('payments')->where('business_id', $tx->business_id)->where('transaction_id', $tx->id)->sum('jumlah');
         $name = (string) ($customer->nama ?? 'Pelanggan');
         $phone = (string) ($customer->no_hp ?? '');
+        $loyalty = DB::table('loyalty_settings')->where('business_id', $tx->business_id)->first();
+        $stamps = $loyalty && $loyalty->is_active && $customer
+            ? ['balance' => app(LoyaltyLedgerService::class)->balance((int) $tx->business_id, (int) $customer->id),
+                'target' => (int) $loyalty->stempel_dibutuhkan] : null;
 
         return [
             'kode_resi' => $tx->kode_resi, 'status' => $tx->status, 'status_bayar' => $tx->status_bayar,
@@ -41,6 +45,9 @@ class PublicReceiptService
             'catatan_kondisi' => $tx->catatan_kondisi, 'items' => $items, 'timeline' => $history,
             'subtotal' => (int) $tx->subtotal, 'potongan_stempel' => (int) $tx->potongan_stempel,
             'potongan_promo' => (int) $tx->potongan_promo, 'total_akhir' => (int) $tx->total_akhir,
+            'promo_nama_snapshot' => $tx->promo_nama_snapshot,
+            'stamp_reward_max_kg_snapshot' => $tx->stamp_reward_max_kg_snapshot,
+            'stamps' => $stamps,
             'terbayar' => $paid, 'sisa' => max(0, (int) $tx->total_akhir - $paid),
             'demo' => (bool) $business->is_demo,
             'email_form_enabled' => app(LifecycleService::class)->writable($business) && app(OutboundGuard::class)->allows($business, now()),

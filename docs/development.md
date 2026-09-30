@@ -17,7 +17,7 @@ docker compose exec -T app php artisan migrate --force
 docker compose exec app php artisan app:bootstrap-developer
 ```
 
-Buka `http://localhost:8088/login`. Command terakhir meminta nama, email dan password tersembunyi (minimal12 karakter, maksimal72 byte UTF-8); tidak ada akun/password bawaan. Developer wajib mengganti password saat masuk, lalu dapat membuat bisnis/owner. Owner membuat cabang, admin, master, dan menyalin master lewat pratinjau. Setelah itu operator dapat membuat pelanggan/transaksi, mencatat pembayaran, mengubah status dan mencetak resi; owner mengatur DP di `/owner/settings/payment` serta notifikasi di `/owner/settings/notifications`. Developer mengatur transport per bisnis di `/dev/businesses/{id}/notifications`. Database development tidak diisi fixture QA.
+Buka `http://localhost:8088/login`. Command terakhir meminta nama, email dan password tersembunyi (minimal12 karakter, maksimal72 byte UTF-8); tidak ada akun/password bawaan. Developer wajib mengganti password saat masuk, lalu dapat membuat bisnis/owner. Owner membuat cabang, admin, master, dan menyalin master lewat pratinjau. Setelah itu operator dapat membuat pelanggan/transaksi, mencatat pembayaran, mengubah status dan mencetak resi; owner mengatur DP di `/owner/settings/payment`, notifikasi di `/owner/settings/notifications`, loyalti di `/owner/settings/loyalty`, serta promo di `/owner/promos`. Developer mengatur transport per bisnis di `/dev/businesses/{id}/notifications`. Database development tidak diisi fixture QA.
 
 Untuk mengecek resi secara manual, buat transaksi dari panel lalu gunakan kode enam karakter yang muncul pada detail/cetakan resinya di halaman depan atau `/t/{kode}`. Teks contoh pada kolom pencarian bukan resi yang terdaftar. Database development tidak diisi transaksi contoh; kode yang belum ada menampilkan halaman 404 dengan form untuk mencoba lagi.
 
@@ -37,7 +37,7 @@ Seeder alternatif `DatabaseSeeder`/`DeveloperSeeder` memerlukan environment `CEK
 
 Environment diinjeksi oleh Compose. Entrypoint membuat placeholder `.env` kosong bila tidak ada; tidak menyalin rahasia ke image. Volume storage memakai nocopy dan direktori dibuat saat runtime untuk menghindari perebutan inisialisasi tiga container.
 
-Kode disalin ke image. Setelah mengubah kode, jalankan `docker compose build` lalu `docker compose up -d --wait`; perubahan migrasi diterapkan melalui command migrate. `docker compose down` menghentikan runtime tanpa menghapus volume. Jangan gunakan `down -v` pada data development pengguna.
+Kode disalin ke image. Setelah mengubah kode, jalankan `docker compose build` lalu `docker compose up -d --wait`; perubahan migrasi diterapkan melalui command migrate. Entrypoint membersihkan cache Blade dalam volume storage pada setiap startup agar view dari image lama tidak tertahan. `docker compose down` menghentikan runtime tanpa menghapus volume. Jangan gunakan `down -v` pada data development pengguna.
 
 Konfigurasi SMTP global ada di `.env` (`MAIL_*`). Default localhost1025 adalah placeholder lokal, bukan provider aktif. Uji memakai transport array/mock; pengiriman nyata perlu konfigurasi SMTP operator. Jangan memakai mailer log untuk reset karena body berisi token. Tidak ada pengiriman email ke pihak nyata dalam verifikasi ini.
 
@@ -76,10 +76,13 @@ docker compose -f compose.yaml -f compose.qa.yaml exec -T qa php tests/Support/m
 docker compose -f compose.yaml -f compose.qa.yaml cp qa:/app/storage/app/private/m2-browser-fixture.json test-results/m2-browser-fixture.json
 npm run test:browser:m2
 npm run test:browser:m3
+docker compose -f compose.yaml -f compose.qa.yaml exec -T qa php tests/Support/m4-browser-seed.php
+docker compose -f compose.yaml -f compose.qa.yaml cp qa:/app/storage/app/private/m4-browser-fixture.json test-results/m4-browser-fixture.json
+npm run test:browser:m4
 docker compose -f compose.yaml -f compose.qa.yaml stop qa
 ```
 
-Node22 lokal diperlukan hanya untuk browser runner ini; CI memasangnya otomatis. Alternatif Windows memakai Node bundel dan Chrome terpasang, `CHROME_PATH` menunjuk executable, `BROWSER_FIXTURE` dan `M2_BROWSER_FIXTURE` menunjuk file fixture masing-masing. M3 memakai fixture M2 dan dijalankan sesudah M2 tanpa seed ulang. URL default QA `http://127.0.0.1:8089`; bisa diganti lewat BROWSER_URL. M2 seed menjalankan `migrate:fresh` lagi dan harus dilakukan setelah runner M1, bukan saat backend suite masih berjalan. Jangan jalankan QA pada DB development. Fixture menghasilkan kredensial sementara hanya dalam file privat/ignored; screenshot di `test-results/` tidak berisi password. CI hanya mengunggah PNG, tidak file credential. Hapus file fixture privat setelah QA. Ulangi migrasi kosong database uji melalui container QA bila diperlukan, bukan volume development.
+Node22 lokal diperlukan hanya untuk browser runner ini; CI memasangnya otomatis. Alternatif Windows memakai Node bundel dan Chrome terpasang, `CHROME_PATH` menunjuk executable, `BROWSER_FIXTURE`, `M2_BROWSER_FIXTURE`, dan `M4_BROWSER_FIXTURE` menunjuk file fixture masing-masing. M3 memakai fixture M2 dan dijalankan sesudah M2 tanpa seed ulang; M4 seed memakai data M2 dan harus dijalankan setelah runner M3. URL default QA `http://127.0.0.1:8089`; bisa diganti lewat BROWSER_URL. M2 seed menjalankan `migrate:fresh` lagi dan harus dilakukan setelah runner M1, bukan saat backend suite masih berjalan. Jangan jalankan QA pada DB development. Fixture menghasilkan kredensial sementara hanya dalam file privat/ignored; screenshot di `test-results/` tidak berisi password. CI hanya mengunggah PNG, tidak file credential. Hapus file fixture privat setelah QA. Ulangi migrasi kosong database uji melalui container QA bila diperlukan, bukan volume development.
 
 ## Pemulihan seluruh outbound
 

@@ -237,6 +237,8 @@ class SendNotification implements ShouldQueue
 
         return ['business' => $business->nama, 'branch' => $branch?->nama ?? $business->nama,
             'code' => $tx->kode_resi, 'total' => (int) $tx->total_akhir,
+            'stamp_discount' => (int) $tx->potongan_stempel, 'promo_discount' => (int) $tx->potongan_promo,
+            'promo_name' => $tx->promo_nama_snapshot,
             'remaining' => max(0, (int) $tx->total_akhir - $paid), 'url' => url('/t/'.$tx->kode_resi),
             'provider_options' => $business->wa_config ? array_diff_key($business->wa_config, array_flip(['secret_key'])) : []];
     }

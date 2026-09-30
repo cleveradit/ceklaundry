@@ -18,9 +18,9 @@ Lima layanan Compose berjalan pada http://localhost:8088. Kolom notifikasi sudah
 
 ## Handoff
 
-Seluruh [TICKET-021–029](Ticket-Implemented/index.md) berstatus DONE dan diarsipkan setelah verifikasi lokal serta CI. [TICKET-030–036](index.md#execution-order) menyusun M4 dari [plan](../plan.md#8-m4--loyalti-dan-promo) dan US-401–407: pengaturan, promo owner, ledger, penukaran, integrasi harga, tampilan, dan verifikasi. Semuanya `REVIEW` karena pengguna meminta penyusunan tiket, belum implementasi. Mulai dari TICKET-030 ketika implementasi M4 diminta; ikuti dependensi di indeks dan batas staging M3 dalam audit.
+Seluruh [TICKET-021–029](Ticket-Implemented/index.md) berstatus DONE dan diarsipkan setelah verifikasi lokal serta CI. Pengguna mengotorisasi TICKET-030–036 pada 30 September 2026. Fitur M4 berada pada branch lokal `codex/m4-loyalty-promo`: pengaturan stempel, ledger/kompensasi, penukaran, promo, snapshot transaksi, tampilan publik/struk, dan QA browser telah diimplementasikan. [Audit M4](../audits/m4-verification.md) memetakan bukti serta kasus yang baru diperiksa sebagian. Suite MySQL final lulus 114 tes/963 assertion. Pint, frontend lint/typecheck/build, validator dokumentasi, serta browser M1–M4 lulus. TICKET-030–035 DONE dan diarsipkan; [TICKET-036](TICKET-036-verifikasi-dan-handoff-m4.md) tetap READY untuk CI remote. Push ditolak karena Git Credential Manager host belum terautentikasi ke GitHub. Setelah autentikasi tersedia, push branch, catat URL run dan hasil CI, lalu tutup TICKET-036.
 
-M4 belum diimplementasikan; M5 laporan dan M6 demo/PWA masih menunggu tiket. [Pengembangan lokal](../development.md) berisi perintah build, QA, dan perawatan runtime.
+M5 laporan dan M6 demo/PWA masih menunggu tiket. [Pengembangan lokal](../development.md) berisi perintah build, QA, dan perawatan runtime.
 
 ## Riwayat M1
 

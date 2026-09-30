@@ -1,7 +1,10 @@
 # Implementation Plan: TICKET-036 (Verifikasi terpadu dan handoff M4)
 
 **Ticket:** `TICKET-036`  
-**Status:** `REVIEW`  
+**Status:** `READY`
+
+**Hasil sementara:** Implementasi dan pengujian lokal/QA dicatat pada [audit M4](../audits/m4-verification.md). CI remote menunggu autentikasi GitHub untuk push branch.
+
 **Target Audience:** AI Developer Agents  
 **Depends On:** `TICKET-030`–`TICKET-035`  
 **Tahap:** M4 — kriteria selesai
@@ -14,7 +17,7 @@
 | Keterlacakan | Seluruh AC US-401–407; AND-02/07/08/09/13/15/16/18/19/22/23, ISO-01–06, DAT-01, UX-03/04/05/06 |
 | Bukti | Pisahkan uji unit/feature, dua koneksi MySQL nyata, browser/QA, struk render, CI remote dan batas staging; jangan menyebut integrasi provider nyata atau deploy sudah terbukti. |
 | Handoff | Audit setiap AC dan kriteria selesai M4; dokumentasi fitur hanya setelah implementasi diverifikasi. M5/M6 tetap pekerjaan terpisah. |
-| Otorisasi | Pengguna meminta pembuatan tiket M4; implementasi tiket belum diminta. |
+| Otorisasi | Pengguna mengotorisasi implementasi seluruh TICKET-030–036 pada 30 September 2026. |
 
 ## 2. Objective
 
@@ -39,12 +42,12 @@ Membuktikan pengaturan, perolehan, penukaran, promo, pembatalan, merge dan penya
 
 | Case | Input | Expected Result | Status |
 |---|---|---|---|
-| Perjalanan | +1 saat lunas, hadiah 2 kg dengan minimum 3 kg, promo 10%, pembatalan | Harga/ledger/cache/snapshot konsisten di panel, publik, resi | `[ ]` |
-| Race | Dua redemption saldo 10, payment/cancel/merge bersamaan | Satu redemption berhasil, tidak ada double delta atau data lintas tenant | `[ ]` |
-| Pengaturan | N10→N5, off→on, master/promo berubah, transaksi lama | Tidak retroaktif, refund delta asal, snapshot lama tetap | `[ ]` |
-| Batas/gagal | Saldo negatif, promo minimum, total0, quote stale, diskon overflow, cabang asing | Penolakan atomik atau nilai bertanda sesuai kontrak | `[ ]` |
-| Permukaan | HP admin/owner, no-JS publik, struk 58 mm, email/WA fake | Tampilan dan nominal konsisten; hak cabang/privasi terjaga | `[ ]` |
-| Handoff | CI, audit, feature docs, staging gap M3/M4 | Setiap klaim bertaut ke bukti; M5/M6 tidak diklaim selesai | `[ ]` |
+| Perjalanan | +1 saat lunas, hadiah 2 kg dengan minimum 3 kg, promo 10%, pembatalan | Harga/ledger/cache/snapshot konsisten di panel, publik, resi | [audit M4](../audits/m4-verification.md) |
+| Race | Dua redemption saldo 10, payment/cancel/merge bersamaan | Satu redemption berhasil, tidak ada double delta atau data lintas tenant | [audit M4](../audits/m4-verification.md) |
+| Pengaturan | N10→N5, off→on, master/promo berubah, transaksi lama | Tidak retroaktif, refund delta asal, snapshot lama tetap | [audit M4](../audits/m4-verification.md) |
+| Batas/gagal | Saldo negatif, promo minimum, total0, quote stale, diskon overflow, cabang asing | Penolakan atomik atau nilai bertanda sesuai kontrak | [audit M4](../audits/m4-verification.md) |
+| Permukaan | HP admin/owner, no-JS publik, struk 58 mm, email/WA fake | Tampilan dan nominal konsisten; hak cabang/privasi terjaga | [audit M4](../audits/m4-verification.md) |
+| Handoff | CI, audit, feature docs, staging gap M3/M4 | Setiap klaim bertaut ke bukti; M5/M6 tidak diklaim selesai | [audit M4](../audits/m4-verification.md) |
 
 ## 6. Verification Commands
 
@@ -66,6 +69,5 @@ Expected: semua gate lulus; uji browser M4 dan race MySQL dicatat dengan hasil a
 
 ## 8. Completion Checklist
 
-- [ ] Seluruh AC dan kriteria plan M4 memiliki status bukti yang jujur.
-- [ ] Gate lokal/CI dan browser yang tersedia lulus; batas staging dicatat.
-- [ ] Dokumen fitur, audit, sesi dan arsip diperbarui sebelum status `DONE`.
+- [x] Implementasi, pengujian lokal/QA, serta batas bukti dicatat pada [audit M4](../audits/m4-verification.md).
+- [ ] CI remote pada revisi akhir lulus atau keputusan eksplisit untuk melewati gate dicatat.

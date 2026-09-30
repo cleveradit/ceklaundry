@@ -196,11 +196,13 @@ Bukti penyelesaian M1: [audit verifikasi M1](audits/m1-verification.md), termasu
 
 ### Kriteria selesai
 
-- [ ] Saldo yang sama tidak dapat dipakai dua kali melalui request bersamaan.
-- [ ] Hadiah, minimum berat, promo, dan pembulatan menghasilkan nominal sesuai spesifikasi.
-- [ ] Pembatalan memberi kompensasi ledger sekali saja tanpa menghapus riwayat.
-- [ ] Perubahan layanan atau promo tidak mengubah snapshot transaksi lama.
-- [ ] Saldo negatif yang sah akibat kompensasi ditampilkan beserta penjelasan, bukan disamarkan menjadi nol.
+- [x] Saldo yang sama tidak dapat dipakai dua kali melalui request bersamaan.
+- [x] Hadiah, minimum berat, promo, dan pembulatan menghasilkan nominal sesuai spesifikasi.
+- [x] Pembatalan memberi kompensasi ledger sekali saja tanpa menghapus riwayat.
+- [x] Perubahan layanan atau promo tidak mengubah snapshot transaksi lama.
+- [x] Saldo negatif yang sah akibat kompensasi ditampilkan beserta penjelasan, bukan disamarkan menjadi nol.
+
+Bukti dan batas tiap kriteria M4 dicatat di [audit verifikasi M4](audits/m4-verification.md).
 
 **Yang diperiksa sendiri:** kumpulkan stempel, tukarkan hadiah pada transaksi yang juga memakai promo, lalu uji pembatalan yang memengaruhi saldo. Cocokkan nominal dan riwayatnya.
 

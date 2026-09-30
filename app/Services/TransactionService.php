@@ -22,7 +22,12 @@ class TransactionService
                 'request_key' => ['required', 'uuid'], 'quote_fingerprint' => ['required', 'string', 'size:64'],
                 'catatan_kondisi' => ['nullable', 'string', 'max:5000'],
                 'estimasi_selesai' => ['nullable', 'date'], 'initial_payment' => ['nullable', 'array'],
+                'reward_item_index' => ['nullable', 'integer', 'min:0', 'max:99'],
+                'promo_id' => ['nullable', 'integer', 'min:1'],
             ])->validate();
+            if (array_intersect(['subtotal', 'total_akhir', 'potongan_stempel', 'potongan_promo', 'stamp_reward_max_kg_snapshot', 'promo_nama_snapshot', 'promo_tipe_snapshot', 'promo_nilai_snapshot'], array_keys($data))) {
+                throw ValidationException::withMessages(['transaksi' => 'Nilai potongan dan total ditetapkan oleh server.']);
+            }
             app(OperationalAccess::class)->branch($fresh, (int) $base['branch_id']);
             $hash = hash('sha256', json_encode($base, JSON_THROW_ON_ERROR));
             $existing = DB::table('transactions')->where('business_id', $business->id)->where('create_request_key', $base['request_key'])->first();
@@ -45,7 +50,8 @@ class TransactionService
                 $customerId = DB::table('customers')->insertGetId([...$valid, 'business_id' => $business->id, 'stamp_count' => 0, 'created_at' => now(), 'updated_at' => now()]);
                 $customer = DB::table('customers')->find($customerId);
             }
-            $quote = app(PricingService::class)->quote($business->id, (int) $base['branch_id'], $base['items']);
+            $quote = $this->quoteForSave($business->id, (int) $base['branch_id'], $base['items'],
+                (int) $customer->id, $base['reward_item_index'] ?? null, $base['promo_id'] ?? null);
             if (! hash_equals($quote['fingerprint'], $base['quote_fingerprint'])) {
                 $quote['estimasi_selesai'] = app(EstimationService::class)->calculate(CarbonImmutable::now('Asia/Jakarta'), $quote['items'], $base['estimasi_selesai'] ?? null)->format('Y-m-d H:i:s');
                 throw new StaleQuoteException($quote);
@@ -57,7 +63,11 @@ class TransactionService
                 'created_by' => $fresh->id,
                 'notification_email' => $customer->email, 'create_request_key' => $base['request_key'], 'create_request_hash' => $hash,
                 'status' => 'DITERIMA', 'waktu_masuk' => $at, 'estimasi_selesai' => $estimated,
-                'subtotal' => $quote['subtotal'], 'total_akhir' => $quote['total_akhir'],
+                'subtotal' => $quote['subtotal'], 'potongan_stempel' => $quote['potongan_stempel'],
+                'potongan_promo' => $quote['potongan_promo'], 'total_akhir' => $quote['total_akhir'],
+                'stamp_reward_max_kg_snapshot' => $quote['stamp_reward_max_kg_snapshot'],
+                'promo_id' => $quote['promo_id'], 'promo_nama_snapshot' => $quote['promo_nama_snapshot'],
+                'promo_tipe_snapshot' => $quote['promo_tipe_snapshot'], 'promo_nilai_snapshot' => $quote['promo_nilai_snapshot'],
                 'status_bayar' => $quote['total_akhir'] === 0 ? 'LUNAS' : 'BELUM_BAYAR',
                 'catatan_kondisi' => $base['catatan_kondisi'] ?? null, 'created_at' => $at, 'updated_at' => $at,
             ];
@@ -79,6 +89,11 @@ class TransactionService
                 DB::table('transaction_items')->insert([...$item, 'transaction_id' => $id, 'created_at' => $at, 'updated_at' => $at]);
             }
             DB::table('status_histories')->insert(['business_id' => $business->id, 'transaction_id' => $id, 'status' => 'DITERIMA', 'user_id' => $fresh->id, 'created_at' => $at]);
+            if ($quote['reward_cost'] !== null) {
+                app(LoyaltyLedgerService::class)->redeem((int) $business->id, (int) $customer->id, $id, $quote['reward_cost']);
+            } elseif ($quote['total_akhir'] === 0) {
+                app(LoyaltyLedgerService::class)->award((int) $business->id, (int) $customer->id, $id);
+            }
             if (! empty($base['initial_payment'])) {
                 $payment = $base['initial_payment'];
                 $payment['request_key'] = $base['request_key'];
@@ -98,7 +113,7 @@ class TransactionService
             $tx = DB::table('transactions')->where('business_id', $business->id)->where('id', $id)->lockForUpdate()->first();
             abort_unless((int) ($data['expected_version'] ?? 0) === (int) $tx->version, 409, 'Transaksi sudah berubah. Muat ulang.');
             abort_unless($tx->status === 'DITERIMA', 422, 'Transaksi sudah terkunci.');
-            if (array_intersect(['customer_id', 'branch_id', 'created_by', 'waktu_masuk', 'status_bayar', 'total_akhir', 'promo_id'], array_keys($data))) {
+            if (array_intersect(['customer_id', 'branch_id', 'created_by', 'waktu_masuk', 'status_bayar', 'total_akhir', 'subtotal', 'potongan_stempel', 'potongan_promo', 'promo_nama_snapshot', 'promo_tipe_snapshot', 'promo_nilai_snapshot', 'stamp_reward_max_kg_snapshot'], array_keys($data))) {
                 throw ValidationException::withMessages(['transaksi' => 'Identitas dan nilai server transaksi tidak dapat diubah langsung.']);
             }
             if (! array_key_exists('items', $data) && ! array_intersect(['catatan_kondisi', 'estimasi_selesai', 'item_clothes'], array_keys($data))) {
@@ -109,15 +124,29 @@ class TransactionService
                 $hasPayment = DB::table('payments')->where('transaction_id', $id)->exists();
                 $hasLedger = DB::table('loyalty_histories')->where('transaction_id', $id)->exists();
                 abort_if($tx->status_bayar === 'LUNAS' || $hasPayment || $hasLedger, 422, 'Harga transaksi sudah terkunci.');
-                $quote = app(PricingService::class)->quote($business->id, $tx->branch_id, $data['items']);
+                $selection = Validator::make($data, ['reward_item_index' => ['nullable', 'integer', 'min:0', 'max:99'], 'promo_id' => ['nullable', 'integer', 'min:1']])->validate();
+                $quote = $this->quoteForSave($business->id, $tx->branch_id, $data['items'],
+                    (int) $tx->customer_id, $selection['reward_item_index'] ?? null, $selection['promo_id'] ?? null);
                 abort_unless(hash_equals($quote['fingerprint'], (string) ($data['quote_fingerprint'] ?? '')), 409, 'Harga berubah. Periksa penawaran baru.');
                 $fields['subtotal'] = $quote['subtotal'];
+                $fields['potongan_stempel'] = $quote['potongan_stempel'];
+                $fields['potongan_promo'] = $quote['potongan_promo'];
+                $fields['stamp_reward_max_kg_snapshot'] = $quote['stamp_reward_max_kg_snapshot'];
+                $fields['promo_id'] = $quote['promo_id'];
+                $fields['promo_nama_snapshot'] = $quote['promo_nama_snapshot'];
+                $fields['promo_tipe_snapshot'] = $quote['promo_tipe_snapshot'];
+                $fields['promo_nilai_snapshot'] = $quote['promo_nilai_snapshot'];
                 $fields['total_akhir'] = $quote['total_akhir'];
                 $fields['status_bayar'] = $quote['total_akhir'] === 0 ? 'LUNAS' : 'BELUM_BAYAR';
                 $fields['estimasi_selesai'] = app(EstimationService::class)->calculate(CarbonImmutable::parse($tx->waktu_masuk, 'Asia/Jakarta'), $quote['items'], $data['estimasi_selesai'] ?? null);
                 DB::table('transaction_items')->where('transaction_id', $id)->delete();
                 foreach ($quote['items'] as $item) {
                     DB::table('transaction_items')->insert([...$item, 'transaction_id' => $id, 'created_at' => now(), 'updated_at' => now()]);
+                }
+                if ($quote['reward_cost'] !== null) {
+                    app(LoyaltyLedgerService::class)->redeem((int) $business->id, (int) $tx->customer_id, $id, $quote['reward_cost']);
+                } elseif ($quote['total_akhir'] === 0) {
+                    app(LoyaltyLedgerService::class)->award((int) $business->id, (int) $tx->customer_id, $id);
                 }
             } else {
                 if (array_key_exists('catatan_kondisi', $data)) {
@@ -142,5 +171,17 @@ class TransactionService
             }
             DB::table('transactions')->where('id', $id)->update($fields);
         });
+    }
+
+    private function quoteForSave(int $businessId, int $branchId, array $items, int $customerId, ?int $rewardIndex, ?int $promoId): array
+    {
+        try {
+            return app(PricingService::class)->quote($businessId, $branchId, $items, $customerId, $rewardIndex, $promoId);
+        } catch (ValidationException $exception) {
+            if (array_intersect(['promo_id', 'reward_item_index'], array_keys($exception->errors()))) {
+                throw new StaleQuoteException(app(PricingService::class)->quote($businessId, $branchId, $items, $customerId));
+            }
+            throw $exception;
+        }
     }
 }

@@ -61,6 +61,9 @@ class PaymentService
             'status_bayar' => $paid + $amount === (int) $transaction->total_akhir ? 'LUNAS' : 'DP',
             'version' => $transaction->version + 1, 'updated_at' => $at,
         ]);
+        if ($paid + $amount === (int) $transaction->total_akhir && $transaction->status_bayar !== 'LUNAS') {
+            app(LoyaltyLedgerService::class)->award((int) $transaction->business_id, (int) $transaction->customer_id, (int) $transaction->id);
+        }
 
         return DB::table('payments')->find($id);
     }
