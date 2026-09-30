@@ -18,9 +18,9 @@ Lima layanan Compose berjalan pada http://localhost:8088. Kolom notifikasi sudah
 
 ## Handoff
 
-Seluruh [TICKET-021–029](Ticket-Implemented/index.md) berstatus DONE dan diarsipkan setelah verifikasi lokal serta CI. Lanjutkan ke penyusunan tiket M4 dari [plan](../plan.md#8-m4--loyalti-dan-promo), dengan mengingat batas staging M3 dalam audit.
+Seluruh [TICKET-021–029](Ticket-Implemented/index.md) berstatus DONE dan diarsipkan setelah verifikasi lokal serta CI. [TICKET-030–036](index.md#execution-order) menyusun M4 dari [plan](../plan.md#8-m4--loyalti-dan-promo) dan US-401–407: pengaturan, promo owner, ledger, penukaran, integrasi harga, tampilan, dan verifikasi. Semuanya `REVIEW` karena pengguna meminta penyusunan tiket, belum implementasi. Mulai dari TICKET-030 ketika implementasi M4 diminta; ikuti dependensi di indeks dan batas staging M3 dalam audit.
 
-M4 promo/loyalti, M5 laporan, dan M6 demo/PWA masih menunggu tiket. [Pengembangan lokal](../development.md) berisi perintah build, QA, dan perawatan runtime.
+M4 belum diimplementasikan; M5 laporan dan M6 demo/PWA masih menunggu tiket. [Pengembangan lokal](../development.md) berisi perintah build, QA, dan perawatan runtime.
 
 ## Riwayat M1
 
