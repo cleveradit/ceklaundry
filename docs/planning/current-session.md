@@ -20,7 +20,7 @@ Lima layanan Compose berjalan pada http://localhost:8088. Kolom notifikasi sudah
 
 Seluruh [TICKET-021–029](Ticket-Implemented/index.md) berstatus DONE dan diarsipkan setelah verifikasi lokal serta CI. Pengguna mengotorisasi TICKET-030–036 pada 30 September 2026. Fitur M4 sudah di `main`: pengaturan stempel, ledger/kompensasi, penukaran, promo, snapshot transaksi, tampilan publik/struk, dan QA browser. [Audit M4](../audits/m4-verification.md) memetakan bukti serta kasus yang baru diperiksa sebagian. Suite MySQL lokal lulus 114 tes/963 assertion. Pint, frontend lint/typecheck/build, validator dokumentasi, serta browser M1–M4 lulus lokal dan [CI pada commit kode `9d0e433`](https://github.com/cleveradit/ceklaundry/actions/runs/36725111623) lulus seluruh gate. TICKET-030–036 DONE dan [diarsipkan](Ticket-Implemented/index.md).
 
-M5 laporan dan M6 demo/PWA masih menunggu tiket. [Pengembangan lokal](../development.md) berisi perintah build, QA, dan perawatan runtime.
+TICKET-037–043 untuk M5 laporan owner telah dibuat dan diurutkan di [indeks aktif](index.md). Semuanya `REVIEW`: pengguna meminta tiket, belum meminta implementasi. Cakupannya riwayat/filter, pendapatan berdasarkan payment, tagihan, dashboard, grafik, CSV, serta verifikasi/handoff. Mulai dari TICKET-037 saat implementasi M5 diotorisasi. M6 demo/PWA masih menunggu tiket. [Pengembangan lokal](../development.md) berisi perintah build, QA, dan perawatan runtime.
 
 ## Riwayat M1
 
