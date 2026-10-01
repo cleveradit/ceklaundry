@@ -2,7 +2,7 @@
 
 **Ticket:** `TICKET-048`
 
-**Status:** `REVIEW`
+**Status:** `READY`
 
 **Target Audience:** AI Developer Agents
 
@@ -19,7 +19,7 @@
 | Cache | Service worker hanya meng-cache aset build dengan nama ber-hash dan halaman offline. Semua HTML/Inertia/status/auth/print/API/CSV dan data dinamis `network-only` + `no-store`; offline tidak menyimpan atau replay write. |
 | Update | Cache build lama dibuang saat aktivasi; versi baru diperiksa saat launch dan dipakai pada navigasi aman. Form yang belum tersimpan mendapat pemberitahuan sebelum reload; logout, switch akun/tenant, dan browser back tidak menampilkan data lama. |
 | Keterlacakan | FR-W01/W02; US-605 AC 1, US-606 AC 1–4; KOM-03, AND-26, SEC-04, ISO-05, UX-03. |
-| Otorisasi | Pengguna meminta penyusunan tiket M6; implementasi belum diminta. |
+| Otorisasi | Pengguna mengotorisasi implementasi seluruh TICKET-044–049 pada 1 Oktober 2026. |
 
 ## 2. Objective
 
@@ -69,7 +69,7 @@ Expected: cache hanya berisi aset yang diizinkan, data dinamis network-only, dan
 
 ## 8. Completion Checklist
 
-- [ ] Otorisasi implementasi diterima dan status menjadi `READY`.
+- [x] Otorisasi implementasi diterima dan status menjadi `READY`.
 - [ ] Manifest, ikon, service worker, offline page, dan update aman diterapkan.
 - [ ] Pengujian cache, pergantian tenant, dan form kotor lulus.
 - [ ] Keterbatasan iOS dan bukti perangkat dicatat jujur.

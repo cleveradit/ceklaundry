@@ -4,6 +4,7 @@ namespace App\Http\Controllers\App;
 
 use App\Exceptions\StaleQuoteException;
 use App\Http\Controllers\Controller;
+use App\Models\Business;
 use App\Services\ManualReceiptLinkService;
 use App\Services\OperationalAccess;
 use App\Services\TransactionService;
@@ -99,7 +100,7 @@ class TransactionController extends Controller
 
         return Inertia::render('App/TransactionDetail', ['transaction' => $tx, 'customer' => $customer,
             'items' => $items, 'payments' => $payments, 'history' => $history,
-            'paid' => $paid, 'manualLink' => $links->link($tx, $customer->no_hp, $paid), 'notifications' => $notifications]);
+            'paid' => $paid, 'manualLink' => Business::query()->find($actor->business_id)?->is_demo ? '' : $links->link($tx, $customer->no_hp, $paid), 'notifications' => $notifications]);
     }
 
     public function update(Request $request, int $id, TransactionService $service)

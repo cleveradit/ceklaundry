@@ -252,12 +252,14 @@ Bukti penyelesaian M5: [audit verifikasi M5](audits/m5-verification.md), termasu
 
 ### Kriteria selesai
 
-- [ ] Dua pengunjung demo mendapat tenant terpisah tanpa dapat membaca data satu sama lain.
-- [ ] Demo tidak mengirim email/WA nyata melalui jalur mana pun.
-- [ ] Demo expired langsung tidak dapat diakses, termasuk bila purge tertunda.
-- [ ] Pembersihan memulihkan ketertinggalan setelah scheduler kembali aktif dan aman dijalankan bersamaan.
+- [x] Dua pengunjung demo mendapat tenant terpisah tanpa dapat membaca data satu sama lain.
+- [x] Demo tidak mengirim email/WA nyata melalui jalur mana pun.
+- [x] Demo expired langsung tidak dapat diakses, termasuk bila purge tertunda.
+- [x] Pembersihan memulihkan ketertinggalan setelah scheduler kembali aktif dan aman dijalankan bersamaan.
 - [ ] PWA teruji pada perangkat yang ditargetkan; logout/pergantian akun tidak menampilkan data tenant sebelumnya dari cache.
-- [ ] Pembaruan aplikasi tidak menghilangkan form yang belum disimpan tanpa pemberitahuan.
+- [x] Pembaruan aplikasi tidak menghilangkan form yang belum disimpan tanpa pemberitahuan.
+
+Bukti lokal dan batas perangkat ada di [audit M6](audits/m6-verification.md). Cache dan pergantian tenant diuji dengan Chrome pada viewport HP; pemasangan dan splash Android/iOS fisik belum diverifikasi, sehingga kriteria perangkat tetap terbuka.
 
 **Yang diperiksa sendiri:** coba dua demo, uji pergantian peran, install aplikasi, matikan jaringan, lalu logout/login sebagai bisnis lain. Pastikan data lama tidak muncul kembali.
 

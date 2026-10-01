@@ -9,5 +9,6 @@ Fitur yang telah diimplementasikan dan diverifikasi dalam lingkungan lokal/CI; L
 | [M3 — Notifikasi](m3-notifikasi.md) | Live pada runtime lokal/CI; lihat batas bukti audit M3 | email transaksi, ready/pengingat, WA opsional, log dan restore hold |
 | [M4 — Loyalti dan promo](m4-loyalti-dan-promo.md) | Live pada runtime lokal/CI; lihat batas bukti audit M4 | pengaturan stempel, ledger, penukaran, promo, status publik dan resi |
 | [M5 — Laporan owner](m5-laporan-owner.md) | Live pada runtime lokal/CI di `main`; lihat audit M5 | riwayat, pendapatan payment, tagihan, dashboard, grafik, CSV dan snapshot baca |
+| [M6 — Demo dan PWA](m6-demo-dan-pwa.md) | Live pada runtime lokal/CI; instalasi perangkat fisik belum diverifikasi | demo terisolasi, simulasi komunikasi, expiry/purge, manifest, cache statis dan offline |
 
-Rancangan M6 ada di [user stories](../initiate-file/user-stories.md). Mulai orientasi dari [architecture](../architecture.md), [data model](../data-model.md), dan [audit M5](../audits/m5-verification.md).
+Mulai orientasi dari [architecture](../architecture.md), [data model](../data-model.md), dan [audit M6](../audits/m6-verification.md).

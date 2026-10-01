@@ -20,6 +20,10 @@ class BranchService
             Gate::forUser($fresh)->authorize($id ? 'update' : 'create', $id ? $branch : Branch::class);
             $data['telepon'] = Input::phone((string) ($data['telepon'] ?? ''));
             $valid = Validator::make($data, ['nama' => ['required', 'string', 'max:100'], 'alamat' => ['required', 'string', 'max:5000'], 'telepon' => ['required', 'regex:/^62[1-9][0-9]{7,12}$/'], 'is_active' => ['required', 'boolean']])->validate();
+            if ($id && $business->is_demo) {
+                [, $reservedAdmin] = app(DemoIdentity::class)->pair($business);
+                abort_if($reservedAdmin->branch_id === $branch->id && ! $valid['is_active'], 403, 'Cabang Utama demo tidak dapat dinonaktifkan.');
+            }
             if ($id && ! $valid['is_active'] && Transaction::query()->where('branch_id', $id)->whereIn('status', ['DITERIMA', 'DIPROSES', 'SIAP_DIAMBIL'])->exists()) {
                 throw ValidationException::withMessages(['is_active' => 'Cabang masih memiliki cucian aktif. Selesaikan atau batalkan transaksi terlebih dahulu.']);
             }

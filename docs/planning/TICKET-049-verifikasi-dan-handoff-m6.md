@@ -2,7 +2,7 @@
 
 **Ticket:** `TICKET-049`
 
-**Status:** `REVIEW`
+**Status:** `READY`
 
 **Target Audience:** AI Developer Agents
 
@@ -19,7 +19,7 @@
 | Keamanan | Dua demo terpisah, nol outbound nyata, expiry/purge, dan cache tenant A→B harus terbukti. Regresi M1–M5 yang tersentuh wajib lulus. |
 | Handoff | Dokumentasi fitur berstatus Live hanya setelah implementasi dan verifikasi; tahap 7 staging/restore dan tahap 8 produksi tetap pekerjaan berikutnya. |
 | Keterlacakan | FR-M01–M06, FR-W01/W02; US-601–606; AND-12/25/26, DAT-02, SEC-02/04, ISO-01/02/05, KOM-03. |
-| Otorisasi | Pengguna meminta penyusunan tiket M6; implementasi belum diminta. |
+| Otorisasi | Pengguna mengotorisasi implementasi seluruh TICKET-044–049 pada 1 Oktober 2026. |
 
 ## 2. Objective
 
@@ -71,7 +71,7 @@ Expected: seluruh gate lulus; jalankan `npm run test:browser:m6` setelah script/
 
 ## 8. Completion Checklist
 
-- [ ] Otorisasi implementasi diterima dan status menjadi `READY`.
+- [x] Otorisasi implementasi diterima dan status menjadi `READY`.
 - [ ] Seluruh AC/kriteria M6 memiliki bukti dan batas di audit.
 - [ ] Gate lokal, browser, MySQL concurrency, dan CI remote lulus.
 - [ ] Feature docs/handoff diperbarui dan tiket `DONE` diarsipkan.

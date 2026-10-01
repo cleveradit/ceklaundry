@@ -6,6 +6,8 @@ use App\Services\AuthRateLimiter;
 use App\Services\BranchService;
 use App\Services\BusinessTransaction;
 use App\Services\CustomerMergeService;
+use App\Services\DemoPurgeService;
+use App\Services\DemoRateLimiter;
 use App\Services\ManualNotificationService;
 use App\Services\MasterSyncService;
 use App\Services\NotificationTransport;
@@ -17,6 +19,7 @@ use App\Services\TransactionStateMachine;
 use App\Tenancy\TenantContext;
 use Carbon\Carbon;
 use Illuminate\Contracts\Console\Kernel;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
@@ -35,6 +38,11 @@ try {
     if ($args['operation'] === 'limiter') {
         Carbon::setTestNow($args['now']);
         app(AuthRateLimiter::class)->attempt('login', 'parallel@example.test', '192.0.2.55');
+    } elseif ($args['operation'] === 'demo-limiter') {
+        Carbon::setTestNow($args['now']);
+        app(DemoRateLimiter::class)->check(Request::create('/', 'POST', [], [], [], ['REMOTE_ADDR' => $args['ip']]));
+    } elseif ($args['operation'] === 'demo-purge') {
+        app(DemoPurgeService::class)->purge($args['business']);
     } elseif ($args['operation'] === 'branch') {
         app(BranchService::class)->save($actor, ['nama' => 'Paralel', 'alamat' => 'Jalan Uji', 'telepon' => '081234567890', 'is_active' => true]);
     } elseif ($args['operation'] === 'deactivate') {

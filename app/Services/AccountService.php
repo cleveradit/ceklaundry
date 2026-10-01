@@ -62,6 +62,7 @@ class AccountService
         Validator::make(['password' => $password], ['password' => Input::passwordRules()])->validate();
         $this->withSecurityLock($user, function (User $fresh, ?Business $business) use ($current, $password, $sessionId) {
             abort_unless($fresh->is_active && (! $business || app(LifecycleService::class)->panelAllowed($business)), 403);
+            abort_if(app(DemoIdentity::class)->reserved($fresh, $business), 403, 'Akun demo yang dicadangkan tidak dapat mengganti password.');
             if ($fresh->role === 'admin') {
                 abort_unless(Branch::query()->whereKey($fresh->branch_id)->where('is_active', true)->exists(), 403, 'Cabang tidak aktif.');
             }
@@ -119,6 +120,7 @@ class AccountService
         app(BusinessTransaction::class)->run($actor, $target->business_id, function (Business $business, User $fresh) use ($targetId, $password) {
             $target = User::query()->where('business_id', $business->id)->lockForUpdate()->findOrFail($targetId);
             abort_unless(($fresh->role === 'developer' && $target->role === 'owner') || ($fresh->role === 'owner' && $target->role === 'admin'), 403);
+            abort_if(app(DemoIdentity::class)->reserved($target, $business), 403, 'Akun demo yang dicadangkan tidak dapat direset.');
             $target->forceFill(['password' => $password, 'must_change_password' => true])->save();
             $this->revoke($target);
             Audit::record($fresh, $business->id, 'akun.reset_password', ['user_id' => $target->id]);
@@ -130,6 +132,7 @@ class AccountService
         return app(BusinessTransaction::class)->run($actor, $actor->business_id, function (Business $business, User $fresh) use ($data, $id) {
             abort_unless($fresh->role === 'owner', 403);
             $target = $id ? User::query()->where('business_id', $business->id)->where('role', 'admin')->lockForUpdate()->findOrFail($id) : new User;
+            abort_if($id && app(DemoIdentity::class)->reserved($target, $business), 403, 'Akun demo yang dicadangkan tidak dapat diubah.');
             Gate::forUser($fresh)->authorize($id ? 'update' : 'create', $id ? $target : User::class);
             $valid = $this->validateAccount($data, $id);
             $assignment = Validator::make($data, ['branch_id' => ['required', 'integer'], 'is_active' => ['required', 'boolean']])->validate();

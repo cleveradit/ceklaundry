@@ -4,9 +4,10 @@
     $message = match ($status) {
         403 => 'Anda tidak memiliki akses. Akun, cabang, atau bisnis mungkin sudah tidak aktif.',
         404 => $missingReceipt ? 'Kode resi tidak ditemukan, periksa kembali resi Anda' : 'Halaman tidak ditemukan.',
+        410 => 'Demo berakhir. Buat demo baru dari halaman depan untuk mencoba lagi.',
         419 => 'Sesi berakhir. Muat ulang halaman dan coba lagi.',
         423 => 'Bisnis saat ini hanya dapat dibaca. Hubungi pengelola.',
-        429 => 'Terlalu banyak percobaan. Silakan coba lagi nanti.',
+        429 => request()->is('demo') ? 'Batas tiga demo per hari tercapai. Coba lagi besok.' : 'Terlalu banyak percobaan. Silakan coba lagi nanti.',
         default => 'Terjadi kendala. Silakan coba lagi.',
     };
 @endphp

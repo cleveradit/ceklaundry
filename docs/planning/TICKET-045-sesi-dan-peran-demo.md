@@ -2,7 +2,7 @@
 
 **Ticket:** `TICKET-045`
 
-**Status:** `REVIEW`
+**Status:** `READY`
 
 **Target Audience:** AI Developer Agents
 
@@ -19,7 +19,7 @@
 | Batas cabang | Admin reserved selalu Cabang Utama dan hanya dapat membaca/menulis data cabang itu; owner melihat kedua cabang. Akun reserved serta Cabang Utama tidak dapat dinonaktifkan atau dipindah. |
 | Tampilan | Semua halaman panel demo menampilkan banner `MODE DEMO` dan aksi `Lihat sebagai Admin` atau `Kembali sebagai Owner`. |
 | Keterlacakan | FR-M03; US-602 AC 1–4; AND-12, ISO-01/02/05, SEC-04, LOK-01. |
-| Otorisasi | Pengguna meminta penyusunan tiket M6; implementasi belum diminta. |
+| Otorisasi | Pengguna mengotorisasi implementasi seluruh TICKET-044–049 pada 1 Oktober 2026. |
 
 ## 2. Objective
 
@@ -68,7 +68,7 @@ Expected: isolasi tenant/cabang dan regenerasi sesi terbukti; catat hasil browse
 
 ## 8. Completion Checklist
 
-- [ ] Otorisasi implementasi diterima dan status menjadi `READY`.
+- [x] Otorisasi implementasi diterima dan status menjadi `READY`.
 - [ ] Switch, banner, dan perlindungan reserved diterapkan di server/UI.
 - [ ] Matriks penerimaan dan regresi otorisasi lulus.
 - [ ] Tidak ada akses lintas tenant/cabang melalui sesi atau ID klien.

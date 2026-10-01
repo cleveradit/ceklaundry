@@ -34,7 +34,7 @@ class ReminderScheduler
                     $setting = DB::table('business_settings')->where('business_id', $business->id)->first();
                     if ($tx->status !== 'SIAP_DIAMBIL' || ! $setting->reminder_enabled ||
                         $tx->reminder_count >= $setting->reminder_max_count ||
-                        ! app(OutboundGuard::class)->allows($business, $tx->waktu_siap_diambil)) {
+                        (! $business->is_demo && ! app(OutboundGuard::class)->allows($business, $tx->waktu_siap_diambil))) {
                         return;
                     }
                     $base = $tx->last_reminder_at ?: $tx->waktu_siap_diambil;

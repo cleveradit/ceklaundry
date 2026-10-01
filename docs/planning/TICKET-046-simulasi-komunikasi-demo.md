@@ -2,7 +2,7 @@
 
 **Ticket:** `TICKET-046`
 
-**Status:** `REVIEW`
+**Status:** `READY`
 
 **Target Audience:** AI Developer Agents
 
@@ -19,7 +19,7 @@
 | Log | Kanal otomatis yang benar-benar eligible dicatat masing-masing sebagai `ditekan_demo` dengan tipe, kanal, notification_key, dan snapshot tujuan; kanal tak eligible tidak membuat log. Simulasi manual memakai tipe/kanal/key/tujuan yang sesuai dan tidak mengonsumsi kuota API WA. |
 | Akun/verifikasi | Reset akun demo memberi respons generik tanpa token/job/send; verifikasi email transaksi hanya simulasi dan tidak mengaktifkan email tanpa verifikasi nyata. |
 | Keterlacakan | FR-M04; US-603 AC 1–2; AND-12/25, SEC-04, ISO-05, DAT-03, LOK-01. |
-| Otorisasi | Pengguna meminta penyusunan tiket M6; implementasi belum diminta. |
+| Otorisasi | Pengguna mengotorisasi implementasi seluruh TICKET-044–049 pada 1 Oktober 2026. |
 
 ## 2. Objective
 
@@ -68,7 +68,7 @@ Expected: nol panggilan transport eksternal dengan log simulasi yang lengkap; re
 
 ## 8. Completion Checklist
 
-- [ ] Otorisasi implementasi diterima dan status menjadi `READY`.
+- [x] Otorisasi implementasi diterima dan status menjadi `READY`.
 - [ ] Semua jalur komunikasi demo terpetakan dan disimulasikan.
 - [ ] Log eligible, nol outbound, dan deduplikasi terbukti.
 - [ ] Jalur tenant nyata serta restore hold tidak regresi.

@@ -17,16 +17,16 @@ M4 — loyalti dan promo diimplementasikan setelah otorisasi pengguna pada 30 Se
 
 TICKET-037–043 mengimplementasikan seluruh M5 berdasarkan [plan M5](../plan.md#9-m5--laporan-owner), diotorisasi pengguna pada 1 Oktober 2026. Seluruhnya DONE dan dicatat pada [arsip](Ticket-Implemented/index.md). [Audit M5](../audits/m5-verification.md) memuat AC, snapshot, browser dan kapasitas/performa. [CI commit kode akhir `691737e`](https://github.com/cleveradit/ceklaundry/actions/runs/36869810998) lulus pada branch `codex/m5-reports` ([PR #2](https://github.com/cleveradit/ceklaundry/pull/2)); kode sudah di `main`, belum deploy produksi.
 
-M6 — demo dan PWA direncanakan dalam TICKET-044–049 setelah permintaan pengguna pada 1 Oktober 2026. Seluruh tiket berstatus `REVIEW`: penyusunan tiket telah diminta, implementasi belum diotorisasi. TICKET-048 dapat dikerjakan terpisah dari jalur demo sesudah M1–M5, tetapi TICKET-049 menunggu semuanya.
+M6 — demo dan PWA direncanakan dalam TICKET-044–049 setelah permintaan pengguna pada 1 Oktober 2026. Pengguna mengotorisasi implementasi seluruh TICKET-044–049 pada 1 Oktober 2026; statusnya `READY` sampai selesai dan diverifikasi. TICKET-048 dapat dikerjakan terpisah dari jalur demo sesudah M1–M5, tetapi TICKET-049 menunggu semuanya.
 
 | Urutan | Ticket | Lingkup | Status | Dependensi |
 |---|---|---|---|---|
-| 1 | [TICKET-044](TICKET-044-provisioning-dan-fixture-demo.md) | Provisioning, fixture, batas demo/IP | `REVIEW` | M1–M5 |
-| 2 | [TICKET-045](TICKET-045-sesi-dan-peran-demo.md) | Sesi, banner, switch owner/admin | `REVIEW` | 044 |
-| 3 | [TICKET-046](TICKET-046-simulasi-komunikasi-demo.md) | Simulasi komunikasi dan log demo | `REVIEW` | 044 |
-| 4 | [TICKET-047](TICKET-047-expiry-dan-purge-demo.md) | Expiry, scheduler, purge aman | `REVIEW` | 044–046 |
-| 5 | [TICKET-048](TICKET-048-pwa-statis-dan-pembaruan-aman.md) | Install, cache statis, offline, update aman | `REVIEW` | M1–M5 |
-| 6 | [TICKET-049](TICKET-049-verifikasi-dan-handoff-m6.md) | Verifikasi 17 AC dan handoff | `REVIEW` | 044–048 |
+| 1 | [TICKET-044](TICKET-044-provisioning-dan-fixture-demo.md) | Provisioning, fixture, batas demo/IP | `READY` | M1–M5 |
+| 2 | [TICKET-045](TICKET-045-sesi-dan-peran-demo.md) | Sesi, banner, switch owner/admin | `READY` | 044 |
+| 3 | [TICKET-046](TICKET-046-simulasi-komunikasi-demo.md) | Simulasi komunikasi dan log demo | `READY` | 044 |
+| 4 | [TICKET-047](TICKET-047-expiry-dan-purge-demo.md) | Expiry, scheduler, purge aman | `READY` | 044–046 |
+| 5 | [TICKET-048](TICKET-048-pwa-statis-dan-pembaruan-aman.md) | Install, cache statis, offline, update aman | `READY` | M1–M5 |
+| 6 | [TICKET-049](TICKET-049-verifikasi-dan-handoff-m6.md) | Verifikasi 17 AC dan handoff | `READY` | 044–048 |
 
 Nomor berikutnya sesudah rangkaian M6 adalah `TICKET-050`.
 

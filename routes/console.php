@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Schedule;
 
 Schedule::command('app:expire-business-access')->everyMinute();
 Schedule::call(fn () => app(NotificationRecoveryService::class)->recover())->everyMinute();
+Schedule::command('app:purge-expired-demos')->everyMinute();
 Schedule::call(fn () => app(ReminderScheduler::class)->run())->dailyAt('08:00')->timezone('Asia/Jakarta');
 
 Artisan::command('inspire', function () {

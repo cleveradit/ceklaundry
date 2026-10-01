@@ -12,7 +12,8 @@
     "test:browser:m3": "node tests/browser/m3.cjs",
     "test:browser:m4": "node tests/browser/m4.cjs",
     "test:browser:m5": "node tests/browser/m5.cjs",
-    "test:browser:m5:performance": "node tests/browser/m5-performance.cjs"
+    "test:browser:m5:performance": "node tests/browser/m5-performance.cjs",
+    "test:browser:m6": "node tests/browser/m6.cjs"
   },
   "dependencies": {
     "@inertiajs/react": "^2.0.0",

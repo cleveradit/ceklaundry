@@ -20,7 +20,10 @@
             <div><input id="kode_resi" name="kode_resi" value="{{ old('kode_resi') }}" required minlength="6" maxlength="6" pattern="[A-Za-z2-9]{6}" autocomplete="off" placeholder="Contoh K7F3XA" aria-describedby="kode-bantuan"><button type="submit"><span class="lookup-spinner" aria-hidden="true"></span><span class="button-label">Cek Status</span></button></div>
             <small id="kode-bantuan">Kode terdiri dari 6 karakter pada resi.</small>
         </form>
-        <button class="demo-note" type="button" disabled aria-disabled="true">Coba Demo · belum tersedia</button>
+        <form action="/demo" method="post" class="demo-form">
+            @csrf
+            <button class="demo-note" type="submit">Coba Demo</button>
+        </form>
     </main>
     <footer>CekLaundry · Hubungi cabang laundry bila Anda kehilangan resi.</footer>
     <script>
@@ -42,6 +45,19 @@
                 label.textContent = 'Mencari...';
             });
             window.addEventListener('pageshow', reset);
+            const demoForm = document.querySelector('.demo-form');
+            const demoButton = demoForm?.querySelector('button[type="submit"]');
+            demoForm?.addEventListener('submit', () => {
+                demoButton.disabled = true;
+                demoButton.setAttribute('aria-busy', 'true');
+                demoButton.textContent = 'Menyiapkan demo…';
+            });
+            window.addEventListener('pageshow', () => {
+                if (!demoButton) return;
+                demoButton.disabled = false;
+                demoButton.removeAttribute('aria-busy');
+                demoButton.textContent = 'Coba Demo';
+            });
         })();
     </script>
 </body>

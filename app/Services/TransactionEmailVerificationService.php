@@ -11,17 +11,19 @@ use Illuminate\Support\Facades\Validator;
 
 class TransactionEmailVerificationService
 {
-    public function request(string $code, string $email, Request $request): void
+    public function request(string $code, string $email, Request $request): bool
     {
         $code = app(PublicReceiptService::class)->normalize($code);
         $email = Validator::make(['email' => $email], ['email' => ['required', 'email', 'max:150']])->validate()['email'];
         $this->limit($code, $email, $request);
         $parent = DB::table('transactions')->where('kode_resi', $code)->first();
         abort_unless($parent, 404);
-        DB::transaction(function () use ($parent, $code, $email) {
+        $demo = false;
+        DB::transaction(function () use ($parent, $code, $email, &$demo) {
             $business = Business::query()->lockForUpdate()->findOrFail($parent->business_id);
+            $demo = $business->is_demo;
             abort_unless(app(LifecycleService::class)->writable($business), 423, 'Bisnis saat ini hanya dapat dibaca.');
-            abort_unless(app(OutboundGuard::class)->allows($business, now()), 503, 'Email sementara tidak tersedia.');
+            abort_unless($business->is_demo || app(OutboundGuard::class)->allows($business, now()), 503, 'Email sementara tidak tersedia.');
             app(TenantContext::class)->run($business->id, function () use ($business, $parent, $code, $email) {
                 $visible = DB::table('transactions')->where('business_id', $business->id)->where('id', $parent->id)->first();
                 DB::table('customers')->where('business_id', $business->id)->where('id', $visible->customer_id)->lockForUpdate()->first();
@@ -39,6 +41,8 @@ class TransactionEmailVerificationService
                 app(NotificationDispatcher::class)->reserve($business, DB::table('transactions')->where('id', $tx->id)->first(), 'verifikasi_email', 'email');
             });
         }, 3);
+
+        return $demo;
     }
 
     public function confirm(string $code, int $version): void
@@ -48,6 +52,7 @@ class TransactionEmailVerificationService
         abort_unless($parent, 404);
         DB::transaction(function () use ($parent, $code, $version) {
             $business = Business::query()->lockForUpdate()->findOrFail($parent->business_id);
+            abort_if($business->is_demo, 403, 'Konfirmasi email tidak tersedia pada demo.');
             abort_unless(app(LifecycleService::class)->writable($business), 423, 'Bisnis saat ini hanya dapat dibaca.');
             app(TenantContext::class)->run($business->id, function () use ($business, $parent, $code, $version) {
                 $visible = DB::table('transactions')->where('business_id', $business->id)->where('id', $parent->id)->first();

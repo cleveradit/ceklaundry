@@ -2,7 +2,7 @@
 
 **Ticket:** `TICKET-047`
 
-**Status:** `REVIEW`
+**Status:** `READY`
 
 **Target Audience:** AI Developer Agents
 
@@ -20,7 +20,7 @@
 | Keamanan | Hanya `is_demo=true` yang sudah expired dapat dihapus; root lock dan validasi ulang, child sebelum parent, tanpa menonaktifkan FK checks. Dua purge paralel aman dan retry idempoten. |
 | Lingkup data | Hapus domain, sesi termasuk switched, reset token, jobs/failed_jobs bertanda business_id server, dan cache tenant; backup mengikuti retensi terpisah. |
 | Keterlacakan | FR-M05; US-604 AC 1,3; DAT-02, AND-12, SEC-02, ISO-05. |
-| Otorisasi | Pengguna meminta penyusunan tiket M6; implementasi belum diminta. |
+| Otorisasi | Pengguna mengotorisasi implementasi seluruh TICKET-044–049 pada 1 Oktober 2026. |
 
 ## 2. Objective
 
@@ -69,7 +69,7 @@ Expected: penolakan akses tidak bergantung pada cron; pembersihan MySQL memenuhi
 
 ## 8. Completion Checklist
 
-- [ ] Otorisasi implementasi diterima dan status menjadi `READY`.
+- [x] Otorisasi implementasi diterima dan status menjadi `READY`.
 - [ ] Guard expiry, command, dan scheduler diterapkan.
 - [ ] Semua kasus batas, outage, concurrency, dan isolasi lulus.
 - [ ] Tidak ada FK checks yang dinonaktifkan atau tenant nyata yang terhapus.

@@ -19,7 +19,7 @@ class ManualNotificationService
             $tx = DB::table('transactions')->where('business_id', $business->id)->where('id', $id)->lockForUpdate()->first();
             abort_unless($tx->status === 'SIAP_DIAMBIL', 422, 'Pengingat hanya tersedia ketika cucian siap diambil.');
             abort_unless($tx->notification_email, 422, 'Email transaksi belum tersedia.');
-            abort_unless(app(OutboundGuard::class)->allows($business, now()), 503, 'Pengiriman sementara tidak tersedia.');
+            abort_unless($business->is_demo || app(OutboundGuard::class)->allows($business, now()), 503, 'Pengiriman sementara tidak tersedia.');
             $key = sprintf('tx:%d:manual:pengingat:email:%s', $id, $data['request_key']);
             $hash = hash('sha256', $tx->notification_email.'|'.$id.'|pengingat');
             $existing = DB::table('notification_logs')->where('notification_key', $key)->first();
@@ -55,7 +55,7 @@ class ManualNotificationService
             $customer = DB::table('customers')->where('business_id', $business->id)->where('id', $visible->customer_id)->lockForUpdate()->first();
             $tx = DB::table('transactions')->where('business_id', $business->id)->where('id', $id)->lockForUpdate()->first();
             abort_if($type === 'pengingat' && $tx->status !== 'SIAP_DIAMBIL', 422, 'Pengingat hanya tersedia ketika cucian siap diambil.');
-            abort_unless(app(OutboundGuard::class)->allows($business, now()), 503, 'Tautan sementara tidak tersedia.');
+            abort_unless($business->is_demo || app(OutboundGuard::class)->allows($business, now()), 503, 'Tautan sementara tidak tersedia.');
             $key = sprintf('tx:%d:manual:%s:whatsapp_manual:%s', $id, $type, $uuid);
             $hash = hash('sha256', $type.'|'.$customer->no_hp.'|'.$id);
             $existing = DB::table('notification_logs')->where('notification_key', $key)->first();
@@ -68,12 +68,16 @@ class ManualNotificationService
                     'business_id' => $business->id, 'transaction_id' => $id, 'kanal' => 'whatsapp_manual',
                     'tipe' => $type, 'requested_by' => $fresh->id, 'is_manual' => true,
                     'notification_key' => $key, 'request_hash' => $hash, 'tujuan' => $customer->no_hp,
-                    'status' => 'dibuka_manual', 'attempt_count' => 0, 'created_at' => now(), 'updated_at' => now(),
+                    'status' => $business->is_demo ? 'ditekan_demo' : 'dibuka_manual', 'attempt_count' => 0, 'created_at' => now(), 'updated_at' => now(),
                 ]);
             }
             $paid = (int) DB::table('payments')->where('transaction_id', $id)->sum('jumlah');
 
-            return app(ManualReceiptLinkService::class)->link($tx, $customer->no_hp, $paid, $type);
+            $links = app(ManualReceiptLinkService::class);
+
+            return $business->is_demo
+                ? 'demo-preview:'.$links->message($tx, $paid, $type)
+                : $links->link($tx, $customer->no_hp, $paid, $type);
         });
     }
 }

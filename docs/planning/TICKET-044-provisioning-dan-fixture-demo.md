@@ -2,7 +2,7 @@
 
 **Ticket:** `TICKET-044`
 
-**Status:** `REVIEW`
+**Status:** `READY`
 
 **Target Audience:** AI Developer Agents
 
@@ -19,7 +19,7 @@
 | Fixture | Tepat 2 cabang, 3 layanan master yang tersedia di cabang, 1 owner, 1 admin Cabang Utama, 6 customer, 15 transaksi dengan status/payment/ledger dan timestamp sesuai PRD 9.4; promo dan loyalti aktif, DP aktif. Identitas sintetis memakai domain `.invalid` dan nomor sintetis. |
 | Batas | Maksimal 3 demo per IP per hari WIB, fixed window dan increment atomik termasuk request paralel; IP berasal dari trusted proxy yang dikonfigurasi. |
 | Keterlacakan | FR-M01/M02/M06; US-601 AC 1–3, US-604 AC 2; SEC-02/04, ISO-01/05, PLH-03, AND-12, LOK-01. |
-| Otorisasi | Pengguna meminta penyusunan tiket M6; implementasi belum diminta. |
+| Otorisasi | Pengguna mengotorisasi implementasi seluruh TICKET-044–049 pada 1 Oktober 2026. |
 
 ## 2. Objective
 
@@ -67,7 +67,7 @@ Expected: fixture dan batas lulus di MySQL 8.4, tanpa efek pada tenant nyata; ca
 
 ## 8. Completion Checklist
 
-- [ ] Otorisasi implementasi diterima dan status menjadi `READY`.
+- [x] Otorisasi implementasi diterima dan status menjadi `READY`.
 - [ ] Kontrak provisioning, fixture, dan limiter diimplementasikan.
 - [ ] Seluruh kasus penerimaan dan perintah verifikasi lulus.
 - [ ] Tidak ada pengiriman eksternal atau data lintas tenant.

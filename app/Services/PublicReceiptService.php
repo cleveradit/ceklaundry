@@ -21,6 +21,7 @@ class PublicReceiptService
         $tx = DB::table('transactions')->where('kode_resi', $code)->first();
         abort_unless($tx, 404, 'Kode resi tidak ditemukan, periksa kembali resi Anda');
         $business = Business::query()->findOrFail($tx->business_id);
+        abort_if($business->is_demo && ! app(LifecycleService::class)->publicAllowed($business), 410, 'Demo berakhir.');
         abort_unless(app(LifecycleService::class)->publicAllowed($business), 404, 'Kode resi tidak ditemukan, periksa kembali resi Anda');
         $branch = DB::table('branches')->where('business_id', $tx->business_id)->where('id', $tx->branch_id)->first();
         $customer = DB::table('customers')->where('business_id', $tx->business_id)->where('id', $tx->customer_id)->first();
@@ -50,7 +51,7 @@ class PublicReceiptService
             'stamps' => $stamps,
             'terbayar' => $paid, 'sisa' => max(0, (int) $tx->total_akhir - $paid),
             'demo' => (bool) $business->is_demo,
-            'email_form_enabled' => app(LifecycleService::class)->writable($business) && app(OutboundGuard::class)->allows($business, now()),
+            'email_form_enabled' => app(LifecycleService::class)->writable($business) && ($business->is_demo || app(OutboundGuard::class)->allows($business, now())),
         ];
     }
 }

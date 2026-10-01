@@ -38,7 +38,7 @@ return Application::configure(basePath: dirname(__DIR__))
             return false;
         });
         $exceptions->respond(function (Response $response) {
-            if (in_array($response->getStatusCode(), [403, 404, 409, 419, 423, 429, 500, 503])) {
+            if (in_array($response->getStatusCode(), [403, 404, 409, 410, 419, 423, 429, 500, 503])) {
                 if (request()->header('X-Inertia')) {
                     $response = Inertia::render('Error', ['status' => $response->getStatusCode()])->toResponse(request())->setStatusCode($response->getStatusCode());
                 } elseif (! request()->expectsJson()) {

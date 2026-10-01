@@ -13,9 +13,11 @@ class ReceiptEmailController extends Controller
     public function request(Request $request, string $kodeResi, ReceiptRateLimiter $limiter, TransactionEmailVerificationService $service)
     {
         $limiter->check($request);
-        $service->request($kodeResi, (string) $request->input('email'), $request);
+        $demo = $service->request($kodeResi, (string) $request->input('email'), $request);
 
-        return redirect('/t/'.$kodeResi)->with('success', 'Jika alamat dapat digunakan, tautan konfirmasi akan dikirim.');
+        return redirect('/t/'.$kodeResi)->with('success', $demo
+            ? 'Verifikasi email disimulasikan. Tidak ada email terkirim atau alamat baru yang diaktifkan.'
+            : 'Jika alamat dapat digunakan, tautan konfirmasi akan dikirim.');
     }
 
     public function show(Request $request, string $kodeResi, ReceiptRateLimiter $limiter)

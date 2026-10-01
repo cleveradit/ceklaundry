@@ -14,7 +14,7 @@ class NotificationDispatcher
     {
         $readyAt = $tx->waktu_siap_diambil ?? null;
         $guard = app(OutboundGuard::class);
-        if (! $guard->allows($business, now()) || (! $manual && $type !== 'verifikasi_email' && ! $guard->allows($business, $readyAt))) {
+        if (! $business->is_demo && (! $guard->allows($business, now()) || (! $manual && $type !== 'verifikasi_email' && ! $guard->allows($business, $readyAt)))) {
             return null;
         }
         $settings = DB::table('business_settings')->where('business_id', $business->id)->first();
@@ -52,8 +52,8 @@ class NotificationDispatcher
             return $existing->id;
         }
         $quotaMonth = null;
-        $status = 'tertunda';
-        if ($channel === 'whatsapp') {
+        $status = $business->is_demo ? 'ditekan_demo' : 'tertunda';
+        if ($channel === 'whatsapp' && ! $business->is_demo) {
             if (app(WaQuotaService::class)->available($business->id)) {
                 $quotaMonth = app(WaQuotaService::class)->month();
             } else {

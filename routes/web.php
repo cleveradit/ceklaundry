@@ -23,6 +23,8 @@ use App\Http\Controllers\Owner\PaymentSettingController;
 use App\Http\Controllers\Owner\PromoController;
 use App\Http\Controllers\Owner\ReportController;
 use App\Http\Controllers\Owner\ReportExportController;
+use App\Http\Controllers\Public\DemoController;
+use App\Http\Controllers\Public\DemoRoleController;
 use App\Http\Controllers\Public\ReceiptController;
 use App\Http\Controllers\Public\ReceiptEmailController;
 use Illuminate\Support\Facades\Route;
@@ -30,6 +32,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return response()->view('public.home')->header('Cache-Control', 'no-store')->header('Referrer-Policy', 'no-referrer')->header('X-Robots-Tag', 'noindex, nofollow');
 });
+Route::post('/demo', [DemoController::class, 'store']);
 Route::get('/check', [ReceiptController::class, 'search']);
 Route::get('/t/{kodeResi}', [ReceiptController::class, 'show']);
 Route::get('/t/{kodeResi}/print', [ReceiptController::class, 'print']);
@@ -40,6 +43,7 @@ Route::post('/t/{kodeResi}/email/confirm', [ReceiptEmailController::class, 'conf
 require __DIR__.'/auth.php';
 
 Route::middleware(['auth', 'tenant', 'business.access', 'password.changed'])->group(function () {
+    Route::post('/demo/role', [DemoRoleController::class, 'switch']);
     Route::middleware('role:developer')->group(function () {
         Route::get('/dev', [BusinessController::class, 'index']);
         Route::post('/dev/businesses', [BusinessController::class, 'store']);
