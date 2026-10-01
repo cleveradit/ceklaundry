@@ -12,8 +12,8 @@ export default function RevenueChart({ buckets }: { buckets: Bucket[] }) {
       <line x1="35" y1="180" x2="685" y2="180" stroke="#b7c7b8" />
       <polyline points={points} fill="none" stroke="#12634f" strokeWidth="3" />
       {buckets.length <= 31 && buckets.map((bucket, index) => <circle key={bucket.date} cx={x(index)} cy={y(bucket.total)} r="4" fill="#12634f"><title>{bucket.date}: {rupiah(bucket.total)}</title></circle>)}
-      <text x="35" y="207" fontSize="14" fill="#466151">{buckets[0]?.date}</text><text x="685" y="207" textAnchor="end" fontSize="14" fill="#466151">{buckets.at(-1)?.date}</text>
     </svg>
+    <div className="chart-period"><span>{buckets[0]?.date}</span><span>{buckets.at(-1)?.date}</span></div>
     <details><summary>Angka per periode ({buckets.length})</summary><div className="revenue-buckets">{buckets.map(bucket => <div className="data-row" key={bucket.date}><span>{bucket.date}</span><strong>{rupiah(bucket.total)}</strong></div>)}</div></details>
   </section>;
 }

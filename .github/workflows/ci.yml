@@ -63,6 +63,7 @@ jobs:
       - name: M5 dashboard performance at design capacity
         run: |
           docker compose -f compose.yaml -f compose.qa.yaml exec -T qa php tests/Support/m5-capacity-seed.php
+          docker compose -f compose.yaml -f compose.qa.yaml cp qa:/app/storage/app/private/m5-capacity-fixture.json test-results/m5-capacity-fixture.json
           npm run test:browser:m5:performance
       - name: Browser screenshots and print preview
         if: always()
