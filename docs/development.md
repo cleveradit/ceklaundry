@@ -19,6 +19,8 @@ docker compose exec app php artisan app:bootstrap-developer
 
 Buka `http://localhost:8088/login`. Command terakhir meminta nama, email dan password tersembunyi (minimal12 karakter, maksimal72 byte UTF-8); tidak ada akun/password bawaan. Developer wajib mengganti password saat masuk, lalu dapat membuat bisnis/owner. Owner membuat cabang, admin, master, dan menyalin master lewat pratinjau. Setelah itu operator dapat membuat pelanggan/transaksi, mencatat pembayaran, mengubah status dan mencetak resi; owner mengatur DP di `/owner/settings/payment`, notifikasi di `/owner/settings/notifications`, loyalti di `/owner/settings/loyalty`, serta promo di `/owner/promos`. Developer mengatur transport per bisnis di `/dev/businesses/{id}/notifications`. Database development tidak diisi fixture QA.
 
+Owner memantau lima kartu harian di `/owner`, riwayat/filter/CSV di `/owner/reports/history`, grafik pendapatan menurut payment di `/owner/reports/revenue`, dan sisa tagihan di `/owner/reports/receivables`. Definisi angka serta snapshot baca khusus ada di [fitur M5](features/m5-laporan-owner.md).
+
 Untuk mengecek resi secara manual, buat transaksi dari panel lalu gunakan kode enam karakter yang muncul pada detail/cetakan resinya di halaman depan atau `/t/{kode}`. Teks contoh pada kolom pencarian bukan resi yang terdaftar. Database development tidak diisi transaksi contoh; kode yang belum ada menampilkan halaman 404 dengan form untuk mencoba lagi.
 
 `bin/setup-env` menghasilkan APP_KEY dan dua password database acak, izin0600, tidak mencetak rahasia, dan menolak menimpa `.env` existing. Bila port sudah digunakan, ubah `APP_PORT` serta `APP_URL` pada `.env`; jangan hentikan layanan lain. `.env.example` tidak mengandung rahasia. Jangan mencetak `docker compose config` tanpa `--quiet`.
@@ -79,10 +81,18 @@ npm run test:browser:m3
 docker compose -f compose.yaml -f compose.qa.yaml exec -T qa php tests/Support/m4-browser-seed.php
 docker compose -f compose.yaml -f compose.qa.yaml cp qa:/app/storage/app/private/m4-browser-fixture.json test-results/m4-browser-fixture.json
 npm run test:browser:m4
+docker compose -f compose.yaml -f compose.qa.yaml exec -T qa php tests/Support/m5-browser-seed.php
+docker compose -f compose.yaml -f compose.qa.yaml cp qa:/app/storage/app/private/m5-browser-fixture.json test-results/m5-browser-fixture.json
+npm run test:browser:m5
+docker compose -f compose.yaml -f compose.qa.yaml exec -T qa php tests/Support/m5-capacity-seed.php
+docker compose -f compose.yaml -f compose.qa.yaml cp qa:/app/storage/app/private/m5-capacity-fixture.json test-results/m5-capacity-fixture.json
+npm run test:browser:m5:performance
 docker compose -f compose.yaml -f compose.qa.yaml stop qa
 ```
 
-Node22 lokal diperlukan hanya untuk browser runner ini; CI memasangnya otomatis. Alternatif Windows memakai Node bundel dan Chrome terpasang, `CHROME_PATH` menunjuk executable, `BROWSER_FIXTURE`, `M2_BROWSER_FIXTURE`, dan `M4_BROWSER_FIXTURE` menunjuk file fixture masing-masing. M3 memakai fixture M2 dan dijalankan sesudah M2 tanpa seed ulang; M4 seed memakai data M2 dan harus dijalankan setelah runner M3. URL default QA `http://127.0.0.1:8089`; bisa diganti lewat BROWSER_URL. M2 seed menjalankan `migrate:fresh` lagi dan harus dilakukan setelah runner M1, bukan saat backend suite masih berjalan. Jangan jalankan QA pada DB development. Fixture menghasilkan kredensial sementara hanya dalam file privat/ignored; screenshot di `test-results/` tidak berisi password. CI hanya mengunggah PNG, tidak file credential. Hapus file fixture privat setelah QA. Ulangi migrasi kosong database uji melalui container QA bila diperlukan, bukan volume development.
+Node22 lokal diperlukan hanya untuk browser runner ini; CI memasangnya otomatis. Alternatif Windows memakai Node bundel dan Chrome terpasang, `CHROME_PATH` menunjuk executable, `BROWSER_FIXTURE`, `M2_BROWSER_FIXTURE`, `M4_BROWSER_FIXTURE`, dan `M5_BROWSER_FIXTURE` menunjuk file fixture masing-masing. M3 memakai fixture M2 dan dijalankan sesudah M2 tanpa seed ulang; M4 dan M5 memakai data M2 dan dijalankan sesudah runner sebelumnya. URL default QA `http://127.0.0.1:8089`; bisa diganti lewat BROWSER_URL. M2 seed menjalankan `migrate:fresh` lagi dan harus dilakukan setelah runner M1, bukan saat backend suite masih berjalan. Jangan jalankan QA pada DB development. Fixture menghasilkan kredensial sementara hanya dalam file privat/ignored; screenshot di `test-results/` tidak berisi password. CI hanya mengunggah PNG, PDF cetak, dan JSON performa tanpa credential. Hapus file fixture privat setelah QA. Ulangi migrasi kosong database uji melalui container QA bila diperlukan, bukan volume development.
+
+Fixture kapasitas M5 hanya menerima APP_ENV testing/database `ceklaundry_test`, menambah data hingga tepat 200 bisnis/50.000 transaksi, dan exit nonzero bila gagal. Runner membaca metadata `M5_CAPACITY_FIXTURE` (default `test-results/m5-capacity-fixture.json`) dan memeriksa jumlah sebelum 20 navigasi dashboard sesudah login dengan profil 4 Mbps/1 Mbps, latency 150 ms dan CPU 4×. P95 wajib `<2500 ms`, hasil di `test-results/m5-performance.json`. Ini pengukuran browser terkontrol, bukan benchmark VPS produksi; [audit M5](audits/m5-verification.md) mencatat hasil lokal/CI. QA kapasitas dilakukan terakhir karena memperbesar database uji; suite backend berikutnya akan menghapus fixture.
 
 ## Pemulihan seluruh outbound
 

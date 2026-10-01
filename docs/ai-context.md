@@ -2,9 +2,9 @@
 
 Baca dokumen ini sebelum merencanakan atau mengubah proyek. Urutan orientasi: [index.md](index.md) → [architecture.md](architecture.md) → [data-model.md](data-model.md) → [user-stories.md](initiate-file/user-stories.md) dan [nfr.md](initiate-file/nfr.md).
 
-**Tahap proyek:** M1–M4 diimplementasikan. Bukti aktual dan batasnya ada di [audit M1](audits/m1-verification.md), [audit M2](audits/m2-verification.md), [audit M3](audits/m3-verification.md), dan [audit M4](audits/m4-verification.md). M5–M6 belum tersedia; jangan menyebut seluruh produk selesai.
+**Tahap proyek:** M1–M5 diimplementasikan; M5 berada di branch `codex/m5-reports` ([PR #2](https://github.com/cleveradit/ceklaundry/pull/2)). Bukti aktual dan batasnya ada di [audit M1](audits/m1-verification.md), [audit M2](audits/m2-verification.md), [audit M3](audits/m3-verification.md), [audit M4](audits/m4-verification.md), dan [audit M5](audits/m5-verification.md). M6 belum tersedia; jangan menyebut seluruh produk selesai.
 
-## 1. Tech Stack (runtime M1–M4)
+## 1. Tech Stack (runtime M1–M5)
 
 | Lapisan | Pilihan dalam rancangan |
 |---|---|

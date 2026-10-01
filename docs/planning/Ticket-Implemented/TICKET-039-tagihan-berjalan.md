@@ -1,16 +1,16 @@
 # Implementation Plan: TICKET-039 (Daftar tagihan berjalan)
 
-**Ticket:** `TICKET-039`  
-**Status:** `READY`
-**Target Audience:** AI Developer Agents  
-**Depends On:** `TICKET-037`  
+**Ticket:** `TICKET-039`
+**Status:** `DONE`
+**Target Audience:** AI Developer Agents
+**Depends On:** `TICKET-037`
 **Tahap:** M5 — sisa tagihan
 
 ## 1. Business Decision Snapshot
 
 | Item | Approved Value |
 |---|---|
-| Sumber | [Plan M5](../plan.md#9-m5--laporan-owner), [PRD 7.5/7.10 dan FR-O12](../initiate-file/prd.md), [US-503](../initiate-file/user-stories.md) |
+| Sumber | [Plan M5](../../plan.md#9-m5--laporan-owner), [PRD 7.5/7.10 dan FR-O12](../../initiate-file/prd.md), [US-503](../../initiate-file/user-stories.md) |
 | Keterlacakan | US-503 AC1; AND-24, ISO-01/02/05, SEC-05, KIN-04, LOK-01/03 |
 | Tagihan | Hanya transaksi aktif `DITERIMA`/`DIPROSES`/`SIAP_DIAMBIL` dengan status bayar `BELUM_BAYAR` atau `DP`; sisa positif = `total_akhir - SUM(payments.jumlah)`. |
 | Historis | `SUDAH_DIAMBIL` dan `DIBATALKAN` tidak muncul; cabang nonaktif tidak menghapus tagihan historis yang masih sah. |
@@ -37,11 +37,11 @@ Owner melihat transaksi yang masih berada di laundry dan belum lunas, jumlah sis
 
 | Case | Input | Expected Result | Status |
 |---|---|---|---|
-| Tagihan | Total Rp74.500, payment Rp30.000 | Sisa Rp44.500; total keseluruhan bertambah Rp44.500 | `[ ]` |
-| Banyak payment | Dua cicilan pada satu transaksi dan item lebih dari satu | Satu baris; sisa dihitung satu kali | `[ ]` |
-| Status terminal | `SUDAH_DIAMBIL`, `DIBATALKAN`, Rp0 `LUNAS` | Tidak muncul dan tidak menambah total | `[ ]` |
-| Batas cabang | Cabang nonaktif sendiri, cabang bisnis lain | Cabang sendiri tetap terbaca; cabang asing ditolak | `[ ]` |
-| Akses gagal | Admin/developer membuka route owner | 403 tanpa daftar atau total | `[ ]` |
+| Tagihan | Total Rp74.500, payment Rp30.000 | Sisa Rp44.500; total keseluruhan bertambah Rp44.500 | `[x]` |
+| Banyak payment | Dua cicilan pada satu transaksi dan item lebih dari satu | Satu baris; sisa dihitung satu kali | `[x]` |
+| Status terminal | `SUDAH_DIAMBIL`, `DIBATALKAN`, Rp0 `LUNAS` | Tidak muncul dan tidak menambah total | `[x]` |
+| Batas cabang | Cabang nonaktif sendiri, cabang bisnis lain | Cabang sendiri tetap terbaca; cabang asing ditolak | `[x]` |
+| Akses gagal | Admin/developer membuka route owner | 403 tanpa daftar atau total | `[x]` |
 
 ## 6. Verification Commands
 
@@ -58,6 +58,10 @@ Expected: daftar dan total cocok penjumlahan sisa positif transaksi aktif dalam 
 
 ## 8. Completion Checklist
 
-- [ ] Otorisasi implementasi tercatat dan status menjadi `READY`.
-- [ ] AC US-503 dan isolasi lulus.
-- [ ] Hasil verifikasi dicatat.
+- [x] Otorisasi implementasi tercatat dan status menjadi `READY`.
+- [x] AC US-503 dan isolasi lulus.
+- [x] Hasil verifikasi dicatat.
+
+## 9. Hasil verifikasi
+
+Diimplementasikan pada branch `codex/m5-reports`, [PR #2](https://github.com/cleveradit/ceklaundry/pull/2). Matriks AC, kasus batas dan batas bukti ada di [audit M5](../../audits/m5-verification.md). Suite MySQL penuh lulus 126 tes/1095 assertion, Pint 207 file, frontend dan browser M1–M5 lulus. [CI `691737e`](https://github.com/cleveradit/ceklaundry/actions/runs/36869810998) lulus seluruh gate; P95 dashboard 1716 ms pada dataset 200 bisnis/50.000 transaksi. Belum merge/deploy produksi.

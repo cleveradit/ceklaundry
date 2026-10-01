@@ -1,16 +1,16 @@
 # Implementation Plan: TICKET-043 (Verifikasi terpadu dan handoff M5)
 
-**Ticket:** `TICKET-043`  
-**Status:** `READY`
-**Target Audience:** AI Developer Agents  
-**Depends On:** `TICKET-037`–`TICKET-042`  
+**Ticket:** `TICKET-043`
+**Status:** `DONE`
+**Target Audience:** AI Developer Agents
+**Depends On:** `TICKET-037`–`TICKET-042`
 **Tahap:** M5 — kriteria selesai
 
 ## 1. Business Decision Snapshot
 
 | Item | Approved Value |
 |---|---|
-| Sumber | [Plan M5](../plan.md#9-m5--laporan-owner), [PRD 7.5/7.10](../initiate-file/prd.md), [US-501–506](../initiate-file/user-stories.md), [audit M4](../audits/m4-verification.md) |
+| Sumber | [Plan M5](../../plan.md#9-m5--laporan-owner), [PRD 7.5/7.10](../../initiate-file/prd.md), [US-501–506](../../initiate-file/user-stories.md), [audit M4](../../audits/m4-verification.md) |
 | Keterlacakan | Seluruh AC US-501–506 dan empat kriteria selesai M5; AND-24, ISO-01/02/03/05, SEC-04/05, KIN-03/04, LOK-01/03, UX-03/04 |
 | Bukti | Pisahkan uji feature/integrasi MySQL, browser desktop/HP, CSV nyata, query/performa, dan CI remote. Catat batas bukti yang belum diperiksa. |
 | Handoff | Fitur M5 baru dinyatakan Live sesudah matriks AC, regresi, dan hasil verifikasi aktual tercatat; M6 tetap pekerjaan terpisah. |
@@ -39,13 +39,13 @@ Membuktikan riwayat, pendapatan, tagihan, dashboard, grafik, dan CSV menghasilka
 
 | Case | Input | Expected Result | Status |
 |---|---|---|---|
-| Lintas bulan/batal | DP Juli, lunas Agustus, batal September | Juli/Agustus mengikuti payment; setelah batal keduanya mengecualikan transaksi; tidak ada refund September | `[ ]` |
-| Batas/filter | WIB 00.00, tujuh hari, cabang nonaktif, status batal | Riwayat/CSV memakai waktu masuk; pendapatan/grafik memakai waktu payment; cabang/status tepat | `[ ]` |
-| Agregat | Banyak item kg dengan minimum dan beberapa payment | Kg aktual, pendapatan, tagihan, bucket tidak berlipat | `[ ]` |
-| Snapshot | Payment/cancel/merge beradu baca/export | Tiap respons memakai satu keadaan baca konsisten | `[ ]` |
-| Keamanan | Nama formula, admin/developer, owner tenant lain | CSV aman, route owner saja, tidak ada data lintas tenant | `[ ]` |
-| Antarmuka | Browser desktop/HP, rentang kosong, bucket nol | Filter, kartu, grafik/tabel, unduhan terbaca dan selaras | `[ ]` |
-| Handoff | Suite, CI, audit, feature docs | Setiap klaim bertaut bukti; M6 tidak diklaim selesai | `[ ]` |
+| Lintas bulan/batal | DP Juli, lunas Agustus, batal September | Juli/Agustus mengikuti payment; setelah batal keduanya mengecualikan transaksi; tidak ada refund September | `[x]` |
+| Batas/filter | WIB 00.00, tujuh hari, cabang nonaktif, status batal | Riwayat/CSV memakai waktu masuk; pendapatan/grafik memakai waktu payment; cabang/status tepat | `[x]` |
+| Agregat | Banyak item kg dengan minimum dan beberapa payment | Kg aktual, pendapatan, tagihan, bucket tidak berlipat | `[x]` |
+| Snapshot | Payment/cancel/merge beradu baca/export | Tiap respons memakai satu keadaan baca konsisten | `[x]` |
+| Keamanan | Nama formula, admin/developer, owner tenant lain | CSV aman, route owner saja, tidak ada data lintas tenant | `[x]` |
+| Antarmuka | Browser desktop/HP, rentang kosong, bucket nol | Filter, kartu, grafik/tabel, unduhan terbaca dan selaras | `[x]` |
+| Handoff | Suite, CI, audit, feature docs | Setiap klaim bertaut bukti; M6 tidak diklaim selesai | `[x]` |
 
 ## 6. Verification Commands
 
@@ -67,7 +67,11 @@ Expected: semua gate lulus; browser M5, snapshot MySQL, query/performa, CSV, dan
 
 ## 8. Completion Checklist
 
-- [ ] Otorisasi implementasi tercatat dan status menjadi `READY`.
-- [ ] Seluruh AC/kriteria M5 memiliki bukti dan batas di audit.
-- [ ] Gate lokal, browser, dan CI remote lulus; URL run dicatat.
-- [ ] Dokumentasi fitur/handoff diperbarui dan tiket `DONE` diarsipkan.
+- [x] Otorisasi implementasi tercatat dan status menjadi `READY`.
+- [x] Seluruh AC/kriteria M5 memiliki bukti dan batas di audit.
+- [x] Gate lokal, browser, dan CI remote lulus; URL run dicatat.
+- [x] Dokumentasi fitur/handoff diperbarui dan tiket `DONE` diarsipkan.
+
+## 9. Hasil verifikasi
+
+Diimplementasikan pada branch `codex/m5-reports`, [PR #2](https://github.com/cleveradit/ceklaundry/pull/2). Matriks AC, kasus batas dan batas bukti ada di [audit M5](../../audits/m5-verification.md). Suite MySQL penuh lulus 126 tes/1095 assertion, Pint 207 file, frontend dan browser M1–M5 lulus. [CI `691737e`](https://github.com/cleveradit/ceklaundry/actions/runs/36869810998) lulus seluruh gate; P95 dashboard 1716 ms pada dataset 200 bisnis/50.000 transaksi. Belum merge/deploy produksi.

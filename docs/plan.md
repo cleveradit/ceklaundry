@@ -224,10 +224,12 @@ Bukti dan batas tiap kriteria M4 dicatat di [audit verifikasi M4](audits/m4-veri
 
 ### Kriteria selesai
 
-- [ ] DP bulan Juli dan pelunasan bulan Agustus masuk ke periode pembayaran masing-masing.
-- [ ] Pembatalan kemudian hari memengaruhi laporan sesuai definisi yang ditetapkan.
-- [ ] Batas hari WIB, filter cabang, dashboard, grafik, dan CSV menghasilkan angka yang selaras.
-- [ ] Owner tidak dapat melihat laporan bisnis lain; admin tidak mendapat akses laporan khusus owner.
+- [x] DP bulan Juli dan pelunasan bulan Agustus masuk ke periode pembayaran masing-masing.
+- [x] Pembatalan kemudian hari memengaruhi laporan sesuai definisi yang ditetapkan.
+- [x] Batas hari WIB, filter cabang, dashboard, grafik, dan CSV menghasilkan angka yang selaras.
+- [x] Owner tidak dapat melihat laporan bisnis lain; admin tidak mendapat akses laporan khusus owner.
+
+Bukti penyelesaian M5: [audit verifikasi M5](audits/m5-verification.md), termasuk snapshot MySQL, browser, fixture kapasitas dan hasil CI. Implementasi berada di branch `codex/m5-reports` ([PR #2](https://github.com/cleveradit/ceklaundry/pull/2)); M6 dan verifikasi produksi tetap terpisah.
 
 **Yang diperiksa sendiri:** buat data pembayaran lintas tanggal/bulan, cocokkan angka manual, lalu bandingkan tabel, grafik, dan CSV.
 

@@ -1,6 +1,6 @@
 # Architecture Map — CekLaundry
 
-**Status:** fondasi M1 dan operasional inti M2 diimplementasikan; lihat [verifikasi M1](audits/m1-verification.md) dan [verifikasi M2](audits/m2-verification.md). Spesifikasi keseluruhan tetap [arsitektur sumber](initiate-file/architecture.md). M3–M6 masih rancangan.
+**Status:** M1–M5 diimplementasikan pada runtime lokal/CI; bukti milestone terakhir ada di [verifikasi M5](audits/m5-verification.md). M5 berada di branch `codex/m5-reports`. Spesifikasi keseluruhan tetap [arsitektur sumber](initiate-file/architecture.md). M6 masih rancangan.
 
 Monolit Laravel12, PHP8.4 dan MySQL8.4/InnoDB. Panel Inertia/React/TypeScript strict memakai Vite tanpa SSR; halaman depan Blade dengan CSS terpisah tidak mengunduh React.
 
@@ -20,6 +20,9 @@ Monolit Laravel12, PHP8.4 dan MySQL8.4/InnoDB. Panel Inertia/React/TypeScript st
 | `PublicReceiptService`, `ReceiptRateLimiter`, `ReceiptPrintService` | DTO publik tersamar, limiter bersama 30/IP/menit, resi thermal dan QR SVG lokal |
 | `ManualReceiptLinkService` | Tautan wa.me manual; tidak melakukan pengiriman server atau menulis log M2 |
 | `SendPasswordReset`, `OutboundGuard` | Job terenkripsi, token+queue satu transaksi, SMTP global sekali, hold/cutoff |
+| `NotificationDispatcher`, job notifikasi dan recovery | Email siap/pengingat, WA opsional, kuota, recipient snapshot, pengiriman manual dan restore hold M3 |
+| `LoyaltySettingsService`, `LoyaltyLedgerService`, `PromoService`, `PricingService` | Pengaturan/ledger stempel, penukaran dan kompensasi, promo cabang serta snapshot harga M4 |
+| `OwnerReportService`, `ReportSnapshot`, controller Owner | Riwayat, payment revenue, tagihan, kartu dashboard, bucket grafik dan CSV M5; snapshot READ ONLY khusus |
 | `resources/js/Pages/Management.tsx`, `Owner/Sync.tsx` | Form reusable per resource, daftar, konfirmasi dan pratinjau |
 | `NoStore`, konfigurasi Inertia | No-store/no-referrer, history terenkripsi, clear history setelah logout |
 | Docker app/web/db/worker/cron | Runtime lokal dan CI; panduan [development](development.md) |
@@ -32,4 +35,6 @@ Business write: autentikasi → identitas terkini → root lock → cek ulang ak
 
 Alur M2 memakai BusinessTransaction dan root lock yang sama dengan M1. Semua mutasi harga, pelanggan, transaksi, pembayaran dan status memeriksa aktor/cabang terbaru lalu menulis secara atomik. Pembacaan publik mencari kode resi global, membatasi per IP sebelum lookup, dan menyusun DTO tersamar terpisah dari cetak panel.
 
-Belum diimplementasikan: notifikasi pelanggan otomatis dan pencatatan WA manual M3, loyalti/promo aktif M4, laporan M5, provisioning demo dan PWA M6.
+Pembacaan M5 memakai koneksi khusus `owner_reports` dengan REPEATABLE READ dan transaksi READ ONLY, kemudian purge dalam finally; koneksi write BusinessTransaction tetap READ COMMITTED. Seluruh query dalam satu respons, termasuk chunk CSV, melihat snapshot yang sama. Agregat payment per transaksi dilakukan sebelum join baris, sementara kg memakai query item terpisah. Pendapatan mengikuti waktu payment dan status transaksi terkini; pembatalan dapat mengubah laporan periode lampau. Tidak ada cache agregat lintas request.
+
+Belum diimplementasikan: provisioning demo dan PWA M6. Batas provider/restore staging tetap mengikuti [audit M3](audits/m3-verification.md).

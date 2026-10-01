@@ -1,16 +1,16 @@
 # Implementation Plan: TICKET-040 (Dashboard harian owner)
 
-**Ticket:** `TICKET-040`  
-**Status:** `READY`
-**Target Audience:** AI Developer Agents  
-**Depends On:** `TICKET-038`, `TICKET-039`  
+**Ticket:** `TICKET-040`
+**Status:** `DONE`
+**Target Audience:** AI Developer Agents
+**Depends On:** `TICKET-038`, `TICKET-039`
 **Tahap:** M5 — kartu ringkasan owner
 
 ## 1. Business Decision Snapshot
 
 | Item | Approved Value |
 |---|---|
-| Sumber | [Plan M5](../plan.md#9-m5--laporan-owner), [PRD FR-O13/7.10](../initiate-file/prd.md), [US-504](../initiate-file/user-stories.md) |
+| Sumber | [Plan M5](../../plan.md#9-m5--laporan-owner), [PRD FR-O13/7.10](../../initiate-file/prd.md), [US-504](../../initiate-file/user-stories.md) |
 | Keterlacakan | US-504 AC1–2; AND-24, ISO-01/02/05, SEC-05, KIN-03/04, LOK-01/03, UX-03/04 |
 | Kartu | Transaksi dan kg aktual nonbatal yang masuk hari ini; pendapatan payment hari ini; jumlah menumpuk; total tagihan berjalan. Semua lintas cabang owner. |
 | Menumpuk | `SIAP_DIAMBIL` dengan `waktu_siap_diambil <= now - reminder_first_days × 24 jam`; batas tetap berlaku ketika saklar pengingat mati. |
@@ -37,11 +37,11 @@ Halaman `/owner` menjadi ringkasan operasional dan keuangan harian yang dapat di
 
 | Case | Input | Expected Result | Status |
 |---|---|---|---|
-| Hari ini | Transaksi nonbatal 2 kg dengan minimum 3 kg, dua payment, transaksi batal | Jumlah dan kg menghitung transaksi nonbatal sekali; kg 2,0; pendapatan menurut payment sah | `[ ]` |
-| Menumpuk | `reminder_first_days=2`, siap tepat 48 jam dan satu detik lebih muda | Hanya yang mencapai 48 jam masuk, meski reminder off | `[ ]` |
-| Tagihan | DP Rp30.000 dari Rp74.500 | Kartu tagihan cocok Rp44.500 pada daftar TICKET-039 | `[ ]` |
-| Batas tanggal | Aktivitas tepat 00.00 WIB | Masuk kartu hari yang benar | `[ ]` |
-| Akses gagal | Admin/developer, owner bisnis lain | Route owner ditolak; data tenant lain tidak memengaruhi kartu | `[ ]` |
+| Hari ini | Transaksi nonbatal 2 kg dengan minimum 3 kg, dua payment, transaksi batal | Jumlah dan kg menghitung transaksi nonbatal sekali; kg 2,0; pendapatan menurut payment sah | `[x]` |
+| Menumpuk | `reminder_first_days=2`, siap tepat 48 jam dan satu detik lebih muda | Hanya yang mencapai 48 jam masuk, meski reminder off | `[x]` |
+| Tagihan | DP Rp30.000 dari Rp74.500 | Kartu tagihan cocok Rp44.500 pada daftar TICKET-039 | `[x]` |
+| Batas tanggal | Aktivitas tepat 00.00 WIB | Masuk kartu hari yang benar | `[x]` |
+| Akses gagal | Admin/developer, owner bisnis lain | Route owner ditolak; data tenant lain tidak memengaruhi kartu | `[x]` |
 
 ## 6. Verification Commands
 
@@ -58,6 +58,10 @@ Expected: semua kartu sesuai PRD 7.10 dan data laporan, tanpa penggandaan berat/
 
 ## 8. Completion Checklist
 
-- [ ] Otorisasi implementasi tercatat dan status menjadi `READY`.
-- [ ] AC US-504, kinerja, dan isolasi lulus.
-- [ ] Hasil verifikasi dicatat.
+- [x] Otorisasi implementasi tercatat dan status menjadi `READY`.
+- [x] AC US-504, kinerja, dan isolasi lulus.
+- [x] Hasil verifikasi dicatat.
+
+## 9. Hasil verifikasi
+
+Diimplementasikan pada branch `codex/m5-reports`, [PR #2](https://github.com/cleveradit/ceklaundry/pull/2). Matriks AC, kasus batas dan batas bukti ada di [audit M5](../../audits/m5-verification.md). Suite MySQL penuh lulus 126 tes/1095 assertion, Pint 207 file, frontend dan browser M1–M5 lulus. [CI `691737e`](https://github.com/cleveradit/ceklaundry/actions/runs/36869810998) lulus seluruh gate; P95 dashboard 1716 ms pada dataset 200 bisnis/50.000 transaksi. Belum merge/deploy produksi.

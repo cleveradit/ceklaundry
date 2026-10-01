@@ -1,6 +1,6 @@
 # CekLaundry — Documentation Hub
 
-CekLaundry dirancang sebagai aplikasi pengelolaan laundry multi-bisnis: operasional cabang, status cucian publik, pembayaran, notifikasi, promo/loyalti, laporan, demo, dan PWA. **Status saat ini: M1–M4 diimplementasikan dan diverifikasi pada runtime lokal/CI; M5–M6 belum tersedia.** Pengiriman provider nyata dan restore backup fisik memerlukan verifikasi staging.
+CekLaundry dirancang sebagai aplikasi pengelolaan laundry multi-bisnis: operasional cabang, status cucian publik, pembayaran, notifikasi, promo/loyalti, laporan, demo, dan PWA. **Status saat ini: M1–M5 diimplementasikan dan diverifikasi pada runtime lokal/CI; M5 berada di branch `codex/m5-reports` ([PR #2](https://github.com/cleveradit/ceklaundry/pull/2)), M6 belum tersedia.** Pengiriman provider nyata dan restore backup fisik memerlukan verifikasi staging.
 
 **Stack rancangan:** PHP 8.4 · Laravel 12 · MySQL 8.4 · Inertia/React/TypeScript · Blade · Docker Compose.
 
@@ -24,4 +24,4 @@ CekLaundry dirancang sebagai aplikasi pengelolaan laundry multi-bisnis: operasio
 
 ## Spesifikasi dan audit
 
-[PRD sumber produk](initiate-file/prd.md) tersedia bersama keempat dokumen turunannya. [Final System Audit](audits/final-system-audit.md) mencatat keputusan, skenario adversarial, traceability, dan validasi dokumentasi. Bukti runtime ada di [verifikasi M1](audits/m1-verification.md), [verifikasi M2](audits/m2-verification.md), [verifikasi M3](audits/m3-verification.md), dan [verifikasi M4](audits/m4-verification.md).
+[PRD sumber produk](initiate-file/prd.md) tersedia bersama keempat dokumen turunannya. [Final System Audit](audits/final-system-audit.md) mencatat keputusan, skenario adversarial, traceability, dan validasi dokumentasi. Bukti runtime ada di [verifikasi M1](audits/m1-verification.md), [verifikasi M2](audits/m2-verification.md), [verifikasi M3](audits/m3-verification.md), [verifikasi M4](audits/m4-verification.md), dan [verifikasi M5](audits/m5-verification.md).
