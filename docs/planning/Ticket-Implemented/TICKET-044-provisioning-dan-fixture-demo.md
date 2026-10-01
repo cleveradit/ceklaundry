@@ -2,7 +2,7 @@
 
 **Ticket:** `TICKET-044`
 
-**Status:** `READY`
+**Status:** `DONE`
 
 **Target Audience:** AI Developer Agents
 
@@ -14,7 +14,7 @@
 
 | Item | Approved Value |
 |---|---|
-| Sumber | [Plan M6](../plan.md#10-m6--demo-dan-pwa), [PRD 9.4](../initiate-file/prd.md), [US-601 dan US-604](../initiate-file/user-stories.md), [arsitektur 7–8](../initiate-file/architecture.md) |
+| Sumber | [Plan M6](../../plan.md#10-m6--demo-dan-pwa), [PRD 9.4](../../initiate-file/prd.md), [US-601 dan US-604](../../initiate-file/user-stories.md), [arsitektur 7–8](../../initiate-file/architecture.md) |
 | Akses | `POST /demo` dari tombol Coba Demo memakai CSRF; prospek langsung memperoleh sesi owner demo. Login dengan kredensial akun reserved tidak tersedia. |
 | Fixture | Tepat 2 cabang, 3 layanan master yang tersedia di cabang, 1 owner, 1 admin Cabang Utama, 6 customer, 15 transaksi dengan status/payment/ledger dan timestamp sesuai PRD 9.4; promo dan loyalti aktif, DP aktif. Identitas sintetis memakai domain `.invalid` dan nomor sintetis. |
 | Batas | Maksimal 3 demo per IP per hari WIB, fixed window dan increment atomik termasuk request paralel; IP berasal dari trusted proxy yang dikonfigurasi. |
@@ -44,17 +44,17 @@ Prospek dapat membuat satu tenant demo utuh dari halaman depan dan langsung menc
 
 | Case | Input | Expected Result | Status |
 |---|---|---|---|
-| Provision normal | Prospek tekan Coba Demo | Tenant baru, fixture persis PRD 9.4, sesi owner aktif | `[ ]` |
-| Isolasi | Dua prospek membuat demo | Business berbeda; transaksi/customer tenant lain 404 atau tidak muncul | `[ ]` |
-| Konsistensi fixture | Periksa 15 transaksi, pembayaran, promo, minimum, ledger | Status, total, payment dan saldo cocok; tidak ada outbound | `[ ]` |
-| Batas WIB | IP yang sama meminta demo ke-1/2/3/4, termasuk pergantian hari | Tiga berhasil, keempat 429; hari WIB berikutnya kembali tersedia | `[ ]` |
-| Race | Empat request serentak dari IP sama pada dua koneksi MySQL | Paling banyak tiga demo terbuat | `[ ]` |
-| Kegagalan | Injeksi error di tengah fixture | Seluruh data tenant di-rollback; tidak ada sesi demo setengah jadi | `[ ]` |
+| Provision normal | Prospek tekan Coba Demo | Tenant baru, fixture persis PRD 9.4, sesi owner aktif | `[x]` |
+| Isolasi | Dua prospek membuat demo | Business berbeda; transaksi/customer tenant lain 404 atau tidak muncul | `[x]` |
+| Konsistensi fixture | Periksa 15 transaksi, pembayaran, promo, minimum, ledger | Status, total, payment dan saldo cocok; tidak ada outbound | `[x]` |
+| Batas WIB | IP yang sama meminta demo ke-1/2/3/4, termasuk pergantian hari | Tiga berhasil, keempat 429; hari WIB berikutnya kembali tersedia | `[x]` |
+| Race | Empat request serentak dari IP sama pada dua koneksi MySQL | Paling banyak tiga demo terbuat | `[x]` |
+| Kegagalan | Injeksi error di tengah fixture | Seluruh data tenant di-rollback; tidak ada sesi demo setengah jadi | `[x]` |
 
 ## 6. Verification Commands
 
-1. `rtk proxy docker compose exec -T app php artisan test --filter=DemoProvisionTest`
-2. `rtk proxy docker compose exec -T app php artisan test --filter=DemoProvisionConcurrencyTest`
+1. `rtk proxy docker compose exec -T app php artisan test --filter=DemoFlowTest`
+2. `rtk proxy docker compose exec -T app php artisan test --filter=DemoConcurrencyTest`
 3. `rtk proxy docker compose exec -T app ./vendor/bin/pint --test`
 4. `rtk proxy python3 docs/audits/validate-final-specs.py`
 
@@ -67,7 +67,9 @@ Expected: fixture dan batas lulus di MySQL 8.4, tanpa efek pada tenant nyata; ca
 
 ## 8. Completion Checklist
 
-- [x] Otorisasi implementasi diterima dan status menjadi `READY`.
-- [ ] Kontrak provisioning, fixture, dan limiter diimplementasikan.
-- [ ] Seluruh kasus penerimaan dan perintah verifikasi lulus.
-- [ ] Tidak ada pengiriman eksternal atau data lintas tenant.
+- [x] Otorisasi implementasi diterima; status `DONE` setelah verifikasi lokal/CI.
+- [x] Kontrak provisioning, fixture, dan limiter diimplementasikan.
+- [x] Seluruh kasus penerimaan dan perintah verifikasi lulus.
+- [x] Tidak ada pengiriman eksternal atau data lintas tenant.
+
+Bukti aktual dan batas pengujian perangkat ada di [audit M6](../../audits/m6-verification.md). Status DONE mencakup implementasi dan gate lokal/CI; pemasangan serta splash Android/iOS fisik tetap belum diverifikasi.

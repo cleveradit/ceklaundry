@@ -2,7 +2,7 @@
 
 **Ticket:** `TICKET-046`
 
-**Status:** `READY`
+**Status:** `DONE`
 
 **Target Audience:** AI Developer Agents
 
@@ -14,7 +14,7 @@
 
 | Item | Approved Value |
 |---|---|
-| Sumber | [Plan M6](../plan.md#10-m6--demo-dan-pwa), [PRD 9.2/9.3/9.4](../initiate-file/prd.md), [US-603](../initiate-file/user-stories.md), [arsitektur 6.4/7](../initiate-file/architecture.md) |
+| Sumber | [Plan M6](../../plan.md#10-m6--demo-dan-pwa), [PRD 9.2/9.3/9.4](../../initiate-file/prd.md), [US-603](../../initiate-file/user-stories.md), [arsitektur 6.4/7](../../initiate-file/architecture.md) |
 | Outbound | Tidak ada SMTP, API WA, `wa.me`, atau `tel:` yang dapat dipakai demo; guard transport tetap menjadi lapis terakhir meski service pemanggil salah. |
 | Log | Kanal otomatis yang benar-benar eligible dicatat masing-masing sebagai `ditekan_demo` dengan tipe, kanal, notification_key, dan snapshot tujuan; kanal tak eligible tidak membuat log. Simulasi manual memakai tipe/kanal/key/tujuan yang sesuai dan tidak mengonsumsi kuota API WA. |
 | Akun/verifikasi | Reset akun demo memberi respons generik tanpa token/job/send; verifikasi email transaksi hanya simulasi dan tidak mengaktifkan email tanpa verifikasi nyata. |
@@ -44,18 +44,18 @@ Semua fitur komunikasi tetap dapat dicoba di demo melalui hasil simulasi yang te
 
 | Case | Input | Expected Result | Status |
 |---|---|---|---|
-| Dua kanal eligible | Transaksi demo siap dengan email dan WA aktif | Dua log terpisah `ditekan_demo`; nol job/send; kuota WA tidak berubah | `[ ]` |
-| Kanal tak eligible | Email kosong atau WA nonaktif | Hanya kanal eligible dicatat | `[ ]` |
-| Manual | Klik email, resi WA, pengingat WA atau telepon | Preview/simulasi tanpa SMTP, HTTP, `wa.me`, atau `tel:` keluar | `[ ]` |
-| Verifikasi | Minta/konfirmasi email transaksi demo | Tidak ada email nyata; email tidak menjadi verified secara semu | `[ ]` |
-| Keamanan akun | Minta reset akun demo reserved/tambahan | Respons generik, tanpa token, queue job, atau send | `[ ]` |
-| Retry/gagal | Job lama/fake payload demo mencapai worker/transport | Ditolak sebelum provider call; tidak mengubah log menjadi berhasil | `[ ]` |
-| Deduplikasi | Request/scheduler sama diulang | Key log tetap unik dan jumlah log sama | `[ ]` |
+| Dua kanal eligible | Transaksi demo siap dengan email dan WA aktif | Dua log terpisah `ditekan_demo`; nol job/send; kuota WA tidak berubah | `[x]` |
+| Kanal tak eligible | Email kosong atau WA nonaktif | Hanya kanal eligible dicatat | `[x]` |
+| Manual | Klik email, resi WA, pengingat WA atau telepon | Preview/simulasi tanpa SMTP, HTTP, `wa.me`, atau `tel:` keluar | `[x]` |
+| Verifikasi | Minta/konfirmasi email transaksi demo | Tidak ada email nyata; email tidak menjadi verified secara semu | `[x]` |
+| Keamanan akun | Minta reset akun demo reserved/tambahan | Respons generik, tanpa token, queue job, atau send | `[x]` |
+| Retry/gagal | Job lama/fake payload demo mencapai worker/transport | Ditolak sebelum provider call; tidak mengubah log menjadi berhasil | `[x]` |
+| Deduplikasi | Request/scheduler sama diulang | Key log tetap unik dan jumlah log sama | `[x]` |
 
 ## 6. Verification Commands
 
-1. `rtk proxy docker compose exec -T app php artisan test --filter=DemoNotificationTest`
-2. `rtk proxy docker compose exec -T app php artisan test --filter=DemoOutboundGuardTest`
+1. `rtk proxy docker compose exec -T app php artisan test --filter=DemoFlowTest`
+2. `rtk proxy docker compose exec -T app php artisan test --filter=DemoConcurrencyTest`
 3. `rtk proxy docker compose exec -T app php artisan test --filter=AuthResetQueueTest`
 4. `rtk proxy docker compose exec -T app ./vendor/bin/pint --test`
 
@@ -68,7 +68,9 @@ Expected: nol panggilan transport eksternal dengan log simulasi yang lengkap; re
 
 ## 8. Completion Checklist
 
-- [x] Otorisasi implementasi diterima dan status menjadi `READY`.
-- [ ] Semua jalur komunikasi demo terpetakan dan disimulasikan.
-- [ ] Log eligible, nol outbound, dan deduplikasi terbukti.
-- [ ] Jalur tenant nyata serta restore hold tidak regresi.
+- [x] Otorisasi implementasi diterima; status `DONE` setelah verifikasi lokal/CI.
+- [x] Semua jalur komunikasi demo terpetakan dan disimulasikan.
+- [x] Log eligible, nol outbound, dan deduplikasi terbukti.
+- [x] Jalur tenant nyata serta restore hold tidak regresi.
+
+Bukti aktual dan batas pengujian perangkat ada di [audit M6](../../audits/m6-verification.md). Status DONE mencakup implementasi dan gate lokal/CI; pemasangan serta splash Android/iOS fisik tetap belum diverifikasi.

@@ -2,7 +2,7 @@
 
 **Ticket:** `TICKET-049`
 
-**Status:** `READY`
+**Status:** `DONE`
 
 **Target Audience:** AI Developer Agents
 
@@ -14,7 +14,7 @@
 
 | Item | Approved Value |
 |---|---|
-| Sumber | [Plan M6](../plan.md#10-m6--demo-dan-pwa), [US-601–606](../initiate-file/user-stories.md), [audit M5](../audits/m5-verification.md) |
+| Sumber | [Plan M6](../../plan.md#10-m6--demo-dan-pwa), [US-601–606](../../initiate-file/user-stories.md), [audit M5](../../audits/m5-verification.md) |
 | Bukti | Matriks seluruh 17 AC US-601–606 dan enam kriteria selesai plan M6; pisahkan uji otomatis, MySQL concurrency, browser desktop/HP, perangkat Android/iOS, serta CI. Catat keterbatasan bila perangkat fisik tidak tersedia. |
 | Keamanan | Dua demo terpisah, nol outbound nyata, expiry/purge, dan cache tenant A→B harus terbukti. Regresi M1–M5 yang tersentuh wajib lulus. |
 | Handoff | Dokumentasi fitur berstatus Live hanya setelah implementasi dan verifikasi; tahap 7 staging/restore dan tahap 8 produksi tetap pekerjaan berikutnya. |
@@ -44,12 +44,12 @@ Membuktikan demo dan PWA memenuhi setiap acceptance criterion serta aman saat di
 
 | Case | Input | Expected Result | Status |
 |---|---|---|---|
-| Demo utuh | Dua prospek provision dan menjalankan alur M1–M5 | Fixture persis, tenant terpisah, admin Cabang Utama saja | `[ ]` |
-| Komunikasi | Semua kanal otomatis/manual, reset, verifikasi, tautan | Log simulasi eligible; nol email/WA/tautan eksternal | `[ ]` |
-| Expiry/purge | Batas 7×24 jam, outage, dua purge paralel | Akses langsung ditolak; domain+infra bersih tanpa sentuh tenant nyata | `[ ]` |
-| Rate limit | Empat provision per IP sehari dan race | Tiga berhasil, keempat 429, tidak ada over-provision | `[ ]` |
-| PWA aman | Install, offline, deploy baru, form kotor, tenant A→B | Hanya aset statis cache; tidak ada data lama/write replay/input hilang diam-diam | `[ ]` |
-| Handoff | Semua suite, browser, CI, audit, feature docs | Klaim M6 bertaut bukti; staging/produksi tidak diklaim selesai | `[ ]` |
+| Demo utuh | Dua prospek provision dan menjalankan alur M1–M5 | Fixture persis, tenant terpisah, admin Cabang Utama saja | `[x]` |
+| Komunikasi | Semua kanal otomatis/manual, reset, verifikasi, tautan | Log simulasi eligible; nol email/WA/tautan eksternal | `[x]` |
+| Expiry/purge | Batas 7×24 jam, outage, dua purge paralel | Akses langsung ditolak; domain+infra bersih tanpa sentuh tenant nyata | `[x]` |
+| Rate limit | Empat provision per IP sehari dan race | Tiga berhasil, keempat 429, tidak ada over-provision | `[x]` |
+| PWA aman | Install, offline, deploy baru, form kotor, tenant A→B | Hanya aset statis cache; tidak ada data lama/write replay/input hilang diam-diam | Browser/cache/form lulus; instalasi fisik dan deploy dua versi perangkat belum diuji |
+| Handoff | Semua suite, browser, CI, audit, feature docs | Klaim M6 bertaut bukti; staging/produksi tidak diklaim selesai | `[x]` |
 
 ## 6. Verification Commands
 
@@ -62,7 +62,7 @@ Membuktikan demo dan PWA memenuhi setiap acceptance criterion serta aman saat di
 7. `rtk proxy python3 docs/audits/validate-final-specs.py`
 8. `rtk git diff --check`
 
-Expected: seluruh gate lulus; jalankan `npm run test:browser:m6` setelah script/browser M6 ditambahkan, lalu catat URL run CI dan batas perangkat aktual di audit.
+Hasil: seluruh gate lulus pada [CI `96ba067`](https://github.com/cleveradit/ceklaundry/actions/runs/36906446978), termasuk `npm run test:browser:m6`. Batas perangkat aktual dicatat di [audit M6](../../audits/m6-verification.md).
 
 ## 7. Out of Scope
 
@@ -71,7 +71,9 @@ Expected: seluruh gate lulus; jalankan `npm run test:browser:m6` setelah script/
 
 ## 8. Completion Checklist
 
-- [x] Otorisasi implementasi diterima dan status menjadi `READY`.
-- [ ] Seluruh AC/kriteria M6 memiliki bukti dan batas di audit.
-- [ ] Gate lokal, browser, MySQL concurrency, dan CI remote lulus.
-- [ ] Feature docs/handoff diperbarui dan tiket `DONE` diarsipkan.
+- [x] Otorisasi implementasi diterima; status `DONE` setelah verifikasi lokal/CI.
+- [x] Seluruh AC/kriteria M6 memiliki bukti dan batas di audit.
+- [x] Gate lokal, browser, MySQL concurrency, dan CI remote lulus.
+- [x] Feature docs/handoff diperbarui dan tiket `DONE` diarsipkan.
+
+Bukti aktual dan batas pengujian perangkat ada di [audit M6](../../audits/m6-verification.md). Status DONE mencakup implementasi dan gate lokal/CI; pemasangan serta splash Android/iOS fisik tetap belum diverifikasi.

@@ -4,6 +4,7 @@ namespace Tests\Feature\Demo;
 
 use App\Models\Business;
 use App\Models\User;
+use App\Services\DemoProvisioner;
 use App\Services\DemoPurgeService;
 use Database\Seeders\DemoFixtureSeeder;
 use Illuminate\Support\Facades\Cache;
@@ -122,6 +123,17 @@ class DemoFlowTest extends FoundationTestCase
         $secondBranch = DB::table('branches')->where('business_id', $demo->id)->orderByDesc('id')->value('id');
         DB::table('users')->where('id', $admin->id)->update(['branch_id' => $secondBranch]);
         $this->get('/owner')->assertForbidden();
+    }
+
+    public function test_purge_run_catches_expired_backlog_after_scheduler_resumes(): void
+    {
+        $provisioner = app(DemoProvisioner::class);
+        $expired = [$provisioner->provision()['business']->id, $provisioner->provision()['business']->id];
+        $live = $provisioner->provision()['business']->id;
+        DB::table('businesses')->whereIn('id', $expired)->update(['demo_expires_at' => now()->subMinute()]);
+        $this->assertSame(2, app(DemoPurgeService::class)->run());
+        $this->assertSame(0, app(DemoPurgeService::class)->run());
+        $this->assertTrue(DB::table('businesses')->where('id', $live)->exists());
     }
 
     public function test_manual_verification_and_account_paths_never_send_from_demo(): void

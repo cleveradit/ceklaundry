@@ -2,7 +2,7 @@
 
 **Ticket:** `TICKET-045`
 
-**Status:** `READY`
+**Status:** `DONE`
 
 **Target Audience:** AI Developer Agents
 
@@ -14,7 +14,7 @@
 
 | Item | Approved Value |
 |---|---|
-| Sumber | [Plan M6](../plan.md#10-m6--demo-dan-pwa), [PRD 9.3–9.4](../initiate-file/prd.md), [US-602](../initiate-file/user-stories.md), [arsitektur 7](../initiate-file/architecture.md) |
+| Sumber | [Plan M6](../../plan.md#10-m6--demo-dan-pwa), [PRD 9.3–9.4](../../initiate-file/prd.md), [US-602](../../initiate-file/user-stories.md), [arsitektur 7](../../initiate-file/architecture.md) |
 | Peran | `POST /demo/role` hanya untuk sesi demo; pasangan owner/admin dan tenant disimpan server, bukan diterima sebagai arbitrary user/branch ID. Switch meregenerasi session ID. |
 | Batas cabang | Admin reserved selalu Cabang Utama dan hanya dapat membaca/menulis data cabang itu; owner melihat kedua cabang. Akun reserved serta Cabang Utama tidak dapat dinonaktifkan atau dipindah. |
 | Tampilan | Semua halaman panel demo menampilkan banner `MODE DEMO` dan aksi `Lihat sebagai Admin` atau `Kembali sebagai Owner`. |
@@ -44,16 +44,16 @@ Prospek dapat berpindah antara sudut pandang owner dan admin pada tenant demo ya
 
 | Case | Input | Expected Result | Status |
 |---|---|---|---|
-| Switch sah | Owner demo → admin → owner | Session ID berubah pada tiap switch; admin hanya Cabang Utama; owner dua cabang | `[ ]` |
-| Banner | Buka halaman panel demo dan bisnis nyata | `MODE DEMO` beserta aksi tepat hanya pada demo | `[ ]` |
-| ID palsu | POST user/branch/tenant ID lain | Ditolak; tidak ada perubahan autentikasi atau data yang terbuka | `[ ]` |
-| Sesi usang | Akun/cabang/tenant reserved berubah atau demo expired | Request ditolak, sesi tidak memberi akses lama | `[ ]` |
-| Aset reserved | Owner mencoba menonaktifkan/pindah akun reserved atau Cabang Utama | Ditolak server; CRUD akun/cabang tambahan tetap bisa | `[ ]` |
-| Bisnis nyata | Owner non-demo POST `/demo/role` | Ditolak, peran dan sesi tetap | `[ ]` |
+| Switch sah | Owner demo → admin → owner | Session ID berubah pada tiap switch; admin hanya Cabang Utama; owner dua cabang | `[x]` |
+| Banner | Buka halaman panel demo dan bisnis nyata | `MODE DEMO` beserta aksi tepat hanya pada demo | `[x]` |
+| ID palsu | POST user/branch/tenant ID lain | Ditolak; tidak ada perubahan autentikasi atau data yang terbuka | `[x]` |
+| Sesi usang | Akun/cabang/tenant reserved berubah atau demo expired | Request ditolak, sesi tidak memberi akses lama | `[x]` |
+| Aset reserved | Owner mencoba menonaktifkan/pindah akun reserved atau Cabang Utama | Ditolak server; CRUD akun/cabang tambahan tetap bisa | `[x]` |
+| Bisnis nyata | Owner non-demo POST `/demo/role` | Ditolak, peran dan sesi tetap | `[x]` |
 
 ## 6. Verification Commands
 
-1. `rtk proxy docker compose exec -T app php artisan test --filter=DemoRoleTest`
+1. `rtk proxy docker compose exec -T app php artisan test --filter=DemoFlowTest`
 2. `rtk proxy docker compose exec -T app php artisan test --filter=LifecycleTest`
 3. `rtk proxy docker build --target frontend -t ceklaundry-frontend -f docker/php/Dockerfile .`
 4. `rtk proxy docker run --rm ceklaundry-frontend npm run typecheck`
@@ -68,7 +68,9 @@ Expected: isolasi tenant/cabang dan regenerasi sesi terbukti; catat hasil browse
 
 ## 8. Completion Checklist
 
-- [x] Otorisasi implementasi diterima dan status menjadi `READY`.
-- [ ] Switch, banner, dan perlindungan reserved diterapkan di server/UI.
-- [ ] Matriks penerimaan dan regresi otorisasi lulus.
-- [ ] Tidak ada akses lintas tenant/cabang melalui sesi atau ID klien.
+- [x] Otorisasi implementasi diterima; status `DONE` setelah verifikasi lokal/CI.
+- [x] Switch, banner, dan perlindungan reserved diterapkan di server/UI.
+- [x] Matriks penerimaan dan regresi otorisasi lulus.
+- [x] Tidak ada akses lintas tenant/cabang melalui sesi atau ID klien.
+
+Bukti aktual dan batas pengujian perangkat ada di [audit M6](../../audits/m6-verification.md). Status DONE mencakup implementasi dan gate lokal/CI; pemasangan serta splash Android/iOS fisik tetap belum diverifikasi.

@@ -2,7 +2,7 @@
 
 **Ticket:** `TICKET-047`
 
-**Status:** `READY`
+**Status:** `DONE`
 
 **Target Audience:** AI Developer Agents
 
@@ -14,7 +14,7 @@
 
 | Item | Approved Value |
 |---|---|
-| Sumber | [Plan M6](../plan.md#10-m6--demo-dan-pwa), [PRD 9.4](../initiate-file/prd.md), [US-604](../initiate-file/user-stories.md), [arsitektur 7](../initiate-file/architecture.md), [skema 3](../initiate-file/database-schema.md) |
+| Sumber | [Plan M6](../../plan.md#10-m6--demo-dan-pwa), [PRD 9.4](../../initiate-file/prd.md), [US-604](../../initiate-file/user-stories.md), [arsitektur 7](../../initiate-file/architecture.md), [skema 3](../../initiate-file/database-schema.md) |
 | Expiry | Tepat `created_at + 7×24 jam`; pada saat itu semua request panel/sesi/status publik demo ditolak meski cron tertunda. |
 | Jadwal | Purge tiap menit; pada sistem sehat selesai ≤5 menit setelah expiry, setelah scheduler pulih diproses pada putaran pertama. |
 | Keamanan | Hanya `is_demo=true` yang sudah expired dapat dihapus; root lock dan validasi ulang, child sebelum parent, tanpa menonaktifkan FK checks. Dua purge paralel aman dan retry idempoten. |
@@ -45,18 +45,18 @@ Demo kedaluwarsa tepat waktu pada setiap permukaan akses dan seluruh data live-n
 
 | Case | Input | Expected Result | Status |
 |---|---|---|---|
-| Batas expiry | Request tepat sebelum dan pada `created_at+7×24 jam` | Sebelum diizinkan; pada batas ditolak, termasuk status publik dan sesi lama | `[ ]` |
-| Cron sehat | Demo baru expired | Seluruh live data terhapus ≤5 menit | `[ ]` |
-| Scheduler pulih | Cron mati melewati expiry lalu hidup | Akses tetap ditolak selama outage; purge pada putaran pertama | `[ ]` |
-| Dua purge | Dua proses MySQL bersamaan untuk demo sama | Satu hasil bersih, keduanya selesai aman tanpa FK disable | `[ ]` |
-| Infra | Switched sessions, reset token, queued/failed jobs, cache | Semua jejak live demo yang ditentukan hilang; worker tak mengirim | `[ ]` |
-| Tenant nyata | Business non-demo dengan data serupa | Tidak ada baris/domain/infra miliknya terhapus | `[ ]` |
-| Retry | Purge dipanggil lagi setelah sukses atau kegagalan parsial infra | Idempoten, akhirnya bersih | `[ ]` |
+| Batas expiry | Request tepat sebelum dan pada `created_at+7×24 jam` | Sebelum diizinkan; pada batas ditolak, termasuk status publik dan sesi lama | `[x]` |
+| Cron sehat | Demo baru expired | Seluruh live data terhapus ≤5 menit | `[x]` |
+| Scheduler pulih | Cron mati melewati expiry lalu hidup | Akses tetap ditolak selama outage; purge pada putaran pertama | `[x]` |
+| Dua purge | Dua proses MySQL bersamaan untuk demo sama | Satu hasil bersih, keduanya selesai aman tanpa FK disable | `[x]` |
+| Infra | Switched sessions, reset token, queued/failed jobs, cache | Semua jejak live demo yang ditentukan hilang; worker tak mengirim | `[x]` |
+| Tenant nyata | Business non-demo dengan data serupa | Tidak ada baris/domain/infra miliknya terhapus | `[x]` |
+| Retry | Purge dipanggil lagi setelah sukses atau kegagalan parsial infra | Idempoten, akhirnya bersih | `[x]` |
 
 ## 6. Verification Commands
 
-1. `rtk proxy docker compose exec -T app php artisan test --filter=DemoPurgeTest`
-2. `rtk proxy docker compose exec -T app php artisan test --filter=DemoPurgeConcurrencyTest`
+1. `rtk proxy docker compose exec -T app php artisan test --filter=DemoFlowTest`
+2. `rtk proxy docker compose exec -T app php artisan test --filter=DemoConcurrencyTest`
 3. `rtk proxy docker compose exec -T app php artisan schedule:list`
 4. `rtk proxy docker compose exec -T app ./vendor/bin/pint --test`
 
@@ -69,7 +69,9 @@ Expected: penolakan akses tidak bergantung pada cron; pembersihan MySQL memenuhi
 
 ## 8. Completion Checklist
 
-- [x] Otorisasi implementasi diterima dan status menjadi `READY`.
-- [ ] Guard expiry, command, dan scheduler diterapkan.
-- [ ] Semua kasus batas, outage, concurrency, dan isolasi lulus.
-- [ ] Tidak ada FK checks yang dinonaktifkan atau tenant nyata yang terhapus.
+- [x] Otorisasi implementasi diterima; status `DONE` setelah verifikasi lokal/CI.
+- [x] Guard expiry, command, dan scheduler diterapkan.
+- [x] Semua kasus batas, outage, concurrency, dan isolasi lulus.
+- [x] Tidak ada FK checks yang dinonaktifkan atau tenant nyata yang terhapus.
+
+Bukti aktual dan batas pengujian perangkat ada di [audit M6](../../audits/m6-verification.md). Status DONE mencakup implementasi dan gate lokal/CI; pemasangan serta splash Android/iOS fisik tetap belum diverifikasi.

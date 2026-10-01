@@ -2,7 +2,7 @@
 
 **Ticket:** `TICKET-048`
 
-**Status:** `READY`
+**Status:** `DONE`
 
 **Target Audience:** AI Developer Agents
 
@@ -14,7 +14,7 @@
 
 | Item | Approved Value |
 |---|---|
-| Sumber | [Plan M6](../plan.md#10-m6--demo-dan-pwa), [PRD 5.I](../initiate-file/prd.md), [US-605–606](../initiate-file/user-stories.md), [arsitektur 8](../initiate-file/architecture.md) |
+| Sumber | [Plan M6](../../plan.md#10-m6--demo-dan-pwa), [PRD 5.I](../../initiate-file/prd.md), [US-605–606](../../initiate-file/user-stories.md), [arsitektur 8](../../initiate-file/architecture.md) |
 | Install | Manifest memuat nama, ikon, warna tema, dan splash/launch metadata; panel owner/admin dapat dipasang di home screen pada target Android/iOS. Keterbatasan iOS didokumentasikan. |
 | Cache | Service worker hanya meng-cache aset build dengan nama ber-hash dan halaman offline. Semua HTML/Inertia/status/auth/print/API/CSV dan data dinamis `network-only` + `no-store`; offline tidak menyimpan atau replay write. |
 | Update | Cache build lama dibuang saat aktivasi; versi baru diperiksa saat launch dan dipakai pada navigasi aman. Form yang belum tersimpan mendapat pemberitahuan sebelum reload; logout, switch akun/tenant, dan browser back tidak menampilkan data lama. |
@@ -44,17 +44,17 @@ Panel CekLaundry dapat dipasang sebagai PWA ringan dan memuat aset statis lebih 
 
 | Case | Input | Expected Result | Status |
 |---|---|---|---|
-| Install | Owner/admin membuka panel di HP target | Nama, ikon, warna, dan splash/launch sesuai manifest | `[ ]` |
-| Kunjungan ulang | Buka panel dengan jaringan tersedia | Aset hashed dapat berasal dari cache; data diambil ulang dari server | `[ ]` |
-| Offline | Buka aplikasi tanpa jaringan | Halaman `Anda sedang offline`; tidak ada data tenant atau fungsi tulis offline | `[ ]` |
-| Batas cache | Periksa Cache Storage sesudah status/auth/panel/CSV/print | Hanya aset hashed dan offline page; respons dinamis tidak ada | `[ ]` |
-| Pergantian tenant | Login A → logout → login B → back/offline | Tidak ada identitas/data A yang ditampilkan | `[ ]` |
-| Deploy baru | Aset versi baru tersedia saat form kotor/bersih | Form kotor diberi pemberitahuan dan tidak hilang; navigasi aman memakai aset baru | `[ ]` |
-| Gagal tulis offline | Submit form saat offline lalu online | Tidak ada request yang di-replay diam-diam | `[ ]` |
+| Install | Owner/admin membuka panel di HP target | Nama, ikon, warna, dan splash/launch sesuai manifest | Metadata/ikon lulus browser; instalasi dan splash perangkat fisik belum diuji |
+| Kunjungan ulang | Buka panel dengan jaringan tersedia | Aset hashed dapat berasal dari cache; data diambil ulang dari server | `[x]` |
+| Offline | Buka aplikasi tanpa jaringan | Halaman `Anda sedang offline`; tidak ada data tenant atau fungsi tulis offline | `[x]` |
+| Batas cache | Periksa Cache Storage sesudah status/auth/panel/CSV/print | Hanya aset hashed dan offline page; respons dinamis tidak ada | `[x]` |
+| Pergantian tenant | Login A → logout → login B → back/offline | Tidak ada identitas/data A yang ditampilkan | `[x]` |
+| Deploy baru | Aset versi baru tersedia saat form kotor/bersih | Form kotor diberi pemberitahuan dan tidak hilang; navigasi aman memakai aset baru | Hash/update guard dan form kotor lulus; deploy dua versi perangkat belum diuji |
+| Gagal tulis offline | Submit form saat offline lalu online | Tidak ada request yang di-replay diam-diam | `[x]` |
 
 ## 6. Verification Commands
 
-1. `rtk proxy docker compose exec -T app php artisan test --filter=PwaHeadersTest`
+1. `npm run test:browser:m6` pada QA terpisah setelah migrasi
 2. `rtk proxy docker build --target frontend -t ceklaundry-frontend -f docker/php/Dockerfile .`
 3. `rtk proxy docker run --rm ceklaundry-frontend npm run lint`
 4. `rtk proxy docker run --rm ceklaundry-frontend npm run typecheck`
@@ -69,7 +69,9 @@ Expected: cache hanya berisi aset yang diizinkan, data dinamis network-only, dan
 
 ## 8. Completion Checklist
 
-- [x] Otorisasi implementasi diterima dan status menjadi `READY`.
-- [ ] Manifest, ikon, service worker, offline page, dan update aman diterapkan.
-- [ ] Pengujian cache, pergantian tenant, dan form kotor lulus.
-- [ ] Keterbatasan iOS dan bukti perangkat dicatat jujur.
+- [x] Otorisasi implementasi diterima; status `DONE` setelah verifikasi lokal/CI.
+- [x] Manifest, ikon, service worker, offline page, dan update aman diterapkan.
+- [x] Pengujian cache, pergantian tenant, dan form kotor lulus.
+- [x] Keterbatasan iOS dan bukti perangkat dicatat jujur.
+
+Bukti aktual dan batas pengujian perangkat ada di [audit M6](../../audits/m6-verification.md). Status DONE mencakup implementasi dan gate lokal/CI; pemasangan serta splash Android/iOS fisik tetap belum diverifikasi.

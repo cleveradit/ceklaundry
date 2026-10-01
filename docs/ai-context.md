@@ -2,7 +2,7 @@
 
 Baca dokumen ini sebelum merencanakan atau mengubah proyek. Urutan orientasi: [index.md](index.md) → [architecture.md](architecture.md) → [data-model.md](data-model.md) → [user-stories.md](initiate-file/user-stories.md) dan [nfr.md](initiate-file/nfr.md).
 
-**Tahap proyek:** M1–M5 diimplementasikan pada `main`; kode M6 demo/PWA diimplementasikan dan diverifikasi lokal, dengan hasil CI serta perangkat fisik dicatat terpisah. Bukti aktual dan batasnya ada di [audit M1](audits/m1-verification.md), [audit M2](audits/m2-verification.md), [audit M3](audits/m3-verification.md), [audit M4](audits/m4-verification.md), [audit M5](audits/m5-verification.md), dan [audit M6](audits/m6-verification.md). Jangan menyebut seluruh produk selesai atau produksi siap sebelum verifikasi tahap berikutnya.
+**Tahap proyek:** M1–M6 diimplementasikan pada `main` dan diverifikasi lokal/CI. Bukti aktual dan batasnya ada di [audit M1](audits/m1-verification.md), [audit M2](audits/m2-verification.md), [audit M3](audits/m3-verification.md), [audit M4](audits/m4-verification.md), [audit M5](audits/m5-verification.md), dan [audit M6](audits/m6-verification.md). Pemasangan Android/iOS fisik M6, staging, dan produksi belum diverifikasi; jangan menyebut seluruh produk siap operasi sebelum tahap tersebut.
 
 ## 1. Tech Stack (runtime M1–M6)
 

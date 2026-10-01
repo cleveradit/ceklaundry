@@ -1,6 +1,6 @@
-# Tiket selesai — Persiapan dan M1–M5
+# Tiket selesai — Persiapan dan M1–M6
 
-TICKET-001–043 diimplementasikan dan diverifikasi sesuai keputusan yang berlaku. Lihat [audit M1](../../audits/m1-verification.md), [audit M2](../../audits/m2-verification.md), [audit M3](../../audits/m3-verification.md), [audit M4](../../audits/m4-verification.md), dan [audit M5](../../audits/m5-verification.md) untuk bukti serta batas milestone. Uji printer thermal fisik M2 dilewati atas instruksi pengguna; M3 belum mengklaim kiriman provider nyata atau restore backup fisik.
+TICKET-001–049 diimplementasikan dan diverifikasi sesuai keputusan yang berlaku. Lihat [audit M1](../../audits/m1-verification.md), [audit M2](../../audits/m2-verification.md), [audit M3](../../audits/m3-verification.md), [audit M4](../../audits/m4-verification.md), [audit M5](../../audits/m5-verification.md), dan [audit M6](../../audits/m6-verification.md) untuk bukti serta batas milestone. Uji printer thermal fisik M2 dilewati atas instruksi pengguna; M3 belum mengklaim kiriman provider nyata atau restore backup fisik. Instalasi dan splash Android/iOS fisik M6 belum diverifikasi.
 
 | Tiket | Status |
 |---|---|
@@ -47,3 +47,9 @@ TICKET-001–043 diimplementasikan dan diverifikasi sesuai keputusan yang berlak
 | [TICKET-041](TICKET-041-grafik-pendapatan.md) | DONE |
 | [TICKET-042](TICKET-042-ekspor-riwayat-csv.md) | DONE |
 | [TICKET-043](TICKET-043-verifikasi-dan-handoff-m5.md) | DONE |
+| [TICKET-044](TICKET-044-provisioning-dan-fixture-demo.md) | DONE |
+| [TICKET-045](TICKET-045-sesi-dan-peran-demo.md) | DONE |
+| [TICKET-046](TICKET-046-simulasi-komunikasi-demo.md) | DONE |
+| [TICKET-047](TICKET-047-expiry-dan-purge-demo.md) | DONE |
+| [TICKET-048](TICKET-048-pwa-statis-dan-pembaruan-aman.md) | DONE |
+| [TICKET-049](TICKET-049-verifikasi-dan-handoff-m6.md) | DONE |

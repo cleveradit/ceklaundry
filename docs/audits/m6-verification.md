@@ -1,6 +1,6 @@
 # Verifikasi M6 — Demo dan PWA
 
-Status: implementasi diuji pada MySQL 8.4 dan Chrome 154.0.8037.92 lokal, 1 Oktober 2026. Kode bukti: **L** = suite PHP/MySQL lokal, **B** = browser Chromium lokal, **P** = pemeriksaan kode/build, **C** = CI remote, **S** = staging/perangkat fisik belum diuji. Implementasi belum dideploy ke staging atau produksi.
+Status: implementasi diuji pada MySQL 8.4 dan Chrome 154.0.8037.92 lokal, 1 Oktober 2026. [CI commit kode `96ba067`](https://github.com/cleveradit/ceklaundry/actions/runs/36906446978) lulus backend, frontend, dokumentasi dan browser M1–M6. Kode bukti: **L** = suite PHP/MySQL lokal, **B** = browser Chromium lokal, **P** = pemeriksaan kode/build, **C** = CI remote, **S** = staging/perangkat fisik belum diuji. Implementasi belum dideploy ke staging atau produksi.
 
 ## Matriks 17 acceptance criteria
 
@@ -37,8 +37,8 @@ Status: implementasi diuji pada MySQL 8.4 dan Chrome 154.0.8037.92 lokal, 1 Okto
 
 ## Hasil gate dan batas
 
-Suite backend sebelum dua kasus batas terakhir lulus **132 tes/1.187 assertion** (700,51 detik). `DemoFlowTest` pada image kode akhir lulus **7 tes/87 assertion**; `DemoConcurrencyTest` lulus **2 tes/25 assertion**. Pint lulus 218 file; lint, TypeScript, Vite build, validator spesifikasi, dan `git diff --check` lulus lokal. Browser M6 lulus pada Chrome 154 dengan viewport 390 × 844 dan database QA terpisah; dua demo, role switch, pratinjau WA, cache allowlist, offline, form kotor dan pergantian tenant diperiksa. Browser M1–M5 pada perubahan akhir dan CI remote masih menunggu hasil run setelah push.
+Suite backend sebelum tiga kasus batas terakhir lulus **132 tes/1.187 assertion** (700,51 detik). `DemoFlowTest` pada image kode akhir lulus **8 tes/90 assertion**; `DemoConcurrencyTest` lulus **2 tes/25 assertion**. Pint lulus 218 file; lint, TypeScript, Vite build, validator spesifikasi, dan `git diff --check` lulus lokal. `schedule:list` menampilkan purge tiap menit; 199 tautan Markdown lokal M6 valid. Browser M6 lulus pada Chrome 154 dengan viewport 390 × 844 dan database QA terpisah; dua demo, role switch, pratinjau WA, cache allowlist, offline, form kotor dan pergantian tenant diperiksa. Screenshot dashboard mobile diperiksa dan banner/peran terbaca. [CI `96ba067`](https://github.com/cleveradit/ceklaundry/actions/runs/36906446978) lulus suite MySQL, Pint, frontend, validator dokumentasi, browser M1–M6, serta fixture/performa M5.
 
 Kasus PHP M6 yang direncanakan sebagai beberapa file pada TICKET-044–049 digabung ke `DemoFlowTest` dan `DemoConcurrencyTest` agar fixture berat tidak diulang per berkas. Nama file berubah, sedangkan cakupan fixture, rollback, otorisasi, outbound, expiry/purge dan interleaving MySQL diuji melalui dua suite tersebut serta regresi M1–M5.
 
-Browser HP memakai viewport emulasi, bukan perangkat fisik. Uji pemasangan Android/iOS, splash OS, deploy dua versi SW secara end-to-end pada perangkat, provider nyata, restore backup dan cutover tetap perlu verifikasi tahap berikutnya. Klaim Live berlaku untuk runtime lokal/CI setelah gate remote lulus; produksi belum diverifikasi.
+Browser HP memakai viewport emulasi, bukan perangkat fisik. Uji pemasangan Android/iOS, splash OS, deploy dua versi SW secara end-to-end pada perangkat, provider nyata, restore backup dan cutover tetap perlu verifikasi tahap berikutnya. Klaim Live berlaku untuk runtime lokal/CI; produksi belum diverifikasi.
