@@ -1,6 +1,6 @@
 # Architecture Map — CekLaundry
 
-**Status:** M1–M5 diimplementasikan pada runtime lokal/CI; bukti milestone terakhir ada di [verifikasi M5](audits/m5-verification.md). M5 berada di branch `codex/m5-reports`. Spesifikasi keseluruhan tetap [arsitektur sumber](initiate-file/architecture.md). M6 masih rancangan.
+**Status:** M1–M5 diimplementasikan pada runtime lokal/CI; bukti milestone terakhir ada di [verifikasi M5](audits/m5-verification.md). M5 sudah di `main`. Spesifikasi keseluruhan tetap [arsitektur sumber](initiate-file/architecture.md). M6 masih rancangan.
 
 Monolit Laravel12, PHP8.4 dan MySQL8.4/InnoDB. Panel Inertia/React/TypeScript strict memakai Vite tanpa SSR; halaman depan Blade dengan CSS terpisah tidak mengunduh React.
 

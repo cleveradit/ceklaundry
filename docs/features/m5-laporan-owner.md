@@ -1,6 +1,6 @@
 # M5 — Laporan owner
 
-Status: diimplementasikan pada branch `codex/m5-reports`, [PR #2](https://github.com/cleveradit/ceklaundry/pull/2). Verifikasi lokal dan bukti CI dicatat di [audit M5](../audits/m5-verification.md). Fitur tidak memerlukan migrasi baru; belum dideploy produksi.
+Status: diimplementasikan pada `main`, [PR #2](https://github.com/cleveradit/ceklaundry/pull/2). Verifikasi lokal dan bukti CI dicatat di [audit M5](../audits/m5-verification.md). Fitur tidak memerlukan migrasi baru; belum dideploy produksi.
 
 ## Halaman dan aturan angka
 

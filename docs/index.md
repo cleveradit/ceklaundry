@@ -1,6 +1,6 @@
 # CekLaundry — Documentation Hub
 
-CekLaundry dirancang sebagai aplikasi pengelolaan laundry multi-bisnis: operasional cabang, status cucian publik, pembayaran, notifikasi, promo/loyalti, laporan, demo, dan PWA. **Status saat ini: M1–M5 diimplementasikan dan diverifikasi pada runtime lokal/CI; M5 berada di branch `codex/m5-reports` ([PR #2](https://github.com/cleveradit/ceklaundry/pull/2)), M6 belum tersedia.** Pengiriman provider nyata dan restore backup fisik memerlukan verifikasi staging.
+CekLaundry dirancang sebagai aplikasi pengelolaan laundry multi-bisnis: operasional cabang, status cucian publik, pembayaran, notifikasi, promo/loyalti, laporan, demo, dan PWA. **Status saat ini: M1–M5 diimplementasikan dan diverifikasi pada runtime lokal/CI; M5 sudah di `main` ([PR #2](https://github.com/cleveradit/ceklaundry/pull/2)), M6 belum tersedia.** Pengiriman provider nyata dan restore backup fisik memerlukan verifikasi staging.
 
 **Stack rancangan:** PHP 8.4 · Laravel 12 · MySQL 8.4 · Inertia/React/TypeScript · Blade · Docker Compose.
 

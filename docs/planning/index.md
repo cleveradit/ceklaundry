@@ -15,7 +15,7 @@ TICKET-001–029 (persiapan, M1–M3) selesai di [arsip](Ticket-Implemented/inde
 
 M4 — loyalti dan promo diimplementasikan setelah otorisasi pengguna pada 30 September 2026. TICKET-030–036 selesai dan dicatat pada [arsip](Ticket-Implemented/index.md); bukti dan batasnya ada di [audit M4](../audits/m4-verification.md). [CI run #24](https://github.com/cleveradit/ceklaundry/actions/runs/36725111623) lulus pada commit kode M4 di `main`.
 
-TICKET-037–043 mengimplementasikan seluruh M5 berdasarkan [plan M5](../plan.md#9-m5--laporan-owner), diotorisasi pengguna pada 1 Oktober 2026. Seluruhnya DONE dan dicatat pada [arsip](Ticket-Implemented/index.md). [Audit M5](../audits/m5-verification.md) memuat AC, snapshot, browser dan kapasitas/performa. [CI commit kode akhir `691737e`](https://github.com/cleveradit/ceklaundry/actions/runs/36869810998) lulus pada branch `codex/m5-reports` ([draft PR #2](https://github.com/cleveradit/ceklaundry/pull/2)); belum merge/deploy produksi.
+TICKET-037–043 mengimplementasikan seluruh M5 berdasarkan [plan M5](../plan.md#9-m5--laporan-owner), diotorisasi pengguna pada 1 Oktober 2026. Seluruhnya DONE dan dicatat pada [arsip](Ticket-Implemented/index.md). [Audit M5](../audits/m5-verification.md) memuat AC, snapshot, browser dan kapasitas/performa. [CI commit kode akhir `691737e`](https://github.com/cleveradit/ceklaundry/actions/runs/36869810998) lulus pada branch `codex/m5-reports` ([PR #2](https://github.com/cleveradit/ceklaundry/pull/2)); kode sudah di `main`, belum deploy produksi.
 
 Tidak ada ticket implementasi aktif. Ticket berikutnya adalah `TICKET-044` untuk M6; M6 belum dibuat tiket implementasinya.
 

@@ -229,7 +229,7 @@ Bukti dan batas tiap kriteria M4 dicatat di [audit verifikasi M4](audits/m4-veri
 - [x] Batas hari WIB, filter cabang, dashboard, grafik, dan CSV menghasilkan angka yang selaras.
 - [x] Owner tidak dapat melihat laporan bisnis lain; admin tidak mendapat akses laporan khusus owner.
 
-Bukti penyelesaian M5: [audit verifikasi M5](audits/m5-verification.md), termasuk snapshot MySQL, browser, fixture kapasitas dan hasil CI. Implementasi berada di branch `codex/m5-reports` ([PR #2](https://github.com/cleveradit/ceklaundry/pull/2)); M6 dan verifikasi produksi tetap terpisah.
+Bukti penyelesaian M5: [audit verifikasi M5](audits/m5-verification.md), termasuk snapshot MySQL, browser, fixture kapasitas dan hasil CI. Implementasi sudah di `main` ([PR #2](https://github.com/cleveradit/ceklaundry/pull/2)); M6 dan verifikasi produksi tetap terpisah.
 
 **Yang diperiksa sendiri:** buat data pembayaran lintas tanggal/bulan, cocokkan angka manual, lalu bandingkan tabel, grafik, dan CSV.
 
