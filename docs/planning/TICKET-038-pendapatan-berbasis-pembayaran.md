@@ -1,7 +1,7 @@
 # Implementation Plan: TICKET-038 (Pendapatan berbasis tanggal pembayaran)
 
 **Ticket:** `TICKET-038`  
-**Status:** `REVIEW`  
+**Status:** `READY`
 **Target Audience:** AI Developer Agents  
 **Depends On:** `TICKET-037`  
 **Tahap:** M5 — laporan pendapatan
@@ -15,7 +15,7 @@
 | Pendapatan | `SUM(payments.jumlah)` menurut `payments.waktu` dalam periode WIB, hanya untuk transaksi yang statusnya **kini bukan** `DIBATALKAN`. Tidak ada payment sintetis pada transaksi Rp0. |
 | Pembatalan | Pembatalan kemudian hari mengeluarkan semua payment transaksi itu dari laporan lama secara retrospektif; aplikasi tidak membuat ledger refund. |
 | Periode | Hari ini, tujuh hari terakhir termasuk hari ini, bulan ini, dan tanggal bebas; cabang opsional harus milik bisnis owner. |
-| Otorisasi | Tiket dibuat atas permintaan pengguna; implementasi masih `REVIEW`. |
+| Otorisasi | Pengguna mengotorisasi implementasi seluruh TICKET-037–043 pada 1 Oktober 2026. |
 
 ## 2. Objective
 

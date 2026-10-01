@@ -14,19 +14,18 @@ use App\Http\Controllers\Developer\NotificationConfigController;
 use App\Http\Controllers\Owner\AdminController;
 use App\Http\Controllers\Owner\BranchController;
 use App\Http\Controllers\Owner\BranchServiceController;
+use App\Http\Controllers\Owner\DashboardController as OwnerDashboardController;
 use App\Http\Controllers\Owner\LoyaltySettingController;
 use App\Http\Controllers\Owner\MasterServiceController;
 use App\Http\Controllers\Owner\MasterSyncController;
 use App\Http\Controllers\Owner\NotificationSettingController;
 use App\Http\Controllers\Owner\PaymentSettingController;
 use App\Http\Controllers\Owner\PromoController;
+use App\Http\Controllers\Owner\ReportController;
+use App\Http\Controllers\Owner\ReportExportController;
 use App\Http\Controllers\Public\ReceiptController;
 use App\Http\Controllers\Public\ReceiptEmailController;
-use App\Models\Branch;
-use App\Models\MasterService;
-use App\Models\User;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 Route::get('/', function () {
     return response()->view('public.home')->header('Cache-Control', 'no-store')->header('Referrer-Policy', 'no-referrer')->header('X-Robots-Tag', 'noindex, nofollow');
@@ -50,7 +49,11 @@ Route::middleware(['auth', 'tenant', 'business.access', 'password.changed'])->gr
         Route::put('/dev/businesses/{id}/notifications', [NotificationConfigController::class, 'update'])->whereNumber('id');
     });
     Route::middleware('role:owner')->group(function () {
-        Route::get('/owner', fn () => Inertia::render('Dashboard', ['branchCount' => Branch::query()->count(), 'serviceCount' => MasterService::query()->count(), 'adminCount' => User::query()->where('business_id', auth()->user()->business_id)->where('role', 'admin')->count()]));
+        Route::get('/owner', [OwnerDashboardController::class, 'index']);
+        Route::get('/owner/reports/history', [ReportController::class, 'history']);
+        Route::get('/owner/reports/revenue', [ReportController::class, 'revenue']);
+        Route::get('/owner/reports/receivables', [ReportController::class, 'receivables']);
+        Route::get('/owner/reports/history.csv', [ReportExportController::class, 'history']);
         foreach (['branches' => BranchController::class, 'admins' => AdminController::class, 'masters' => MasterServiceController::class] as $path => $controller) {
             Route::get('/owner/'.$path, [$controller, 'index']);
             Route::post('/owner/'.$path, [$controller, 'store']);

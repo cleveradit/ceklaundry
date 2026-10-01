@@ -9,6 +9,7 @@ export default function AppLayout({ title, subtitle, children, action }: { title
   const role = props.auth?.role;
   const links = role === 'developer' ? [{ href: '/dev', label: 'Bisnis laundry', icon: Store }] : role === 'owner' ? [
     { href: '/owner', label: 'Ringkasan', icon: LayoutDashboard }, { href: '/owner/branches', label: 'Cabang', icon: Store },
+    { href: '/owner/reports/history', label: 'Riwayat transaksi', icon: ClipboardList }, { href: '/owner/reports/revenue', label: 'Pendapatan', icon: Layers }, { href: '/owner/reports/receivables', label: 'Tagihan berjalan', icon: ClipboardList },
     { href: '/owner/admins', label: 'Tim admin', icon: Users }, { href: '/owner/masters', label: 'Layanan master', icon: Layers }, { href: '/owner/sync', label: 'Sebarkan layanan', icon: RefreshCw }, { href: '/owner/settings/notifications', label: 'Notifikasi', icon: Layers }, { href: '/app', label: 'Operasional', icon: ClipboardList },
   ] : [{ href: '/app', label: 'Ringkasan cabang', icon: Store }, { href: '/app/transactions', label: 'Transaksi', icon: ClipboardList }, { href: '/app/customers', label: 'Pelanggan', icon: Users }];
   useEffect(() => {

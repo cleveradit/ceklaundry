@@ -1,7 +1,7 @@
 # Implementation Plan: TICKET-043 (Verifikasi terpadu dan handoff M5)
 
 **Ticket:** `TICKET-043`  
-**Status:** `REVIEW`  
+**Status:** `READY`
 **Target Audience:** AI Developer Agents  
 **Depends On:** `TICKET-037`–`TICKET-042`  
 **Tahap:** M5 — kriteria selesai
@@ -14,7 +14,7 @@
 | Keterlacakan | Seluruh AC US-501–506 dan empat kriteria selesai M5; AND-24, ISO-01/02/03/05, SEC-04/05, KIN-03/04, LOK-01/03, UX-03/04 |
 | Bukti | Pisahkan uji feature/integrasi MySQL, browser desktop/HP, CSV nyata, query/performa, dan CI remote. Catat batas bukti yang belum diperiksa. |
 | Handoff | Fitur M5 baru dinyatakan Live sesudah matriks AC, regresi, dan hasil verifikasi aktual tercatat; M6 tetap pekerjaan terpisah. |
-| Otorisasi | Tiket dibuat atas permintaan pengguna; implementasi masih `REVIEW`. |
+| Otorisasi | Pengguna mengotorisasi implementasi seluruh TICKET-037–043 pada 1 Oktober 2026. |
 
 ## 2. Objective
 

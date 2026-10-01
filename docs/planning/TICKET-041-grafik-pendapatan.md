@@ -1,7 +1,7 @@
 # Implementation Plan: TICKET-041 (Grafik pendapatan harian dan bulanan)
 
 **Ticket:** `TICKET-041`  
-**Status:** `REVIEW`  
+**Status:** `READY`
 **Target Audience:** AI Developer Agents  
 **Depends On:** `TICKET-038`  
 **Tahap:** M5 — grafik pendapatan
@@ -14,7 +14,7 @@
 | Keterlacakan | US-505 AC1–2; AND-24, ISO-01/02/05, SEC-05, KIN-04, LOK-01/03, UX-03/04 |
 | Sumber angka | Payment nonbatal dari TICKET-038; bucket harian/bulanan WIB termasuk bucket nol; total bucket sama dengan total laporan untuk filter yang sama. |
 | Konsistensi | Grafik dan total pada halaman yang sama dibaca dari satu snapshot `REPEATABLE READ`, tanpa cache agregat lintas request. |
-| Otorisasi | Tiket dibuat atas permintaan pengguna; implementasi masih `REVIEW`. |
+| Otorisasi | Pengguna mengotorisasi implementasi seluruh TICKET-037–043 pada 1 Oktober 2026. |
 
 ## 2. Objective
 

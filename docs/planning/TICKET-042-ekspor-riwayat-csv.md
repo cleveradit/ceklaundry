@@ -1,7 +1,7 @@
 # Implementation Plan: TICKET-042 (Ekspor riwayat transaksi CSV)
 
 **Ticket:** `TICKET-042`  
-**Status:** `REVIEW`  
+**Status:** `READY`
 **Target Audience:** AI Developer Agents  
 **Depends On:** `TICKET-037`, `TICKET-038`, `TICKET-039`  
 **Tahap:** M5 — ekspor owner
@@ -15,7 +15,7 @@
 | Kolom | Kode resi, cabang, nama/nomor HP customer terkini, status, status bayar, subtotal, potongan stempel/promo, total, total terbayar, sisa, waktu masuk, estimasi, waktu siap/diambil. Satu baris per transaksi. |
 | Format | UTF-8 BOM, CSV RFC 4180, waktu ISO WIB, uang numerik tanpa `Rp`; teks yang diawali formula spreadsheet dinetralkan. |
 | Konsistensi | Filter sama dengan TICKET-037 dan seluruh baris dari satu snapshot baca terscope owner; ekspor sinkron streaming lewat route panel, bukan URL publik. |
-| Otorisasi | Tiket dibuat atas permintaan pengguna; implementasi masih `REVIEW`. |
+| Otorisasi | Pengguna mengotorisasi implementasi seluruh TICKET-037–043 pada 1 Oktober 2026. |
 
 ## 2. Objective
 

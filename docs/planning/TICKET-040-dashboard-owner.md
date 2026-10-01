@@ -1,7 +1,7 @@
 # Implementation Plan: TICKET-040 (Dashboard harian owner)
 
 **Ticket:** `TICKET-040`  
-**Status:** `REVIEW`  
+**Status:** `READY`
 **Target Audience:** AI Developer Agents  
 **Depends On:** `TICKET-038`, `TICKET-039`  
 **Tahap:** M5 — kartu ringkasan owner
@@ -14,7 +14,7 @@
 | Keterlacakan | US-504 AC1–2; AND-24, ISO-01/02/05, SEC-05, KIN-03/04, LOK-01/03, UX-03/04 |
 | Kartu | Transaksi dan kg aktual nonbatal yang masuk hari ini; pendapatan payment hari ini; jumlah menumpuk; total tagihan berjalan. Semua lintas cabang owner. |
 | Menumpuk | `SIAP_DIAMBIL` dengan `waktu_siap_diambil <= now - reminder_first_days × 24 jam`; batas tetap berlaku ketika saklar pengingat mati. |
-| Otorisasi | Tiket dibuat atas permintaan pengguna; implementasi masih `REVIEW`. |
+| Otorisasi | Pengguna mengotorisasi implementasi seluruh TICKET-037–043 pada 1 Oktober 2026. |
 
 ## 2. Objective
 

@@ -1,7 +1,7 @@
 # Implementation Plan: TICKET-039 (Daftar tagihan berjalan)
 
 **Ticket:** `TICKET-039`  
-**Status:** `REVIEW`  
+**Status:** `READY`
 **Target Audience:** AI Developer Agents  
 **Depends On:** `TICKET-037`  
 **Tahap:** M5 — sisa tagihan
@@ -14,7 +14,7 @@
 | Keterlacakan | US-503 AC1; AND-24, ISO-01/02/05, SEC-05, KIN-04, LOK-01/03 |
 | Tagihan | Hanya transaksi aktif `DITERIMA`/`DIPROSES`/`SIAP_DIAMBIL` dengan status bayar `BELUM_BAYAR` atau `DP`; sisa positif = `total_akhir - SUM(payments.jumlah)`. |
 | Historis | `SUDAH_DIAMBIL` dan `DIBATALKAN` tidak muncul; cabang nonaktif tidak menghapus tagihan historis yang masih sah. |
-| Otorisasi | Tiket dibuat atas permintaan pengguna; implementasi masih `REVIEW`. |
+| Otorisasi | Pengguna mengotorisasi implementasi seluruh TICKET-037–043 pada 1 Oktober 2026. |
 
 ## 2. Objective
 

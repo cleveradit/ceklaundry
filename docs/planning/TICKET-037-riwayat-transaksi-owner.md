@@ -1,7 +1,7 @@
 # Implementation Plan: TICKET-037 (Riwayat transaksi owner dan filter)
 
 **Ticket:** `TICKET-037`  
-**Status:** `REVIEW`  
+**Status:** `READY`
 **Target Audience:** AI Developer Agents  
 **Depends On:** `TICKET-036`  
 **Tahap:** M5 — riwayat dan dasar filter laporan
@@ -14,7 +14,7 @@
 | Keterlacakan | US-501 AC1–2; AND-24, ISO-01/02/03/05, SEC-04/05, KIN-04, LOK-01/03 |
 | Rentang | Tanggal WIB `[awal 00.00, sehari setelah akhir 00.00)` diterapkan pada `transactions.waktu_masuk`; input tanggal terbalik atau tidak valid ditolak. |
 | Cakupan | Semua cabang bisnis owner termasuk cabang nonaktif; status `DIBATALKAN` tetap tersedia dan berlabel. Filter cabang tidak boleh memilih cabang bisnis lain. |
-| Otorisasi | Pengguna meminta pembuatan tiket M5; implementasi belum diotorisasi, sehingga status `REVIEW`. |
+| Otorisasi | Pengguna mengotorisasi implementasi seluruh TICKET-037–043 pada 1 Oktober 2026. |
 
 ## 2. Objective
 
